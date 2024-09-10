@@ -1,0 +1,176 @@
+/* ตั้งค่าสำหรับ body และ html */
+body, html {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center; /* จัดแนวนอน */
+    align-items: center;     /* จัดแนวตั้ง */
+    background-color: #222; 
+    font-family: 'Playfair Display', serif;
+    line-height: 1.6;
+    color: #f5f5f5;
+}
+
+/* กล่อง .test-plans */
+.test-plans {
+    padding: 20px;
+    width: 90%;
+    max-width: 800px;
+    background-color: #333;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease-in-out;
+    margin: auto; /* ตั้งค่า auto เพื่อให้กล่องอยู่ตรงกลาง */
+}
+
+/* หัวข้อของหน้า */
+.test-plans h2 {
+    margin-bottom: 20px;
+    text-align: center;
+    color: #ffd700;
+    font-size: 2rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+/* จัดตาราง */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.table th,
+.table td {
+    text-align: center;
+    padding: 20px;
+    border-bottom: 1px solid #555;
+}
+
+/* ตกแต่งหัวข้อของตาราง */
+.table th {
+    background-color: #444;
+    color: #f5f5f5;
+    font-weight: bold;
+    border-bottom: 2px solid #555;
+}
+
+/* ตกแต่งข้อมูลของตาราง */
+.table td {
+    color: #f5f5f5;
+}
+
+.table tr:hover {
+    background-color: #555;
+}
+
+/* ปุ่ม Create Test Plan */
+.create-btn {
+    background-color: #ffd700; /* เปลี่ยนสีพื้นหลังที่คุณต้องการ */
+    border-color: #ffd700; /* เปลี่ยนสีขอบที่คุณต้องการ */
+    color: #000000; /* สีข้อความ */
+    padding: 10px 20px; /* ขนาดปุ่ม */
+    margin: 10px 0; /* เว้นระยะรอบๆ ปุ่ม */
+    border-radius: 8px; /* มุมปุ่มโค้งมน */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease; /* เอฟเฟ็กต์การเปลี่ยนสีและการขยาย */
+    cursor: pointer;
+}
+
+.create-btn:hover {
+    background-color: #ffd700; 
+    transform: scale(1.05);
+}
+
+/* เพิ่ม Effect Create Test Plan */
+.create-btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ปุ่ม Update */
+.action-btn.btn-primary {
+    background-color: #3498db; /* สีพื้นหลังของปุ่ม Update */
+    border-color: #2980b9; /* สีขอบของปุ่ม Update */
+    color: #fff; /* สีข้อความของปุ่ม Update */
+    padding: 10px 20px; /* ขนาดปุ่ม */
+    border-radius: 8px; /* มุมปุ่มโค้งมน */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* เงาของปุ่ม */
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease; /* เอฟเฟ็กต์การเปลี่ยนสีและการขยาย */
+    cursor: pointer;
+}
+
+/* เอฟเฟ็กต์เมื่อ Hover ปุ่ม Update */
+.action-btn.btn-primary:hover {
+    background-color: #2980b9; /* สีพื้นหลังเมื่อ hover */
+    transform: scale(1.05); /* ขยายขนาดปุ่มเมื่อ hover */
+}
+
+/* เพิ่ม Effect เมื่อกดปุ่ม Update */
+.action-btn.btn-primary:active {
+    transform: scale(0.98); /* ขนาดลดลงเมื่อกดปุ่ม */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* เงาลดลงเมื่อกดปุ่ม */
+}
+
+/* ปุ่ม Delete */
+.action-btn.btn-danger {
+    background-color: #e74c3c; /* สีพื้นหลังของปุ่ม Delete */
+    border-color: #c0392b; /* สีขอบของปุ่ม Delete */
+    color: #fff; /* สีข้อความของปุ่ม Delete */
+    padding: 10px 20px; /* ขนาดปุ่ม */
+    border-radius: 8px; /* มุมปุ่มโค้งมน */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* เงาของปุ่ม */
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease; /* เอฟเฟ็กต์การเปลี่ยนสีและการขยาย */
+    cursor: pointer;
+}
+
+/* เอฟเฟ็กต์เมื่อ Hover ปุ่ม Delete */
+.action-btn.btn-danger:hover {
+    background-color: #c0392b; /* สีพื้นหลังเมื่อ hover */
+    transform: scale(1.05); /* ขยายขนาดปุ่มเมื่อ hover */
+}
+
+/* เพิ่ม Effect เมื่อกดปุ่ม Delete */
+.action-btn.btn-danger:active {
+    transform: scale(0.98); /* ขนาดลดลงเมื่อกดปุ่ม */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* เงาลดลงเมื่อกดปุ่ม */
+}
+
+/* ปรับขนาดและการจัดวางปุ่ม */
+.action-btn {
+    margin: 5px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* เพิ่มเอฟเฟ็กต์เมื่อกดปุ่ม */
+.action-btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive สำหรับหน้าจอเล็ก */
+@media (max-width: 600px) {
+    .test-plans {
+        width: 100%;
+        padding: 15px;
+    }
+
+    .table th, .table td {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+
+    .action-btn {
+        padding: 4px 8px;
+    }
+}
