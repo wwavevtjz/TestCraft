@@ -112,7 +112,6 @@ const UpdateRequirement = () => {
           </button>
         </div>
       </form>
-      {error && <p className="error-message">{error}</p>}
     </div>
   );
 };
