@@ -1,0 +1,61 @@
+/* UpdateRequirement.css */
+.update-requirement {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.update-requirement h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.update-requirement form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.update-requirement label {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.update-requirement input,
+.update-requirement select,
+.update-requirement textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.update-requirement button {
+  padding: 12px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.update-requirement button:hover {
+  background-color: #0056b3;
+  
+}
+
+.update-requirement .form-buttons {
+  display: flex;
+  justify-content: space-between;
+}

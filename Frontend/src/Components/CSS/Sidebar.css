@@ -1,0 +1,106 @@
+/*Sidebar.css */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100vh;
+  background-color: #6a6c6b;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.5);
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  z-index: 1000;
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.sidebar ul li {
+  margin: 20px 0;
+}
+
+.sidebar ul li a {
+  text-decoration: none;
+  color: #f5f5f5;
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar ul li a::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(230, 195, 0, 0.2);
+  transition: all 0.4s ease;
+}
+
+.sidebar ul li a:hover::after,
+.sidebar ul li a.active::after {
+  left: 0;
+}
+
+.sidebar ul li a.active {
+  color: #141414;
+}
+
+.sidebar ul li a .sidebar-icon {
+  margin-right: 15px;
+  font-size: 22px;
+  transition: transform 0.3s ease;
+}
+
+.sidebar ul li a:hover .sidebar-icon,
+.sidebar ul li a.active .sidebar-icon {
+  transform: rotate(360deg);
+  /* Icon หมุน*/
+}
+
+.sidebar ul li a span {
+  position: relative;
+  z-index: 1;
+}
+
+.main-content {
+  margin-left: 250px;
+  padding: 40px;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+.TestCraft {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #000000;
+  padding-bottom: 10px;
+}

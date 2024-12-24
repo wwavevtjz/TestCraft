@@ -1,0 +1,245 @@
+/* General page styling */
+body,
+html {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+}
+
+
+.navbar2 {
+  background-color: #4c6580;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: sticky;
+  width: 170px;
+  height: auto;
+
+}
+
+.nav-project-name {
+  color: #f39c12;
+  font-weight: bold;
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
+  margin-bottom: 10px;
+  /* เพิ่มช่องว่าง */
+  cursor: pointer;
+  position: relative;
+  transition: color 0.3s ease, transform 0.3s ease;
+  padding: 8px 10px;
+}
+
+.nav-link:hover {
+
+  transform: translateX(5px);
+}
+
+.nav-link.active {
+  background-color: #4CAF50;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+/* Dropdown styling with Animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideContentDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-container {
+  position: relative;
+  /* Anchor สำหรับ dropdown */
+  z-index: 10;
+  /* Ensure dropdown is above other elements */
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  /* แสดง dropdown ด้านล่าง */
+  left: 0;
+  background-color: #3b4a5a;
+  border: 1px solid #ccc;
+  width: 180px;
+  display: none;
+  flex-direction: column;
+  z-index: 999;
+  animation: slideDown 0.3s ease-out;
+  /* ใส่ animation ให้ dropdown */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+}
+
+/* Show dropdown menu on open class */
+.dropdown-container.open .dropdown-menu {
+  display: flex;
+}
+
+/* Add animation to content after clicking Overview */
+.content-container.overview-active {
+  animation: slideContentDown 0.5s ease-out;
+}
+
+.dropdown-item {
+  padding: 10px;
+  color: #f4f4f4;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, padding-left 0.3s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #4c6580;
+  padding-left: 12px;
+}
+
+.dropdown-item.active {
+  background-color: #4c6580;
+  color: white;
+  font-weight: bold;
+}
+
+/* Content container styling */
+.content-container {
+  flex: 1;
+  padding: 20px;
+  background-color: #f9f9f9;
+  overflow-y: auto;
+  /* ป้องกันการล้นใน content */
+  position: relative;
+  /* Fix z-index issues */
+}
+
+h2 {
+  color: #333;
+  margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Hover effects */
+.nav-link,
+.dropdown-item {
+  cursor: pointer;
+  padding: 10px;
+  color: #f9f9f9;
+  text-decoration: none;
+}
+
+.nav-link.active,
+.dropdown-item.active {
+  background-color: #4c6580;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+/* Responsive Fixes */
+@media (max-width: 768px) {
+  .navbar2 {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 10px;
+  }
+
+  .dropdown-menu {
+    width: 100%;
+    /* แสดง dropdown เต็มความกว้าง */
+  }
+
+  .content-container {
+    padding: 10px;
+  }
+
+  .nav-link {
+    margin: 0 5px;
+    font-size: 16px;
+  }
+}
+
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  background-color: #1e3a56;
+  color: #fff;
+}
+
+.sidebar {
+  width: 170px;
+  background-color: #1e3a56;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-project-name {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.sidebar-section-title {
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  color: #aaa;
+}
+
+.nav-link {
+  padding: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #fff;
+  transition: background 0.2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background-color: #357ab7;
+  border-radius: 5px;
+}
+
+.content-container {
+  flex-grow: 1;
+  padding: 20px;
+  background-color: #f5f5f5;
+  color: #000;
+  overflow-y: auto;
+}

@@ -1,0 +1,116 @@
+/* CreateRequirement */
+.requirement-specification {
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
+}
+
+.requirement-specification h1,
+.requirement-specification h2 {
+  text-align: center;
+  color: #333;
+  margin: 20px 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.requirement-form {
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+}
+
+/* Form Group Styling */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.form-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+}
+
+/* Button Styles */
+.btn {
+  display: inline-block;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.btn-primary {
+  background-color: #4caf50;
+}
+
+.btn-primary:hover {
+  background-color: #45a049;
+}
+
+.btn-warning {
+  background-color: #ffa726;
+}
+
+.btn-warning:hover {
+  background-color: #fb8c00;
+}
+
+.btn-danger {
+  background-color: #e53935;
+}
+
+.btn-danger:hover {
+  background-color: #d32f2f;
+}
+
+.btn-back {
+  display: inline-block;
+  background-color: #2196f3;
+  padding: 12px 20px;
+  color: #fff;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  text-decoration: none;
+}
+
+.btn-back:hover {
+  background-color: #1976d2;
+}
