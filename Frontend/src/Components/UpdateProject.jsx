@@ -13,13 +13,15 @@ const UpdateProject = () => {
         project_member: [],
         start_date: '',
         end_date: '',
+        project_status: '', // เพิ่มฟิลด์ project_status เพื่อความถูกต้อง
     });
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
+    // ดึงข้อมูล Project โดยใช้ useEffect
     useEffect(() => {
         axios
-            .get(`http://localhost:3001/project/${id}`) // ดึงข้อมูล Project ให้ขึ้นที่หน้า Update
+            .get(`http://localhost:3001/project/${id}`)
             .then((res) => {
                 const projectData = res.data;
                 setFormEditProject({
@@ -28,6 +30,7 @@ const UpdateProject = () => {
                     project_member: JSON.parse(projectData.project_member) || [],
                     start_date: projectData.start_date || '',
                     end_date: projectData.end_date || '',
+                    project_status: projectData.project_status || '', // เพิ่มการตั้งค่า status
                 });
                 setLoading(false);
             })
@@ -37,6 +40,7 @@ const UpdateProject = () => {
             });
     }, [id]);
 
+    // ดึงข้อมูล Members
     useEffect(() => {
         axios
             .get('http://localhost:3001/member')
@@ -50,6 +54,7 @@ const UpdateProject = () => {
             .catch((err) => console.error('Error fetching members:', err));
     }, []);
 
+    // ฟังก์ชันจัดการการเลือกสมาชิก
     const handleChange = (selectedOptions) => {
         setFormEditProject({
             ...formEditProject,
@@ -57,6 +62,7 @@ const UpdateProject = () => {
         });
     };
 
+    // ฟังก์ชันจัดการฟอร์มเมื่อกด Submit
     const handleSubmit = (e) => {
         e.preventDefault();
 
@@ -72,7 +78,7 @@ const UpdateProject = () => {
             })
             .then(() => {
                 alert('Project updated successfully!');
-                navigate('/Project'); // เผื่อมีเปลี่ยน path อยู่ตรงนี้เด้อ
+                navigate('/Project');
             })
             .catch((err) => {
                 console.error('Error updating project:', err);
@@ -80,31 +86,21 @@ const UpdateProject = () => {
             });
     };
 
+    // ฟังก์ชันแปลงวันที่ให้อยู่ในรูปแบบที่ Input รองรับ
     const formatDateForInput = (date) => {
         if (!date) return '';
         const parsedDate = new Date(date);
         return isNaN(parsedDate) ? '' : parsedDate.toISOString().split('T')[0];
     };
 
-    const formatDateForDisplay = (date) => { // เงื่อนไขจัดเรียงวันที่ update ให้เป็น วัน/เดือน/ปี
-        if (!date) return '';
-        const parsedDate = new Date(date);
-        if (isNaN(parsedDate)) return '';
-        const day = parsedDate.getDate().toString().padStart(2, '0');
-        const month = (parsedDate.getMonth() + 1).toString().padStart(2, '0');
-        const year = parsedDate.getFullYear();
-        return `${day}/${month}/${year}`;
-    };
-    
-
     if (loading) {
-        return <div>Loading...</div>; //อันนี้ลูกเล่นเฉยๆไม่ต้องเสือก.......หยอกๆ
-    } 
+        return <div>Loading...</div>; // ลูกเล่น Loading
+    }
 
-    return ( // ผลลัพท์หน้าบ้าน มีไรแก้ตรงนี้
-        <div className="update-project"> 
+    return (
+        <div className="update-project">
             <h2>Update Project</h2>
-            <form onSubmit={handleSubmit}> 
+            <form onSubmit={handleSubmit}>
                 <label>
                     Project Name:
                     <input
@@ -161,6 +157,26 @@ const UpdateProject = () => {
                         formEditProject.project_member.includes(member.value)
                     )}
                 />
+                <label>Select Status:</label>
+                <select
+                    id="requirementStatus"
+                    className="select-status"
+                    value={formEditProject.project_status || "Select Status"} // ตั้งค่า default
+                    onChange={(e) =>
+                        setFormEditProject({
+                            ...formEditProject,
+                            project_status: e.target.value,
+                        })
+                    }
+                >
+                    <option value="Select Status" disabled>
+                        Select Status
+                    </option>
+                    <option value="DRAFT">DRAFT</option>
+                    <option value="IN PROGRESS">IN PROGRESS</option>
+                    <option value="CLOSED">CLOSED</option>
+                </select>
+
                 <button type="submit">Update Project</button>
             </form>
         </div>

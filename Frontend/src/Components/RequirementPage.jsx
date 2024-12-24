@@ -104,7 +104,7 @@ const RequirementPage = () => {
           <button
             className="verify-button"
             onClick={() =>
-              navigate("/ReqVerification", { state: { selectedRequirements } })
+              navigate(`/ReqVerification?project_id=${projectId}`, { state: { selectedRequirements } })
             }
           >
             <FontAwesomeIcon icon={faCheckSquare} /> Verification
@@ -165,11 +165,24 @@ const RequirementPage = () => {
                   <td>{data.requirement_description}</td>
                   <td>
                     <button
-                      onClick={() => navigate(`/UpdateRequirement?project_id=${projectId}`)}
+                      //คลิกที่ Update จะมีการดึงข้อมูลของ database มาใช้แล้วจะโชว์ requirement ที่อยู่ในตารางมาแก้
+                      onClick={() => {
+                        const requirementData = {
+                          requirement_name: data.requirement_name,
+                          requirement_type: data.requirement_type,
+                          requirement_description: data.requirement_description,
+                          requirement_id: data.requirement_id,  // ต้องระบุ requirement_id ด้วย
+                        };
+
+                        navigate(`/UpdateRequirement?project_id=${projectId}&requirement_id=${data.requirement_id}`, {
+                          state: { requirementData: requirementData }  // ส่งข้อมูลที่แก้ไขแล้ว
+                        });
+                      }}
                       className="action-button edit-req"
                     >
                       <FontAwesomeIcon icon={faPen} className="action-icon" />
                     </button>
+
                     <button
                       onClick={() => handleDelete(data.requirement_id)}
                       className="action-button delete-req"
@@ -177,7 +190,7 @@ const RequirementPage = () => {
                       <FontAwesomeIcon icon={faTrash} className="action-icon" />
                     </button>
                   </td>
-                  <td>{data.status}</td>
+                  <td>{data.requirement_status}</td>
                 </tr>
               ))}
             </tbody>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom"; // import useNavigate
 import axios from "axios";
 import "./CSS/ReqVerification.css";
 
 const ReqVerification = () => {
   const location = useLocation();
+  const navigate = useNavigate(); // initialize navigate
   const { selectedRequirements } = location.state || { selectedRequirements: [] };
 
   const [reqcriList, setReqcriList] = useState([]);
@@ -15,10 +16,15 @@ const ReqVerification = () => {
   const [showPopup, setShowPopup] = useState(false); // State สำหรับจัดการ Popup
   const [isAllChecked, setIsAllChecked] = useState(false); // State เช็คว่า Checklist ครบหรือไม่
   const [showBackButton, setShowBackButton] = useState(false); // State สำหรับการแสดงปุ่มย้อนกลับ
+  const [projectId, setProjectId] = useState(null); // Project ID state (you should get it from the context or URL)
 
   useEffect(() => {
     fetchCriteria();
-  }, []);
+    // Getting projectId from query parameters (if any)
+    const queryParams = new URLSearchParams(location.search);
+    const id = queryParams.get("project_id");
+    if (id) setProjectId(id); // Set projectId state from query string
+  }, [location]);
 
   // ฟังก์ชันสำหรับดึงข้อมูล Checklist
   const fetchCriteria = async () => {
@@ -40,7 +46,6 @@ const ReqVerification = () => {
       return;
     }
     try {
-      // ส่งข้อมูล Criteria ใหม่ไปที่ Backend
       await axios.post("http://localhost:3001/reqcriteria", { reqcri_name: newCriteria });
       setNewCriteria("");
       fetchCriteria();
@@ -58,17 +63,16 @@ const ReqVerification = () => {
   // ฟังก์ชันแก้ไข
   const handleUpdate = async () => {
     if (editValue.trim() === "") {
-      alert("กรุณากรอกค่าที่ต้องการแก้ไข"); // ถ้าผู้ใช้ไม่ได้กรอกอะไร แจ้งเตือน
+      alert("กรุณากรอกค่าที่ต้องการแก้ไข");
       return;
     }
     try {
-      // อัปเดตข้อมูลใน Backend
       await axios.put(`http://localhost:3001/reqcriteria/${editingId}`, { reqcri_name: editValue });
       setEditingId(null);
       setEditValue("");
       fetchCriteria();
     } catch (error) {
-      console.error("มีปัญหาในการอัปเดต Criteria:", error);
+      console.error("มีปัญหาการอัปเดต Criteria:", error);
     }
   };
 
@@ -77,7 +81,7 @@ const ReqVerification = () => {
     if (!window.confirm("คุณแน่ใจหรือว่าต้องการลบ Criteria นี้?")) return;
     try {
       await axios.delete(`http://localhost:3001/reqcriteria/${id}`);
-      fetchCriteria(); // ดึงข้อมูลใหม่มาแสดง
+      fetchCriteria();
     } catch (error) {
       console.error("มีปัญหาในการลบ Criteria:", error);
     }
@@ -90,20 +94,29 @@ const ReqVerification = () => {
   };
 
   // ฟังก์ชันกดปุ่ม Verify
-  const handleVerify = () => {
+  const handleVerify = async () => {
     checkAllSelected();
-    if (isAllChecked) {
-      setShowPopup(true); // เปิด Popup เมื่อเลือกครบ
-    } else {
-      setShowPopup(true); // แสดง Popup แจ้งเตือนว่าไม่เลือกครบ
-      setShowBackButton(true); // แสดงปุ่มย้อนกลับ
-    }
-  };
+    setShowPopup(true); // เปิด Popup
+    setShowBackButton(!isAllChecked); // แสดงปุ่มย้อนกลับเมื่อยังไม่เลือกครบ
 
-  // ฟังก์ชันยืนยันการ Verify
-  const confirmVerify = () => {
-    alert("ดำเนินการ Verify เรียบร้อย!");
-    setShowPopup(false); // ปิด Popup
+    // เมื่อกด Verify จะต้องอัปเดตสถานะของ Requirements ที่เลือกให้เป็น 'VERIFIED'
+    try {
+      const updatedRequirements = selectedRequirements.map((requirement) => ({
+        ...requirement,
+        requirement_status: 'VERIFIED' // ตั้งค่า status เป็น 'VERIFIED'
+      }));
+
+      // Update each requirement status to VERIFIED
+      await Promise.all(
+        updatedRequirements.map((requirement) =>
+          axios.put(`http://localhost:3001/requirement/${requirement.requirement_id}`, { requirement_status: 'VERIFIED' })
+        )
+      );
+      // หลังจากอัปเดตสำเร็จ, รีเฟรชรายการ Criteria หรือ Requirements
+      fetchCriteria(); // รีเฟรชรายการ Criteria
+    } catch (error) {
+      console.error("มีปัญหาการอัปเดตสถานะของ Requirements:", error);
+    }
   };
 
   const handleBack = () => {
@@ -111,9 +124,19 @@ const ReqVerification = () => {
     setShowBackButton(false); // ซ่อนปุ่มย้อนกลับ
   };
 
+  // ฟังก์ชันยืนยันการ Verify
+  const confirmVerify = () => {
+    // Ensure projectId is set
+    if (projectId) {
+      navigate(`/Dashboard?project_id=${projectId}`, { state: { selectedSection: 'Requirement' } });
+    } else {
+      console.error("Project ID is missing");
+    }
+    setShowPopup(false); // ปิด Popup
+  };
+
   return (
     <div className="req-verification-container">
-      {/* ส่วนหัว */}
       <div className="header">
         <h1>Requirement Specification Verification Criteria</h1>
         <button className="verify-button" onClick={handleVerify}>
@@ -122,7 +145,6 @@ const ReqVerification = () => {
       </div>
 
       <div className="content">
-        {/* ส่วน Checklist */}
         <div className="checklist-section">
           <h2>Checklist</h2>
           <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
@@ -147,7 +169,7 @@ const ReqVerification = () => {
                       <input
                         type="text"
                         value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)} // เก็บค่าที่กำลังแก้ไข
+                        onChange={(e) => setEditValue(e.target.value)}
                       />
                       <button onClick={handleUpdate}>Save</button>
                       <button onClick={() => setEditingId(null)}>Cancel</button>
@@ -179,7 +201,6 @@ const ReqVerification = () => {
           )}
         </div>
 
-        {/* ส่วน Requirements */}
         <div className="requirements-section">
           <h2>Requirements</h2>
           <table>
@@ -208,27 +229,26 @@ const ReqVerification = () => {
           </table>
         </div>
 
-        {/* ส่วน Members */}
         <div className="members-section">
           <h2>Member</h2>
           <p>ส่วนนี้สำหรับสมาชิกที่รับผิดชอบการตรวจสอบ</p>
         </div>
       </div>
 
-      {/* Popup การแจ้งเตือน */}
       {showPopup && (
         <div className="popup">
           <div className="popup-content">
-            <p>
-              {isAllChecked
-                ? "ยืนยันที่จะ Verify ใช่มั้ย เพราะจะกลับมาแก้ไม่ได้แล้ว"
-                : "กรุณาเลือก Checklist ที่ต้องการ Verify ก่อน"}
-            </p>
-            
-              <button onClick={confirmVerify}>Save</button>
-              <button onClick={handleBack}>Cancel</button>
-            </div>
+            <p>{isAllChecked ? "ยืนยันที่จะ Verify ใช่มั้ย เพราะจะกลับมาแก้ไม่ได้แล้ว" : "กรุณาเลือก Checklist ที่ต้องการ Verify ก่อน"}</p>
+            {isAllChecked ? (
+              <>
+                <button onClick={confirmVerify}>Save</button>
+                <button onClick={handleBack}>Cancel</button>
+              </>
+            ) : (
+              <button onClick={handleBack}>OK</button>
+            )}
           </div>
+        </div>
       )}
     </div>
   );

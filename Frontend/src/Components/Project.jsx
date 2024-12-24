@@ -146,6 +146,7 @@ const Project = () => {
                           <FontAwesomeIcon icon={faTrash} className="action-icon" />
                         </button>
                       </td>
+                      <td>{project.project_status}</td>
                     </tr>
                   ))
                 )}

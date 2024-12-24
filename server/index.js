@@ -69,15 +69,16 @@ app.post('/project', (req, res) => {
     console.log('Request Body:', req.body); // ดูข้อมูลที่ส่งมา
     const sql = `
             INSERT INTO project 
-            (project_name, project_description, project_member, start_date, end_date) 
-            VALUES (?, ?, ?, ?, ?)
+            (project_name, project_description, project_member, start_date, end_date, project_status) 
+            VALUES (?, ?, ?, ?, ?, ?)
         `;
     const values = [
         req.body.project_name,
         req.body.project_description,
         req.body.project_member,
         req.body.start_date,
-        req.body.end_date
+        req.body.end_date,
+        req.body.project_status
     ];
 
     db.query(sql, values, (err, data) => {
@@ -98,7 +99,8 @@ app.put('/project/:id', (req, res) => {
             project_description = ?, 
             project_member = ?, 
             start_date = ?, 
-            end_date = ?
+            end_date = ?,
+            project_status = ?
         WHERE 
             project_id = ?
     `;
@@ -108,6 +110,7 @@ app.put('/project/:id', (req, res) => {
         req.body.project_member,
         req.body.start_date,
         req.body.end_date,
+        req.body.project_status,
         req.params.id
     ];
 
@@ -172,14 +175,14 @@ app.get('/project/:project_id/requirement', (req, res) => {
 
 // Add a new requirement for a specific project
 app.post('/requirement', (req, res) => {
-    const { requirement_name, requirement_type, requirement_description, project_id } = req.body;
+    const { requirement_name, requirement_type, requirement_description, requirement_status, project_id } = req.body;
 
-    if (!requirement_name || !requirement_type || !requirement_description || !project_id) {
+    if (!requirement_name || !requirement_type || !requirement_description || !requirement_status || !project_id) {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const sql = "INSERT INTO requirement (requirement_name, requirement_type, requirement_description, project_id) VALUES (?, ?, ?, ?)";
-    const values = [requirement_name, requirement_type, requirement_description, project_id];
+    const sql = "INSERT INTO requirement (requirement_name, requirement_type, requirement_description,requirement_status, project_id) VALUES (?, ?, ?, ?, ?)";
+    const values = [requirement_name, requirement_type, requirement_description, requirement_status, project_id];
 
     db.query(sql, values, (err, data) => {
         if (err) {
@@ -191,31 +194,26 @@ app.post('/requirement', (req, res) => {
 });
 
 
-app.put('/requirement/:id', (req, res) => {
-    const { requirement_name, requirement_description, requirement_type, project_id } = req.body;
+// Update requirement
+app.put("/requirement/:id", (req, res) => {
+    const { id } = req.params;
+    const { requirement_name, requirement_description, requirement_type } = req.body;
 
-    // ตรวจสอบว่า requirement_name, requirement_description, requirement_type และ project_id มีค่าหรือไม่
-    if (!requirement_name || !requirement_description || !requirement_type || !project_id) {
+    if (!requirement_name || !requirement_description || !requirement_type) {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const sql = "UPDATE requirement SET requirement_name = ?, requirement_description = ?, requirement_type = ?, project_id = ? WHERE requirement_id = ?";
-    const values = [
-        requirement_name,
-        requirement_description,
-        requirement_type,
-        project_id, // เพิ่ม project_id ในการอัปเดต
-        req.params.id
-    ];
-
-    db.query(sql, values, (err, data) => {
+    const sql =
+        "UPDATE requirement SET requirement_name = ?, requirement_description = ?, requirement_type = ? WHERE requirement_id = ?";
+    db.query(sql, [requirement_name, requirement_description, requirement_type, id], (err, data) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ message: "Error updating requirement" });
         }
-        return res.status(200).json({ message: "Requirement updated successfully", data });
+        return res.status(200).json({ message: "Requirement updated successfully" });
     });
 });
+
 
 
 // Delete a requirement
@@ -334,7 +332,90 @@ app.delete('/reqcriteria/:id', (req, res) => {
     });
 });
 
+// ------------------------- Requirement Verified -------------------------
+app.get('/project/:project_id/reqverified', (req, res) => {
+    const { project_id } = req.params;
 
+    const sql = "SELECT * FROM reqverified WHERE project_id = ?";
+    const values = [project_id];
+
+    db.query(sql, values, (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: "Error fetching requirements" });
+        }
+        if (data.length === 0) {
+            return res.status(404).json({ message: "No requirements found for this project" });
+        }
+        return res.status(200).json(data);
+    });
+});
+
+app.get('/project/:id/reqverified', (req, res) => {
+    const sql = `
+        SELECT 
+            r.reqver_id,
+            r.reqver_name,
+            p.project_id
+        FROM reqverified r
+        INNER JOIN project p ON r.project_id = p.project_id
+        WHERE r.project_id = ?
+    `;
+    const projectId = req.params.id;
+
+    db.query(sql, [projectId], (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Error fetching requirements');
+        } else {
+            res.status(200).json(results);
+        }
+    });
+});
+
+app.put('/project/:id/reqverified', (req, res) => {
+    const { id } = req.params; // รับ project_id จาก URL
+    const { reqver_id, reqver_name, status } = req.body; // รับค่าที่ต้องการอัปเดตจาก body
+
+    // คำสั่ง SQL สำหรับอัปเดตข้อมูล
+    const sql = `
+        UPDATE reqverified
+        SET reqver_name = ?, status = ?
+        WHERE reqver_id = ? AND project_id = ?
+    `;
+
+    // ส่งค่าไปยังฐานข้อมูล
+    db.query(sql, [reqver_name, status, reqver_id, id], (err, result) => {
+        if (err) {
+            console.error("Error updating requirement:", err);
+            return res.status(500).json({ message: "Error updating requirement" });
+        }
+
+        // ถ้าไม่มีแถวไหนถูกอัปเดต
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Requirement not found or no changes made" });
+        }
+
+        // ส่งข้อความว่าอัปเดตสำเร็จ
+        res.status(200).json({ message: "Requirement updated successfully" });
+    });
+});
+
+
+
+
+app.post('/reqverified', (req, res) => {
+    const { reqver_name } = req.body;
+
+    const sql = "INSERT INTO requirementverified (reqver_name) VALUES (?)";
+    db.query(sql, [reqver_name], (err, result) => {
+        if (err) {
+            console.error('Error Requirement Verified:', err);
+            return res.status(500).json({ message: "Error Requirement Verified" });
+        }
+        res.status(201).json({ message: "Requirement Verified created successfully", data: result });
+    });
+});
 
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;

@@ -12,6 +12,7 @@ const CreateProject = () => {
         start_date: '',
         end_date: '',
         project_member: [],
+        project_status: ''
     });
     const navigate = useNavigate();
 
@@ -77,6 +78,7 @@ const CreateProject = () => {
                         type="text"
                         name="project_name"
                         value={formProject.project_name}
+                        className="project-input"
                         onChange={(e) =>
                             setFormProject({ ...formProject, project_name: e.target.value })
                         }
@@ -88,6 +90,7 @@ const CreateProject = () => {
                         type="text"
                         name="project_description"
                         value={formProject.project_description}
+                        className="project-input"
                         onChange={(e) =>
                             setFormProject({ ...formProject, project_description: e.target.value })
                         }
@@ -99,6 +102,7 @@ const CreateProject = () => {
                         type="date"
                         name="start_date"
                         value={formProject.start_date}
+                        className="project-input"
                         onChange={(e) =>
                             setFormProject({ ...formProject, start_date: e.target.value })
                         }
@@ -110,6 +114,7 @@ const CreateProject = () => {
                         type="date"
                         name="end_date"
                         value={formProject.end_date}
+                        className="project-input"
                         onChange={(e) =>
                             setFormProject({ ...formProject, end_date: e.target.value })
                         }
@@ -127,6 +132,24 @@ const CreateProject = () => {
                         formProject.project_member.includes(member.value)
                     )}
                 />
+                <label>Select Status</label>
+                <select
+                    id="requirementStatus"
+                    className="select-status"
+                    value={formProject.project_status}
+                    onChange={(e) =>
+                        setFormProject({ ...formProject, project_status: e.target.value })
+                    }
+                >
+                    <option value="" disabled>
+                        Select Status
+                    </option>
+                    <option value="DRAFT">DRAFT</option>
+                    <option value="IN PROGRESS">IN PROGRESS</option>
+                    <option value="CLOSED">CLOSED</option>
+                </select>
+
+
                 <button type="submit">Create Project</button>
             </form>
         </div>

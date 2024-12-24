@@ -12,22 +12,43 @@ const UpdateRequirement = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(window.location.search);
   const projectId = queryParams.get("project_id");
+  const requirementId = queryParams.get("requirement_id");
 
-  const requirement = location.state?.requirement;
+  // Retrieve the data passed from the RequirementPage component
+  const requirementData = location.state?.requirementData;
 
   useEffect(() => {
-    if (requirement) {
-      setRequirementStatement(requirement.requirement_name);
-      setRequirementType(requirement.requirement_type);
-      setDescription(requirement.requirement_description);
+    if (requirementData) {
+      // Pre-fill fields if the data is passed from the RequirementPage
+      setRequirementStatement(requirementData.requirement_name);
+      setRequirementType(requirementData.requirement_type);
+      setDescription(requirementData.requirement_description);
+    } else if (requirementId) {
+      // Fetch requirement data if no state is passed (in case of URL navigation)
+      fetchRequirementFromAPI(requirementId);
     } else {
-      setError("Requirement data not found. Please go back and try again.");
+      setError("Invalid requirement data. Please go back and try again.");
     }
-  }, [requirement]);
+  }, [requirementData, requirementId]);
+
+  const fetchRequirementFromAPI = async (id) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/requirement/${id}`);
+      if (response.data) {
+        const requirementData = response.data;
+        setRequirementStatement(requirementData.requirement_name);
+        setRequirementType(requirementData.requirement_type);
+        setDescription(requirementData.requirement_description);
+      } else {
+        setError("Requirement not found. Please check and try again.");
+      }
+    } catch (err) {
+      setError("Failed to fetch requirement data. Please try again later.");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const updatedRequirement = {
       requirement_name: requirementStatement,
       requirement_type: requirementType,
@@ -36,10 +57,9 @@ const UpdateRequirement = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:3001/requirement/${requirement.requirement_id}`,
+        `http://localhost:3001/requirement/${requirementId}`,
         updatedRequirement
       );
-
       if (response.status === 200) {
         alert("Requirement updated successfully");
         navigate(`/Dashboard?project_id=${projectId}`, {
@@ -47,7 +67,6 @@ const UpdateRequirement = () => {
         });
       }
     } catch (error) {
-      console.error("Error updating requirement:", error);
       setError("Failed to update requirement. Please try again.");
     }
   };
@@ -55,6 +74,7 @@ const UpdateRequirement = () => {
   return (
     <div className="requirement-specification">
       <h1>Update Requirement</h1>
+      {error && <p className="error-message">{error}</p>}
       <form className="requirement-form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="requirementStatement">Requirement Statement</label>
@@ -74,9 +94,7 @@ const UpdateRequirement = () => {
             onChange={(e) => setRequirementType(e.target.value)}
             required
           >
-            <option value="" disabled>
-              Select Type
-            </option>
+            <option value="" disabled>Select Type</option>
             <option value="Functional">Functionality</option>
             <option value="User interface">User interface</option>
             <option value="External interfaces">External interfaces</option>
@@ -101,7 +119,7 @@ const UpdateRequirement = () => {
             className="btn btn-back"
             onClick={() =>
               navigate(`/Dashboard?project_id=${projectId}`, {
-                state: { selectedSection: "Requirement" }, // แสดงข้อมูล req
+                state: { selectedSection: "Requirement" },
               })
             }
           >

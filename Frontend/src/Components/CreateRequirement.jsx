@@ -24,8 +24,10 @@ const CreateRequirement = () => {
       requirement_name: requirementStatement,
       requirement_type: requirementType,
       requirement_description: description,
-      project_id: projectId,  // ส่ง projectId ไปด้วย
+      project_id: projectId,
+      requirement_status: 'WORKING',  // กำหนดสถานะเป็น 'WORKING'
     };
+
 
     try {
       const response = await axios.post('http://localhost:3001/requirement', newRequirement);
@@ -33,8 +35,8 @@ const CreateRequirement = () => {
       if (response.status === 201) {
         alert('Requirement created successfully');
         navigate(`/Dashboard?project_id=${projectId}`, {
-          state: { selectedSection: 'Requirement' }, // เลือก section Requirement
-        });  // Redirect ไปที่ Dashboard และไปที่ค่า selectedSection เป็น 'Requirement'
+          state: { selectedSection: 'Requirement' }, // Select the 'Requirement' section
+        });  // Redirect to Dashboard and go to the selectedSection 'Requirement'
       } else {
         console.error("Failed to create requirement:", response);
         alert('Failed to create requirement');

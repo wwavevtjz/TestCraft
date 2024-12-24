@@ -1,52 +1,81 @@
-/* Create Project.css */
 .create-project {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 25px;
+  max-width: 700px;
+  margin: 30px auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Roboto', sans-serif;
 }
 
 .create-project h2 {
-  text-align: center;
+  font-size: 28px;
   margin-bottom: 20px;
-}
-
-.create-project form {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 600px;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  color: #333333;
+  text-align: center;
+  font-weight: 500;
 }
 
 .create-project label {
-  margin-bottom: 10px;
-  font-weight: bold;
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #555555;
 }
 
-.create-project input,
-.select-members {
+.select-members,
+.select-status {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  font-size: 16px;
+  color: #333333;
+  background-color: #f9f9f9;
+  transition: all 0.3s ease;
+}
+
+.project-input {
+  width: 96%;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  font-size: 16px;
+  color: #333333;
+  background-color: #f9f9f9;
+  transition: all 0.3s ease;
+}
+
+.project-input:focus,
+.select-status:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.3);
+  outline: none;
+}
+
+.create-project .select-members .select__control {
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+}
+
+.create-project .select-members .select__menu {
+  z-index: 1000;
 }
 
 .create-project button {
-  padding: 10px 20px;
+  width: 100%;
+  padding: 12px;
   background-color: #007bff;
-  color: white;
+  color: #ffffff;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 16px;
+  transition: background-color 0.3s ease;
 }
 
 .create-project button:hover {
