@@ -28,11 +28,6 @@ const CreateProject = () => {
             .catch((err) => console.log('Error fetching members:', err));
     }, []);
 
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
-    };
-
     const handleChange = (selectedOptions) => {
         setFormProject({
             ...formProject,
@@ -46,16 +41,16 @@ const CreateProject = () => {
             alert('Please fill in all required fields.');
             return;
         }
-
+    
         const payload = {
             ...formProject,
-            start_date: formatDate(formProject.start_date),
-            end_date: formatDate(formProject.end_date),
+            start_date: formatDateForInput(formProject.start_date),
+            end_date: formatDateForInput(formProject.end_date),
             project_member: JSON.stringify(formProject.project_member),
         };
-
+    
         console.log('Payload:', payload);
-
+    
         axios
             .post('http://localhost:3001/project', payload)
             .then(() => {
@@ -66,6 +61,13 @@ const CreateProject = () => {
                 console.error('Error creating project:', err);
                 alert('Failed to create project');
             });
+    };
+
+    // ฟังก์ชันแปลงวันที่ให้อยู่ในรูปแบบที่ Input รองรับ
+    const formatDateForInput = (date) => {
+        if (!date) return '';
+        const parsedDate = new Date(date);
+        return isNaN(parsedDate) ? '' : parsedDate.toISOString().split('T')[0];
     };
 
     return (
@@ -101,7 +103,7 @@ const CreateProject = () => {
                     <input
                         type="date"
                         name="start_date"
-                        value={formProject.start_date}
+                        value={formatDateForInput(formProject.start_date)}
                         className="project-input"
                         onChange={(e) =>
                             setFormProject({ ...formProject, start_date: e.target.value })
@@ -113,7 +115,7 @@ const CreateProject = () => {
                     <input
                         type="date"
                         name="end_date"
-                        value={formProject.end_date}
+                        value={formatDateForInput(formProject.end_date)}
                         className="project-input"
                         onChange={(e) =>
                             setFormProject({ ...formProject, end_date: e.target.value })
@@ -148,7 +150,6 @@ const CreateProject = () => {
                     <option value="IN PROGRESS">IN PROGRESS</option>
                     <option value="CLOSED">CLOSED</option>
                 </select>
-
 
                 <button type="submit">Create Project</button>
             </form>
