@@ -24,7 +24,7 @@ const Sidebar = () => {
             to="/Project"
             className={({ isActive }) => (isActive ? 'active' : '')}
           >
-            <GiWhiteBook className="sidebar-icon" />Project
+            <GiWhiteBook className="sidebar-icon" />Projectssss
           </NavLink>
         </li>
         <li>
