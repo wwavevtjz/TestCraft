@@ -1,55 +1,142 @@
-/*UpdateProject.css */
+/* UpdateProject Styles */
 .update-project {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    padding: 20px;
-    box-sizing: border-box;
-  }
-  
-  .update-project h2 {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  
-  .update-project form {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 600px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .update-project label {
-    margin-bottom: 10px;
-    font-weight: bold;
-  }
-  
-  .update-project input,
-  .select-members {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-  
-  .update-project button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-  }
-  
-  .update-project button:hover {
-    background-color: #0056b3;
-  }
-  
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 25px;
+  max-width: 800px;
+  margin: 50px auto;
+  font-family: 'Roboto', sans-serif;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.update-project h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #333333;
+  font-weight: 500;
+}
+
+.update-project form {
+  display: flex;
+  flex-direction: column;
+}
+
+.update-project label {
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #555555;
+}
+
+.update-project input[type='text'],
+.update-project textarea,
+.update-project input[type='date'],
+.update-project select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  font-size: 16px;
+  color: #333333;
+  background-color: #f9f9f9;
+  transition: all 0.3s ease;
+}
+
+.update-project input:focus,
+.update-project textarea:focus,
+.update-project select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.3);
+  outline: none;
+}
+
+.update-project button[type='submit'] {
+  padding: 12px 20px;
+  background-color: #007bff;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.update-project button[type='submit']:hover {
+  background-color: #0056b3;
+}
+
+/* Team Members Styles */
+.team-box {
+  margin-top: 30px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.team-box h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333333;
+  font-weight: 400;
+}
+
+.add-member {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.add-member p {
+  font-size: 16px;
+  font-weight: bold;
+  color: #555555;
+}
+
+.add-member button {
+  padding: 10px 15px;
+  background-color: #6c757d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-member button:hover {
+  background-color: #495057;
+}
+
+.team-members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.team-member {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #f9f9f9;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+}
+
+.team-member .delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.team-member .delete-button img {
+  width: 16px;
+  height: 16px;
+}

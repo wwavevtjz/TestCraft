@@ -11,6 +11,9 @@ import Dashboard from './Components/Dashboard';
 import UpdateProject from './Components/UpdateProject';
 import Home from './Components/Home';
 import TryToReq from './Components/TryToReq';
+import Uploadfile from './Components/Uploadfile';
+import Login from './Components/Login';
+import Signup from './Components/Signup';
 
 const App = () => {
   return (
@@ -18,7 +21,7 @@ const App = () => {
       <Navbar />
       <Routes>
         {/* Route for Project listing */}
-        <Route path="/" element={<Home />} />
+        <Route path="/Home" element={<Home />} />
 
         {/* Routes for Project management */}
         <Route path="/Project" element={<Project />} />
@@ -34,8 +37,16 @@ const App = () => {
         <Route path="/UpdateRequirement" element={<UpdateRequirement />} />
         <Route path="/ReqVerification" element={<ReqVerification />} />
 
+        {/* Routes for Login */}
+        <Route path="/" element={<Login />} />
+        <Route path="/Signup" element={<Signup />} />
+
+
+        {/* ไฟล์ทดลอง */}
         <Route path="/TryToReq" element={<TryToReq />} />
+        <Route path="/Uploadfile" element={<Uploadfile />} />
       </Routes>
+
     </Router>
   );
 };

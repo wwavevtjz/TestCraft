@@ -2,9 +2,8 @@
   background-color: #ffffff;
   border: 1px solid #e0e0e0;
   border-radius: 10px;
-  padding: 25px;
-  max-width: 700px;
-  margin: 30px auto;
+  max-width: 600px;
+  margin: 60px 50px 0 0px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   font-family: 'Roboto', sans-serif;
 }
@@ -24,9 +23,8 @@
   color: #555555;
 }
 
-.select-members,
 .select-status {
-  width: 100%;
+  width: 70%;
   padding: 12px 15px;
   margin-bottom: 20px;
   border: 1px solid #dcdcdc;
@@ -37,16 +35,8 @@
   transition: all 0.3s ease;
 }
 
-.project-input {
-  width: 96%;
-  padding: 12px 15px;
-  margin-bottom: 20px;
-  border: 1px solid #dcdcdc;
-  border-radius: 6px;
-  font-size: 16px;
-  color: #333333;
-  background-color: #f9f9f9;
-  transition: all 0.3s ease;
+.select-roles {
+  width: 70%;
 }
 
 .project-input:focus,
@@ -56,17 +46,20 @@
   outline: none;
 }
 
-.create-project .select-members .select__control {
-  border: 1px solid #dcdcdc;
-  border-radius: 6px;
+.select-mem {
+  width: 70%;
+  padding: 10px 0 10px 0;
 }
 
-.create-project .select-members .select__menu {
-  z-index: 1000;
+
+.create-project form {
+  display: flex;
+  flex-direction: column;
+
 }
 
-.create-project button {
-  width: 100%;
+.createproject-button {
+  width: 30%;
   padding: 12px;
   background-color: #007bff;
   color: #ffffff;
@@ -76,8 +69,145 @@
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  margin-left: auto;
+  margin-top: 25px;
+  /* ดันปุ่มไปด้านขวาสุด */
 }
 
-.create-project button:hover {
+
+.createproject-button:hover {
   background-color: #0056b3;
+}
+
+.team-members {
+  margin-top: 60px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Roboto', sans-serif;
+}
+
+
+.project-page {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 30px auto;
+}
+
+.create-project {
+  flex: 2;
+  /* พื้นที่ด้านซ้ายสำหรับฟอร์ม */
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Roboto', sans-serif;
+}
+
+.team-members {
+  flex: 1;
+  /* พื้นที่ด้านขวาสำหรับสมาชิกทีม */
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Roboto', sans-serif;
+}
+
+.team-members h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333333;
+  font-weight: 400;
+}
+
+.team-members-list {
+  flex-direction: column;
+  gap: 15px;
+}
+
+.team-member {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+}
+
+/* เพิ่มการจัดเรียงในแถวเดียวกัน */
+.date-inputs {
+  width: 90%;
+  display: flex;
+  justify-content: space-between;
+  /* จัดระยะห่าง */
+  gap: 5px;
+  /* เพิ่มระยะห่างระหว่าง Input */
+}
+
+.project-input {
+  width: 90%;
+  padding: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  font-size: 16px;
+  color: #333333;
+  background-color: #f9f9f9;
+  transition: all 0.3s ease;
+}
+
+.select-status {
+  width: 93%;
+  margin-bottom: 10px;
+}
+
+
+.invite-team {
+  display: flex;
+  gap: 20px;
+  /* เพิ่มระยะห่างระหว่าง Select Member และ Select Role */
+  margin-bottom: 20px;
+}
+
+.invite-topic {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+
+
+.select-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  /* จัดให้อยู่แนวกลางในแนวนอน */
+  /* ระยะห่างระหว่าง Select กับปุ่ม Add Member */
+}
+
+
+.addmember-button {
+  padding: 8px 16px;
+  background-color: #6c757d;
+  /* สีน้ำเงิน */
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-button {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }

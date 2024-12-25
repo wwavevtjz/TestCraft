@@ -3,7 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen, faTrash, faPlus, faCheckSquare, faFileUpload, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { FileAddOutlined } from '@ant-design/icons';
 import "./CSS/RequirementPage.css";
+import checkmark from '../image/check_mark.png';
+import checklist from '../image/attendance_list.png';
 
 const RequirementPage = () => {
   const [requirementList, setRequirementList] = useState([]);
@@ -99,7 +102,7 @@ const RequirementPage = () => {
         <h1 className="requirement-title">Project {projectName || projectId} Requirements</h1>
         <div className="action-buttons">
           <button className="review-button" onClick={() => navigate("/ReviewReqVeri")}>
-            <FontAwesomeIcon icon={faCheckSquare} /> Review Verification
+            <img src={checkmark} alt="checkmark" className="checkmark" />Review Verified
           </button>
           <button
             className="verify-button"
@@ -107,14 +110,9 @@ const RequirementPage = () => {
               navigate(`/ReqVerification?project_id=${projectId}`, { state: { selectedRequirements } })
             }
           >
-            <FontAwesomeIcon icon={faCheckSquare} /> Verification
+            <img src={checklist} alt="checklist" className="checklist" /> Verification
           </button>
-          <button
-            onClick={() => navigate(`/CreateRequirement?project_id=${projectId}`)}
-            className="add-requirement-button"
-          >
-            <FontAwesomeIcon icon={faPlus} /> Add Requirements
-          </button>
+
         </div>
       </div>
 
@@ -127,7 +125,16 @@ const RequirementPage = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
         <FontAwesomeIcon icon={faMagnifyingGlass} className="search-icon-req" />
+
+        
+      <button
+        onClick={() => navigate(`/CreateRequirement?project_id=${projectId}`)}
+        className="add-requirement-button"
+      >
+        <FileAddOutlined className="add-req" /> Add Requirements
+      </button>
       </div>
+
 
       <div className="content-container">
         {loading ? (

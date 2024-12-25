@@ -1,11 +1,17 @@
 const express = require('express');
-const app = express();
+const multer = require('multer');
 const mysql = require('mysql');
 const cors = require('cors');
+const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// ตั้งค่า multer เพื่อใช้ memoryStorage (เก็บไฟล์ใน memory)
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
 // Database Connection
 const db = mysql.createConnection({
     user: "root",
@@ -22,6 +28,16 @@ db.connect((err) => {
     }
     console.log('Connected to the database as ID', db.threadId);
 });
+
+// Route สำหรับการอัพโหลดไฟล์
+
+
+
+
+
+
+
+
 
 // ------------------------- PROJECT ROUTES -------------------------
 // Get all projects
@@ -402,8 +418,6 @@ app.put('/project/:id/reqverified', (req, res) => {
 });
 
 
-
-
 app.post('/reqverified', (req, res) => {
     const { reqver_name } = req.body;
 
@@ -416,6 +430,64 @@ app.post('/reqverified', (req, res) => {
         res.status(201).json({ message: "Requirement Verified created successfully", data: result });
     });
 });
+
+
+// ------------------------- Login -------------------------
+app.get('/login', (req, res) => {
+    const sql = "SELECT * FROM login";
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.error('Error fetching :', err);
+            return res.status(500).send('Error fetching ');
+        }
+        res.json(result);
+    });
+});
+
+app.post('/signup', (req, res) => {
+    console.log('Request Body:', req.body); // ดูข้อมูลที่ส่งมา
+    const sql = `
+            INSERT INTO login 
+            (user_name, user_password) 
+            VALUES (?, ?)
+        `;
+    const values = [
+        req.body.user_name,
+        req.body.user_password
+    ];
+
+    db.query(sql, values, (err, data) => {
+        if (err) {
+            console.error('Database Error:', err); // แสดง Error ใน Console
+            return res.status(500).json({ message: "Error adding project" });
+        }
+        return res.status(200).json({ message: "Project added successfully", data });
+    });
+});
+
+app.post('/login', (req, res) => {
+    const { user_name, user_password } = req.body;
+
+    if (!user_name || !user_password) {
+        return res.status(400).json({ message: "Username and password are required" });
+    }
+
+    const sql = "SELECT * FROM login WHERE user_name = ? AND user_password = ?";
+    db.query(sql, [user_name, user_password], (err, result) => {
+        if (err) {
+            console.error('Database Error:', err);
+            return res.status(500).json({ message: "Internal server error" });
+        }
+
+        if (result.length > 0) {
+            return res.status(200).json({ message: "Login successful", user: result[0] });
+        } else {
+            return res.status(401).json({ message: "Invalid username or password" });
+        }
+    });
+});
+
+
 
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;
