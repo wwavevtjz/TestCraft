@@ -49,7 +49,9 @@ const Project = () => {
   };
 
   const handleNavigateToDashboard = (id) => {
-    navigate(`/Dashboard?project_id=${id}`);
+    navigate(`/Dashboard?project_id=${id}`, {
+      state: { selectedSection: 'Requirement' },  // Pass the selectedSection as part of state
+    });
   };
 
   const calculateDaysRemaining = (endDate) => {
@@ -86,7 +88,6 @@ const Project = () => {
             <FontAwesomeIcon icon={faMagnifyingGlass} className="search-icon" />
           </div>
 
-
           {loading ? (
             <p>Loading projects...</p>
           ) : (
@@ -112,10 +113,11 @@ const Project = () => {
                     <tr key={project.project_id}>
                       <td
                         className="project-name-link"
-                        onClick={() => handleNavigateToDashboard(project.project_id)}
+                        onClick={() => handleNavigateToDashboard(project.project_id)}  // Handle navigation here
                       >
                         {project.project_name}
                       </td>
+
                       <td>{project.project_description}</td>
                       <td>
                         {new Date(project.start_date).toLocaleDateString('th-TH', {
