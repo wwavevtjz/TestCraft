@@ -69,7 +69,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  margin-left: auto;
+  margin-left: 70%;
   margin-top: 25px;
   /* ดันปุ่มไปด้านขวาสุด */
 }
@@ -93,8 +93,8 @@
 .project-page {
   display: flex;
   align-items: flex-start;
-  gap: 20px;
-  max-width: 1200px;
+
+  max-width: 1400px;
   margin: 30px auto;
 }
 
@@ -210,4 +210,26 @@
   border: none;
   padding: 0;
   cursor: pointer;
+
+}
+
+.back-button {
+  border: none;
+  cursor: pointer;
+  background: none;
+}
+
+.project-textarea {
+  width: 90%;
+  height: 6em;
+  padding: 10px;
+  font-size: 16px;
+  color: #333333;
+  background-color: #f9f9f9;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  border-color: #007bff;
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.3);
+  outline: none;
 }

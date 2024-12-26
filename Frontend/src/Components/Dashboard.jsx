@@ -4,6 +4,7 @@ import axios from 'axios';
 import './CSS/Dashboard.css';
 
 import RequirementPage from './RequirementPage';
+import ProjectConfig from './ProjectConfig';
 
 const Dashboard = () => {
   const location = useLocation();
@@ -62,10 +63,10 @@ const Dashboard = () => {
           Overview
         </div>
         <div
-          className={`nav-link ${selectedSection === 'Documentation' ? 'active' : ''}`}
-          onClick={() => setSelectedSection('Documentation')}
+          className={`nav-link ${selectedSection === 'Configuration' ? 'active' : ''}`}
+          onClick={() => setSelectedSection('Configuration')}
         >
-          Documentation
+          Configuration
         </div>
 
         {/* Management Section */}
@@ -132,7 +133,7 @@ const Dashboard = () => {
         ) : (
           <>
             {selectedSection === 'Overview' && <h2>Overview Content</h2>}
-            {selectedSection === 'Documentation' && <h2>Documentation Content</h2>}
+            {selectedSection === 'Configuration' && <ProjectConfig />}
             {selectedSection === 'Requirement' && <RequirementPage />}
             {selectedSection === 'Design' && <h2>Design Content</h2>}
             {selectedSection === 'Implementation' && <h2>Implementation Content</h2>}

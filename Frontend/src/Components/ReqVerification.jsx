@@ -145,61 +145,28 @@ const ReqVerification = () => {
       </div>
 
       <div className="content">
-        <div className="checklist-section">
-          <h2>Checklist</h2>
-          <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+       <div className="checklist-section">
+  <h2>Checklist</h2>
+  {loading ? (
+    <p>Loading...</p>
+  ) : (
+    <ul>
+      {reqcriList.map((criteria) => (
+        <li key={criteria.reqcri_id} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <label>
             <input
-              type="text"
-              value={newCriteria}
-              onChange={(e) => setNewCriteria(e.target.value)}
-              placeholder="Add New Criteria"
+              type="checkbox"
+              checked={criteria.isChecked || false}
+              disabled // ทำให้ Read-Only
             />
-            <button className="add-button" onClick={handleAdd}>
-              Add
-            </button>
-          </div>
-          {loading ? (
-            <p>Loading........</p>
-          ) : (
-            <ul>
-              {reqcriList.map((criteria) => (
-                <li key={criteria.reqcri_id} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  {editingId === criteria.reqcri_id ? (
-                    <>
-                      <input
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                      />
-                      <button onClick={handleUpdate}>Save</button>
-                      <button onClick={() => setEditingId(null)}>Cancel</button>
-                    </>
-                  ) : (
-                    <>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={criteria.isChecked || false}
-                          onChange={(e) => {
-                            const updatedList = reqcriList.map((item) =>
-                              item.reqcri_id === criteria.reqcri_id
-                                ? { ...item, isChecked: e.target.checked }
-                                : item
-                            );
-                            setReqcriList(updatedList);
-                          }}
-                        />
-                        {criteria.reqcri_name}
-                      </label>
-                      <button onClick={() => handleEdit(criteria.reqcri_id, criteria.reqcri_name)}>Edit</button>
-                      <button onClick={() => handleDelete(criteria.reqcri_id)}>Delete</button>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+            {criteria.reqcri_name}
+          </label>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
+
 
         <div className="requirements-section">
           <h2>Requirements</h2>

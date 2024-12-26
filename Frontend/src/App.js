@@ -14,6 +14,7 @@ import TryToReq from './Components/TryToReq';
 import Uploadfile from './Components/Uploadfile';
 import Login from './Components/Login';
 import Signup from './Components/Signup';
+import ProjectConfig from './Components/ProjectConfig';
 
 const App = () => {
   return (
@@ -30,6 +31,9 @@ const App = () => {
 
         {/* Route for Dashboard */}
         <Route path="/Dashboard" element={<Dashboard />} />
+
+        {/* Routes for Dashboard Project */}
+        <Route path="/ProjectConfig" element={<ProjectConfig />} />
 
         {/* Routes for Requirements */}
         <Route path="/requirementPage" element={<RequirementPage />} />

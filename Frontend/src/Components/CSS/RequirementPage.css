@@ -66,6 +66,8 @@
 
 /* กล่องอัปโหลดไฟล์ */
 .file-upload-section {
+  margin-left:20px;
+  width: 96%;
   background-color: #f9f9f9;
   padding: 15px;
   border-radius: 5px;
@@ -153,7 +155,7 @@
 }
 
 .req-search-input {
-  margin-left: 2%;
+  margin-left: 1%;
   width: 30%;
   max-width: 500px;
   padding: 10px 15px;
@@ -228,7 +230,7 @@
 }
 
 .add-requirement-button {
-  margin-left: 47%;
+  margin-left: 53%;
   display: flex;
   align-items: center;
   gap: 8px;

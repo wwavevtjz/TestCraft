@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import './CSS/CreateProject.css';
 import closeicon from '../image/close.png';
+import backarrow from '../image/arrow_left.png';
 
 const CreateProject = () => {
     const [members, setMembers] = useState([]);
@@ -125,6 +126,10 @@ const CreateProject = () => {
     return (
         <div className="project-page">
             <div className="create-project">
+                <button onClick={() => navigate('/Project')} className="back-button">
+                    <img src={backarrow} alt="Back arrow" className="backarrow" />
+                </button>
+
                 <h2>Create Project</h2>
                 <form onSubmit={handleSubmit}>
                     <label>
@@ -141,16 +146,17 @@ const CreateProject = () => {
                     </label>
                     <label>
                         Project Description:
-                        <input
-                            type="text"
+                        <textarea
                             name="project_description"
                             value={formProject.project_description}
-                            className="project-input"
+                            className="project-textarea"
                             onChange={(e) =>
                                 setFormProject({ ...formProject, project_description: e.target.value })
                             }
+                            rows="5"
                         />
                     </label>
+
                     <div className="date-inputs">
                         <label>
                             Start Date:
@@ -224,7 +230,7 @@ const CreateProject = () => {
 
 
 
-                    <button className='createproject-button' type="submit">Create Project</button>
+
                 </form>
             </div>
 
@@ -251,6 +257,7 @@ const CreateProject = () => {
                         </div>
                     ))}
                 </div>
+                <button className='createproject-button' type="submit">Create Project</button>
             </div>
         </div>
     );
