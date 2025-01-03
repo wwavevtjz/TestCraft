@@ -503,9 +503,10 @@ app.post("/upload", upload.single("file"), (req, res) => {
         return res.status(400).json({ message: "Only PDF files are allowed." });
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-        return res.status(400).json({ message: "File size exceeds 10MB." });
+    if (file.size > 10 * 1024 * 1024 * 1024) {
+        return res.status(400).json({ message: "File size exceeds 10GB." });
     }
+    
 
     const sql = "INSERT INTO file_requirement (filereq_name, filereq_data) VALUES (?, ?)";
     const values = [title, file.buffer];
