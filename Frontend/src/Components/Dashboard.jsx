@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './CSS/Dashboard.css';
 
@@ -8,14 +8,17 @@ import ProjectConfig from './ProjectConfig';
 
 const Dashboard = () => {
   const location = useLocation();
+  const navigate = useNavigate();  // ใช้ navigate สำหรับลิ้งค์กลับไปหน้า Project
   const [selectedSection, setSelectedSection] = useState(localStorage.getItem('selectedSection') || 'Overview');
   const [projectName, setProjectName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [projectStatus, setProjectStatus] = useState('');
 
   // ดึง project_id จาก query params ใน URL
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get('project_id');  // ตรวจสอบว่าใช้ 'project_id'
+  
   useEffect(() => {
     if (location.state && location.state.selectedSection) {
       setSelectedSection(location.state.selectedSection);  // อัปเดต selectedSection จาก state ที่ส่งมา
@@ -32,6 +35,7 @@ const Dashboard = () => {
         .get(`http://localhost:3001/project/${projectId}`)
         .then((res) => {
           setProjectName(res.data.project_name);
+          setProjectStatus(res.data.project_status); // เพิ่มการดึงสถานะโปรเจกต์
           setLoading(false);
         })
         .catch((err) => {
@@ -46,6 +50,27 @@ const Dashboard = () => {
   useEffect(() => {
     localStorage.setItem('selectedSection', selectedSection);
   }, [selectedSection]);
+
+  // ฟังก์ชันการปิดโปรเจกต์
+  const handleCloseProject = async () => {
+    const confirmation = window.confirm("คุณแน่ใจที่จะปิดโปรเจค?");
+    if (confirmation) {
+      try {
+        // ส่งคำขอ PUT เพื่อปิดโปรเจกต์
+        await axios.put(`http://localhost:3001/project/${projectId}`, { project_status: 'CLOSE' });
+        alert("Project closed successfully!");
+
+        // อัปเดตสถานะโปรเจกต์ใน UI
+        setProjectStatus('CLOSE');
+
+        // ลิ้งก์กลับไปที่หน้า Project
+        navigate('/Project');
+      } catch (error) {
+        console.error("Error closing project:", error);
+        alert("Failed to close project. Please try again.");
+      }
+    }
+  };
 
   return (
     <div className="dashboard-container">
@@ -122,6 +147,13 @@ const Dashboard = () => {
         >
           Guide Tutorial
         </div>
+
+        {/* Close Project Button in Sidebar */}
+        {projectStatus !== 'CLOSE' && (
+          <button onClick={handleCloseProject} className="close-project-btn">
+            Close Project
+          </button>
+        )}
       </nav>
 
       {/* Main Content Section */}

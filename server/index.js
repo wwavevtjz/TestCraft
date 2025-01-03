@@ -1,4 +1,5 @@
 const express = require('express');
+const bodyParser = require("body-parser");
 const multer = require('multer');
 const mysql = require('mysql');
 const cors = require('cors');
@@ -7,6 +8,8 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // ตั้งค่า multer เพื่อใช้ memoryStorage (เก็บไฟล์ใน memory)
 const storage = multer.memoryStorage();
@@ -28,12 +31,6 @@ db.connect((err) => {
     }
     console.log('Connected to the database as ID', db.threadId);
 });
-
-// Route สำหรับการอัพโหลดไฟล์
-
-
-
-
 
 
 
@@ -488,7 +485,86 @@ app.post('/login', (req, res) => {
 });
 
 
+// ------------------------- File Upload -------------------------
+// Upload file
+app.post("/upload", upload.single("file"), (req, res) => {
+    const { title } = req.body;
+    const file = req.file;
 
+    if (!file) {
+        return res.status(400).json({ message: "Please upload a file." });
+    }
+
+    if (!title) {
+        return res.status(400).json({ message: "Title is required." });
+    }
+
+    if (file.mimetype !== "application/pdf") {
+        return res.status(400).json({ message: "Only PDF files are allowed." });
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        return res.status(400).json({ message: "File size exceeds 10MB." });
+    }
+
+    const sql = "INSERT INTO file_requirement (filereq_name, filereq_data) VALUES (?, ?)";
+    const values = [title, file.buffer];
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error("Error inserting file:", err);
+            return res.status(500).json({ message: "Failed to save file." });
+        }
+
+        res.status(200).json({ message: "File uploaded successfully.", fileId: result.insertId });
+    });
+});
+
+//ดึงไฟล์
+app.get('/files', (req, res) => {
+    const sql = `
+        SELECT 
+            filereq_id AS file_id, 
+            filereq_name AS title, 
+            uploaded_at 
+        FROM 
+            file_requirement`;
+
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: 'Failed to fetch files.' });
+        }
+        res.json(results);
+    });
+});
+
+//โหลดไฟล์
+// app.get('/files/:file_id/download', (req, res) => {
+//     const fileId = req.params.file_id;
+//     const filePath = `uploads/${fileId}`; // หรือ path ที่ไฟล์ถูกเก็บไว้
+  
+//     res.download(filePath, (err) => {
+//       if (err) {
+//         console.error('Error downloading file:', err);
+//         res.status(500).send('Error downloading file');
+//       }
+//     });
+//   });
+  
+//ลบไฟล์
+app.delete('/files/:fileId', (req, res) => {
+    const fileId = req.params.fileId;
+    db.query('DELETE FROM files WHERE file_id = ?', [fileId], (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Error deleting file" });
+      }
+      res.sendStatus(204); // No Content
+    });
+  });
+  
+  
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;
 app.listen(PORT, () => {

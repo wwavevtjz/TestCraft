@@ -242,3 +242,18 @@ h2 {
   color: #000;
   overflow-y: auto;
 }
+
+.close-project-btn {
+  background-color: #ff4d4d;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 250px;
+}
+
+.close-project-btn:hover {
+  background-color: #e60000;
+}

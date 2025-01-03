@@ -1,58 +1,62 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import PropTypes from "prop-types";
 import axios from "axios";
-import "./CSS/UpdateRequirement.css";
+import "./CSS/CreateRequirement.css";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const UpdateRequirement = () => {
   const [requirementStatement, setRequirementStatement] = useState("");
   const [requirementType, setRequirementType] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [selectedFileId, setSelectedFileId] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const queryParams = new URLSearchParams(window.location.search);
-  const projectId = queryParams.get("project_id");
-  const requirementId = queryParams.get("requirement_id");
-
-  // Retrieve the data passed from the RequirementPage component
-  const requirementData = location.state?.requirementData;
+  const { requirementId, projectId } = location.state || {};
 
   useEffect(() => {
-    if (requirementData) {
-      // Pre-fill fields if the data is passed from the RequirementPage
-      setRequirementStatement(requirementData.requirement_name);
-      setRequirementType(requirementData.requirement_type);
-      setDescription(requirementData.requirement_description);
-    } else if (requirementId) {
-      // Fetch requirement data if no state is passed (in case of URL navigation)
-      fetchRequirementFromAPI(requirementId);
-    } else {
-      setError("Invalid requirement data. Please go back and try again.");
+    if (requirementId) {
+      setIsLoading(true);
+      axios
+        .get(`http://localhost:3001/requirement/${requirementId}`)
+        .then((response) => {
+          const requirementData = response.data;
+          setRequirementStatement(requirementData.requirement_name);
+          setRequirementType(requirementData.requirement_type);
+          setDescription(requirementData.requirement_description);
+          setSelectedFileId(requirementData.file_id || "");
+        })
+        .catch(() => setError("Failed to load requirement details."))
+        .finally(() => setIsLoading(false));
     }
-  }, [requirementData, requirementId]);
+  }, [requirementId]);
 
-  const fetchRequirementFromAPI = async (id) => {
-    try {
-      const response = await axios.get(`http://localhost:3001/requirement/${id}`);
-      if (response.data) {
-        const requirementData = response.data;
-        setRequirementStatement(requirementData.requirement_name);
-        setRequirementType(requirementData.requirement_type);
-        setDescription(requirementData.requirement_description);
-      } else {
-        setError("Requirement not found. Please check and try again.");
-      }
-    } catch (err) {
-      setError("Failed to fetch requirement data. Please try again later.");
+  useEffect(() => {
+    if (projectId) {
+      axios
+        .get(`http://localhost:3001/files?project_id=${projectId}`)
+        .then((response) => setUploadedFiles(response.data))
+        .catch(() => setError("Failed to load uploaded files."));
     }
-  };
+  }, [projectId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!requirementStatement || !requirementType || !description) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
     const updatedRequirement = {
       requirement_name: requirementStatement,
       requirement_type: requirementType,
       requirement_description: description,
+      project_id: projectId,
+      file_id: selectedFileId,
+      requirement_status: "WORKING",
     };
 
     try {
@@ -60,16 +64,23 @@ const UpdateRequirement = () => {
         `http://localhost:3001/requirement/${requirementId}`,
         updatedRequirement
       );
+
       if (response.status === 200) {
         alert("Requirement updated successfully");
         navigate(`/Dashboard?project_id=${projectId}`, {
           state: { selectedSection: "Requirement" },
         });
+      } else {
+        setError("Failed to update requirement.");
       }
     } catch (error) {
-      setError("Failed to update requirement. Please try again.");
+      setError(error.response?.data?.message || "Something went wrong");
     }
   };
+
+  const clearError = () => setError("");
+
+  if (isLoading) return <p>Loading...</p>;
 
   return (
     <div className="requirement-specification">
@@ -82,7 +93,11 @@ const UpdateRequirement = () => {
             type="text"
             id="requirementStatement"
             value={requirementStatement}
-            onChange={(e) => setRequirementStatement(e.target.value)}
+            onChange={(e) => {
+              clearError();
+              setRequirementStatement(e.target.value);
+            }}
+            placeholder="Enter requirement statement"
             required
           />
         </div>
@@ -91,16 +106,16 @@ const UpdateRequirement = () => {
           <select
             id="requirementType"
             value={requirementType}
-            onChange={(e) => setRequirementType(e.target.value)}
+            onChange={(e) => {
+              clearError();
+              setRequirementType(e.target.value);
+            }}
             required
           >
-            <option value="" disabled>Select Type</option>
-            <option value="Functional">Functionality</option>
-            <option value="User interface">User interface</option>
-            <option value="External interfaces">External interfaces</option>
-            <option value="Reliability">Reliability</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Portability">Portability</option>
+            <option value="" disabled>
+              Select Type
+            </option>
+            {/* Options */}
           </select>
         </div>
         <div className="form-group">
@@ -108,10 +123,37 @@ const UpdateRequirement = () => {
           <textarea
             id="description"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              clearError();
+              setDescription(e.target.value);
+            }}
+            placeholder="Enter requirement description"
             rows="4"
             required
           ></textarea>
+        </div>
+        <div className="form-group">
+          <label htmlFor="fileSelect">Attach File</label>
+          <select
+            id="fileSelect"
+            value={selectedFileId}
+            onChange={(e) => setSelectedFileId(e.target.value)}
+          >
+            <option value="" disabled>
+              Select a file
+            </option>
+            {uploadedFiles.length > 0 ? (
+              uploadedFiles.map((file) => (
+                <option key={file.id} value={file.id}>
+                  {file.name}
+                </option>
+              ))
+            ) : (
+              <option value="" disabled>
+                No files available
+              </option>
+            )}
+          </select>
         </div>
         <div className="form-buttons">
           <button
@@ -132,6 +174,15 @@ const UpdateRequirement = () => {
       </form>
     </div>
   );
+};
+
+UpdateRequirement.propTypes = {
+  location: PropTypes.shape({
+    state: PropTypes.shape({
+      requirementId: PropTypes.string.isRequired,
+      projectId: PropTypes.string.isRequired,
+    }),
+  }),
 };
 
 export default UpdateRequirement;

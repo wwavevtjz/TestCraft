@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import './CSS/CreateRequirement.css';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "./CSS/CreateRequirement.css";
+import { useNavigate } from "react-router-dom";
 
 const CreateRequirement = () => {
-  const [requirementStatement, setRequirementStatement] = useState('');
-  const [requirementType, setRequirementType] = useState('');
-  const [description, setDescription] = useState('');
-  const [error, setError] = useState('');
+  const [requirementStatement, setRequirementStatement] = useState("");
+  const [requirementType, setRequirementType] = useState("");
+  const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState([]); // State for uploaded files
+  const [selectedFileId, setSelectedFileId] = useState(""); // Selected file ID
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(window.location.search);
-  const projectId = queryParams.get('project_id');
+  const projectId = queryParams.get("project_id");
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,28 +28,31 @@ const CreateRequirement = () => {
       requirement_type: requirementType,
       requirement_description: description,
       project_id: projectId,
-      requirement_status: 'WORKING',  // กำหนดสถานะเป็น 'WORKING'
+      file_id: selectedFileId, // Attach selected file ID
+      requirement_status: "WORKING",
     };
 
-
     try {
-      const response = await axios.post('http://localhost:3001/requirement', newRequirement);
+      const response = await axios.post(
+        "http://localhost:3001/requirement",
+        newRequirement
+      );
 
       if (response.status === 201) {
-        alert('Requirement created successfully');
+        alert("Requirement created successfully");
         navigate(`/Dashboard?project_id=${projectId}`, {
-          state: { selectedSection: 'Requirement' }, // Select the 'Requirement' section
-        });  // Redirect to Dashboard and go to the selectedSection 'Requirement'
+          state: { selectedSection: "Requirement" },
+        });
       } else {
         console.error("Failed to create requirement:", response);
-        alert('Failed to create requirement');
+        alert("Failed to create requirement");
       }
     } catch (error) {
-      console.error('Error creating requirement:', error);
+      console.error("Error creating requirement:", error);
       if (error.response) {
-        setError(error.response.data.message || 'Something went wrong');
+        setError(error.response.data.message || "Something went wrong");
       } else {
-        setError('Network error. Please try again.');
+        setError("Network error. Please try again.");
       }
     }
   };
@@ -75,14 +81,18 @@ const CreateRequirement = () => {
             onChange={(e) => setRequirementType(e.target.value)}
             required
           >
-            <option value="" disabled>Select Type</option>
+            <option value="" disabled>
+              Select Type
+            </option>
             <option value="Functional">Functionality</option>
             <option value="User interface">User interface</option>
             <option value="External interfaces">External interfaces</option>
             <option value="Reliability">Reliability</option>
             <option value="Maintenance">Maintenance</option>
             <option value="Portability">Portability</option>
-            <option value="Limitations Design and construction">Limitations Design and construction</option>
+            <option value="Limitations Design and construction">
+              Limitations Design and construction
+            </option>
             <option value="Interoperability">Interoperability</option>
             <option value="Reusability">Reusability</option>
             <option value="Legal and regulative">Legal and regulative</option>
@@ -99,11 +109,32 @@ const CreateRequirement = () => {
             required
           ></textarea>
         </div>
+        <div className="form-group">
+          <label htmlFor="fileSelect">Attach File</label>
+          <select
+            id="fileSelect"
+            value={selectedFileId}
+            onChange={(e) => setSelectedFileId(e.target.value)}
+          >
+            <option value="" disabled>
+              Select a file
+            </option>
+            {uploadedFiles.map((file) => (
+              <option key={file.id} value={file.id}>
+                {file.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="form-buttons">
           <button
             type="button"
             className="btn btn-back"
-            onClick={() => navigate(`/Dashboard?project_id=${projectId}`, { state: { selectedSection: 'Requirement' } })}
+            onClick={() =>
+              navigate(`/Dashboard?project_id=${projectId}`, {
+                state: { selectedSection: "Requirement" },
+              })
+            }
           >
             Back to Requirements
           </button>

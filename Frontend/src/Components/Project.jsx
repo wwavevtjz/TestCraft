@@ -12,6 +12,7 @@ const Project = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // ดึงข้อมูลโปรเจกต์
   useEffect(() => {
     axios
       .get('http://localhost:3001/project')
@@ -26,34 +27,42 @@ const Project = () => {
       });
   }, []);
 
+  // ค้นหาชื่อโปรเจกต์
   useEffect(() => {
     const filtered = searchQuery
       ? projectList.filter((project) =>
-        project.project_name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+          project.project_name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
       : projectList;
     setFilteredProjects(filtered);
   }, [searchQuery, projectList]);
 
+  // ไปที่หน้า Update Project
   const handleUpdateProject = (id) => {
     navigate(`/UpdateProject/${id}`);
   };
 
+  // ลบโปรเจกต์
   const handleDeleteProject = async (id) => {
-    try {
-      await axios.delete(`http://localhost:3001/project/${id}`);
-      setProjectList(projectList.filter((project) => project.project_id !== id));
-    } catch (err) {
-      console.error('Error deleting project:', err);
+    const isConfirmed = window.confirm('Are you sure you want to delete this project?');
+    if (isConfirmed) {
+      try {
+        await axios.delete(`http://localhost:3001/project/${id}`);
+        setProjectList(projectList.filter((project) => project.project_id !== id));
+      } catch (err) {
+        console.error('Error deleting project:', err);
+      }
     }
   };
 
+  // ไปที่หน้า Dashboard ของโปรเจกต์
   const handleNavigateToDashboard = (id) => {
     navigate(`/Dashboard?project_id=${id}`, {
       state: { selectedSection: 'Requirement' },  // Pass the selectedSection as part of state
     });
   };
 
+  // คำนวณวันที่เหลือ
   const calculateDaysRemaining = (endDate) => {
     const today = new Date();
     const end = new Date(endDate);
@@ -106,18 +115,17 @@ const Project = () => {
               <tbody>
                 {filteredProjects.length === 0 ? (
                   <tr>
-                    <td colSpan="6">No projects available</td>
+                    <td colSpan="7">No projects available</td>
                   </tr>
                 ) : (
                   filteredProjects.map((project) => (
                     <tr key={project.project_id}>
                       <td
                         className="project-name-link"
-                        onClick={() => handleNavigateToDashboard(project.project_id)}  // Handle navigation here
+                        onClick={() => handleNavigateToDashboard(project.project_id)}
                       >
                         {project.project_name}
                       </td>
-
                       <td>{project.project_description}</td>
                       <td>
                         {new Date(project.start_date).toLocaleDateString('th-TH', {
@@ -148,7 +156,13 @@ const Project = () => {
                           <FontAwesomeIcon icon={faTrash} className="action-icon" />
                         </button>
                       </td>
-                      <td>{project.project_status}</td>
+                      <td>
+                        <span
+                          className={project.project_status === 'CLOSE' ? 'closed-status' : ''}
+                        >
+                          {project.project_status}
+                        </span>
+                      </td>
                     </tr>
                   ))
                 )}

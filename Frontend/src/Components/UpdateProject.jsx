@@ -2,49 +2,43 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import Select from 'react-select';
-import './CSS/UpdateProject.css';
+import './CSS/CreateProject.css';
 import closeicon from '../image/close.png';
+import backarrow from '../image/arrow_left.png';
 
 const UpdateProject = () => {
-    const { id } = useParams();
     const [members, setMembers] = useState([]);
     const [selectedMember, setSelectedMember] = useState(null);
     const [selectedRoles, setSelectedRoles] = useState([]);
-    const [teamMembers, setTeamMembers] = useState([]);
-    const [formEditProject, setFormEditProject] = useState({
+    const [formProject, setFormProject] = useState({
         project_name: '',
         project_description: '',
-        project_member: [],
         start_date: '',
         end_date: '',
-        project_status: '',
+        project_member: [],
+        project_status: 'PENDING',
     });
-    const [loading, setLoading] = useState(true);
+    const [showPopup, setShowPopup] = useState(false);
+    const [popupMessage, setPopupMessage] = useState('');
     const navigate = useNavigate();
+    const { id } = useParams(); // Get project ID from the URL
 
     useEffect(() => {
+        // Fetch project details
         axios
             .get(`http://localhost:3001/project/${id}`)
             .then((res) => {
-                const projectData = res.data;
-                setFormEditProject({
-                    project_name: projectData.project_name,
-                    project_description: projectData.project_description,
-                    project_member: JSON.parse(projectData.project_member) || [],
-                    start_date: projectData.start_date || '',
-                    end_date: projectData.end_date || '',
-                    project_status: projectData.project_status || '',
+                const project = res.data;
+                setFormProject({
+                    ...project,
+                    start_date: formatDateForInput(project.start_date),
+                    end_date: formatDateForInput(project.end_date),
+                    project_member: JSON.parse(project.project_member),
                 });
-                setTeamMembers(JSON.parse(projectData.project_member) || []);
-                setLoading(false);
             })
-            .catch((err) => {
-                console.error('Error fetching project data:', err);
-                setLoading(false);
-            });
-    }, [id]);
-
-    useEffect(() => {
+            .catch((err) => console.log('Error fetching project details:', err));
+    
+        // Fetch members for selection
         axios
             .get('http://localhost:3001/member')
             .then((res) => {
@@ -54,8 +48,8 @@ const UpdateProject = () => {
                 }));
                 setMembers(memberOptions);
             })
-            .catch((err) => console.error('Error fetching members:', err));
-    }, []);
+            .catch((err) => console.log('Error fetching members:', err));
+    }, [id]);    
 
     const handleMemberChange = (selectedOption) => {
         setSelectedMember(selectedOption);
@@ -67,42 +61,66 @@ const UpdateProject = () => {
 
     const handleAddMember = (e) => {
         e.preventDefault();
+
         if (selectedMember && selectedRoles.length > 0) {
-            const newMember = {
-                name: selectedMember.value,
-                roles: selectedRoles.map((role) => role.value),
-            };
-            setTeamMembers([...teamMembers, newMember]);
+            const existingMember = formProject.project_member.find(
+                (member) => member.name === selectedMember.value
+            );
+
+            if (existingMember) {
+                existingMember.roles = existingMember.roles || [];
+                const newRoles = selectedRoles.map((role) => role.value);
+                existingMember.roles = [...new Set([...existingMember.roles, ...newRoles])];
+            } else {
+                const newMember = {
+                    name: selectedMember.value,
+                    roles: selectedRoles.map((role) => role.value),
+                };
+                setFormProject((prevFormProject) => ({
+                    ...prevFormProject,
+                    project_member: [...prevFormProject.project_member, newMember],
+                }));
+            }
+
             setSelectedMember(null);
             setSelectedRoles([]);
+        } else {
+            setPopupMessage('Please select a member and at least one role.');
+            setShowPopup(true);
         }
     };
 
-    const handleDeleteMember = (index) => {
-        const updatedTeamMembers = teamMembers.filter((_, idx) => idx !== index);
-        setTeamMembers(updatedTeamMembers);
+    const handleDeleteMember = (memberName) => {
+        setFormProject((prevFormProject) => ({
+            ...prevFormProject,
+            project_member: prevFormProject.project_member.filter(
+                (member) => member.name !== memberName
+            ),
+        }));
+    };
+
+    const handlePopupClose = () => {
+        setShowPopup(false);
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if (!formEditProject.project_name.trim() || !formEditProject.start_date || !formEditProject.end_date) {
-            alert('Please fill in all required fields');
+        if (!formProject.project_name.trim() || !formProject.start_date || !formProject.end_date) {
+            setPopupMessage('Please fill all required fields.');
+            setShowPopup(true);
             return;
         }
 
-        const updatedProject = {
-            ...formEditProject,
-            project_member: JSON.stringify(
-                teamMembers.map((member) => ({
-                    name: member.name,
-                    roles: member.roles,
-                }))
-            ),
+        const payload = {
+            ...formProject,
+            start_date: formatDateForInput(formProject.start_date),
+            end_date: formatDateForInput(formProject.end_date),
+            project_member: JSON.stringify(formProject.project_member),
         };
 
         axios
-            .put(`http://localhost:3001/project/${id}`, updatedProject)
+            .put(`http://localhost:3001/project/${id}`, payload)
             .then(() => {
                 alert('Project updated successfully!');
                 navigate('/Project');
@@ -116,116 +134,131 @@ const UpdateProject = () => {
     const formatDateForInput = (date) => {
         if (!date) return '';
         const parsedDate = new Date(date);
-        return isNaN(parsedDate) ? '' : parsedDate.toISOString().split('T')[0];
+        const year = parsedDate.getFullYear();
+        const month = String(parsedDate.getMonth() + 1).padStart(2, '0'); // Month is zero-based
+        const day = String(parsedDate.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     };
 
-    if (loading) {
-        return <div>Loading...</div>;
-    }
 
     return (
         <div className="project-page">
-            <div className="update-project">
-                <div className="form-box">
-                    <h2>Update Project</h2>
-                    <form onSubmit={handleSubmit}>
+            <div className="create-project">
+                <button onClick={() => navigate('/Project')} className="back-button">
+                    <img src={backarrow} alt="Back arrow" className="backarrow" />
+                </button>
+
+                <h2>Update Project</h2>
+                <form onSubmit={handleSubmit}>
+                    <label>
+                        Project Name:
+                        <input
+                            type="text"
+                            name="project_name"
+                            value={formProject.project_name}
+                            className="project-input"
+                            onChange={(e) =>
+                                setFormProject({ ...formProject, project_name: e.target.value })
+                            }
+                        />
+                    </label>
+                    <label>
+                        Project Description:
+                        <textarea
+                            name="project_description"
+                            value={formProject.project_description}
+                            className="project-textarea"
+                            onChange={(e) =>
+                                setFormProject({
+                                    ...formProject,
+                                    project_description: e.target.value,
+                                })
+                            }
+                            rows="5"
+                        />
+                    </label>
+
+                    <div className="date-inputs">
                         <label>
-                            Project Name:
+                            Start Date:
                             <input
-                                type="text"
-                                value={formEditProject.project_name}
+                                type="date"
+                                name="start_date"
+                                value={formProject.start_date}
+                                className="project-input"
                                 onChange={(e) =>
-                                    setFormEditProject({ ...formEditProject, project_name: e.target.value })
+                                    setFormProject({ ...formProject, start_date: e.target.value })
                                 }
                             />
                         </label>
                         <label>
-                            Project Description:
-                            <textarea
-                                value={formEditProject.project_description}
+                            End Date:
+                            <input
+                                type="date"
+                                name="end_date"
+                                value={formProject.end_date}
+                                className="project-input"
                                 onChange={(e) =>
-                                    setFormEditProject({ ...formEditProject, project_description: e.target.value })
+                                    setFormProject({ ...formProject, end_date: e.target.value })
                                 }
                             />
                         </label>
-                        <div className="date-inputs">
-                            <label>
-                                Start Date:
-                                <input
-                                    type="date"
-                                    value={formatDateForInput(formEditProject.start_date)}
-                                    onChange={(e) =>
-                                        setFormEditProject({ ...formEditProject, start_date: e.target.value })
-                                    }
-                                />
-                            </label>
-                            <label>
-                                End Date:
-                                <input
-                                    type="date"
-                                    value={formatDateForInput(formEditProject.end_date)}
-                                    onChange={(e) =>
-                                        setFormEditProject({ ...formEditProject, end_date: e.target.value })
-                                    }
-                                />
-                            </label>
+                    </div>
+
+
+                    <p className="invite-topic">Invite Team Member</p>
+                    <label>Select Member:</label>
+                    <Select
+                        placeholder="Select Member"
+                        options={members}
+                        className="select-mem"
+                        onChange={handleMemberChange}
+                        value={selectedMember}
+                    />
+
+                    <div className="invite">
+                        <label>Select Roles:</label>
+                        <div className="select-container">
+                            <Select
+                                isMulti
+                                options={[
+                                    { value: 'Product Owner', label: 'Product Owner' },
+                                    { value: 'Designer', label: 'Designer' },
+                                    { value: 'Tester', label: 'Tester' },
+                                    { value: 'Developer', label: 'Developer' },
+                                ]}
+                                className="select-roles"
+                                value={selectedRoles}
+                                onChange={handleRoleChange}
+                                placeholder="Select Roles"
+                            />
+                            <button className="addmember-button" onClick={handleAddMember}>
+                                Add Member
+                            </button>
                         </div>
-                        <label>
-                            Project Status:
-                            <select
-                                value={formEditProject.project_status || 'Select Status'}
-                                onChange={(e) =>
-                                    setFormEditProject({ ...formEditProject, project_status: e.target.value })
-                                }
+                    </div>
+
+                    <button className="createproject-button" type="submit">
+                        Update Project
+                    </button>
+                </form>
+            </div>
+
+            <div className="team-members">
+                <h2>Team Members</h2>
+                <div className="team-members-list">
+                    {formProject.project_member.map((member, index) => (
+                        <div key={index} className="team-member">
+                            <span>{member.name}</span>
+                            <span>Roles: {member.roles ? member.roles.join(', ') : ''}</span>
+                            <button
+                                className="delete-button"
+                                onClick={() => handleDeleteMember(member.name)}
                             >
-                                <option value="Select Status" disabled>
-                                    Select Status
-                                </option>
-                                <option value="DRAFT">DRAFT</option>
-                                <option value="IN PROGRESS">IN PROGRESS</option>
-                                <option value="CLOSED">CLOSED</option>
-                            </select>
-                        </label>
-                        <button type="submit">Update Project</button>
-                    </form>
-                </div>
-
-                <div className="team-box">
-                    <h2>Team Members</h2>
-                    <div className="add-member">
-                        <p>Invite Team Member</p>
-                        <Select
-                            options={members}
-                            value={selectedMember}
-                            onChange={handleMemberChange}
-                            placeholder="Select Member"
-                        />
-                        <Select
-                            isMulti
-                            options={[
-                                { value: 'Product Owner', label: 'Product Owner' },
-                                { value: 'Designer', label: 'Designer' },
-                                { value: 'Tester', label: 'Tester' },
-                                { value: 'Developer', label: 'Developer' },
-                            ]}
-                            value={selectedRoles}
-                            onChange={handleRoleChange}
-                            placeholder="Select Roles"
-                        />
-                        <button onClick={handleAddMember}>Add Member</button>
-                    </div>
-
-                    <div className="team-members-list">
-                        {teamMembers.map((member, index) => (
-                            <div key={index} className="team-member">
-                                <span>{member.name}</span>
-                                <span>Roles: {member.roles.join(', ')}</span>
-                                <button className="delete-button" onClick={() => handleDeleteMember(index)}>
-                                    <img src={closeicon} alt="Close Icon" className="closeicon" />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
+                                <img src={closeicon} alt="Close Icon" className="closeicon" />
+                            </button>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>

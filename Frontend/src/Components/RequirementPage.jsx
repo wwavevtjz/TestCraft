@@ -2,11 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPen, faTrash, faPlus, faCheckSquare, faFileUpload, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { faPen, faTrash, faFileUpload, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { FileAddOutlined } from '@ant-design/icons';
+import Modal from 'react-modal'; // Importing Modal
+import UploadFile from './Uploadfile'; // Importing UploadFile component
 import "./CSS/RequirementPage.css";
 import checkmark from '../image/check_mark.png';
 import checklist from '../image/attendance_list.png';
+
+Modal.setAppElement('#root'); // For accessibility
 
 const RequirementPage = () => {
   const [requirementList, setRequirementList] = useState([]);
@@ -15,6 +19,8 @@ const RequirementPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [projectName, setProjectName] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [fileList, setFileList] = useState([]); // State for uploaded files
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -52,15 +58,18 @@ const RequirementPage = () => {
           setError("Failed to load requirements. Please try again.");
           setLoading(false);
         });
-    }
-  }, [projectId]);
 
-  const filteredRequirements = requirementList.filter((requirement) =>
-    requirement.requirement_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    requirement.requirement_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    requirement.requirement_description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    `REQ-00${requirement.requirement_id}`.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      // Fetch uploaded files
+      axios
+        .get(`http://localhost:3001/project/${projectId}/files`)
+        .then((res) => {
+          setFileList(res.data); // Update file list
+        })
+        .catch((err) => {
+          console.error("Error fetching uploaded files:", err);
+        });
+    }
+  }, [projectId, isModalOpen]); // Refetch files when the modal closes
 
   const handleSelectRequirement = (id) => {
     const selectedRequirement = requirementList.find(req => req.requirement_id === id);
@@ -70,14 +79,12 @@ const RequirementPage = () => {
         : [...prev, selectedRequirement]
     );
   };
-
-
-  const handleDelete = (requirementId) => {
+  
+  const handleDeleteRequirement = (requirementId) => {
     if (window.confirm("Are you sure you want to delete this requirement?")) {
       axios
         .delete(`http://localhost:3001/requirement/${requirementId}`)
         .then((response) => {
-          console.log("Requirement deleted:", response.data);
           setRequirementList((prev) =>
             prev.filter((req) => req.requirement_id !== requirementId)
           );
@@ -88,12 +95,25 @@ const RequirementPage = () => {
     }
   };
 
-  const handleFileUpload = (e) => {
-    // Handle file upload logic here
+  const handleDeleteFile = (fileId) => {
+    if (window.confirm("Are you sure you want to delete this file?")) {
+      axios
+        .delete(`http://localhost:3001/files/${fileId}`)
+        .then(() => {
+          setFileList((prev) => prev.filter((file) => file.file_id !== fileId));
+        })
+        .catch((err) => {
+          console.error("Error deleting file:", err);
+        });
+    }
   };
 
-  const handleUploadSubmit = () => {
-    // Handle file submit logic here
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
   };
 
   return (
@@ -112,7 +132,6 @@ const RequirementPage = () => {
           >
             <img src={checklist} alt="checklist" className="checklist" /> Verification
           </button>
-
         </div>
       </div>
 
@@ -125,24 +144,19 @@ const RequirementPage = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
         <FontAwesomeIcon icon={faMagnifyingGlass} className="search-icon-req" />
-
-        
-      <button
-        onClick={() => navigate(`/CreateRequirement?project_id=${projectId}`)}
-        className="add-requirement-button"
-      >
-        <FileAddOutlined className="add-req" /> Add Requirements
-      </button>
+        <button
+          onClick={() => navigate(`/CreateRequirement?project_id=${projectId}`)}
+          className="add-requirement-button"
+        >
+          <FileAddOutlined className="add-req" /> Add Requirements
+        </button>
       </div>
-
 
       <div className="content-container">
         {loading ? (
           <p>Loading requirements...</p>
         ) : error ? (
           <p className="error-message">{error}</p>
-        ) : filteredRequirements.length === 0 ? (
-          <p>No requirements available for this project.</p>
         ) : (
           <table className="requirement-table">
             <thead>
@@ -157,7 +171,7 @@ const RequirementPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredRequirements.map((data) => (
+              {requirementList.map((data) => (
                 <tr key={data.requirement_id}>
                   <td>
                     <input
@@ -172,32 +186,19 @@ const RequirementPage = () => {
                   <td>{data.requirement_description}</td>
                   <td>
                     <button
-                      //คลิกที่ Update จะมีการดึงข้อมูลของ database มาใช้แล้วจะโชว์ requirement ที่อยู่ในตารางมาแก้
-                      onClick={() => {
-                        const requirementData = {
-                          requirement_name: data.requirement_name,
-                          requirement_type: data.requirement_type,
-                          requirement_description: data.requirement_description,
-                          requirement_id: data.requirement_id,  // ต้องระบุ requirement_id ด้วย
-                        };
-
-                        navigate(`/UpdateRequirement?project_id=${projectId}&requirement_id=${data.requirement_id}`, {
-                          state: { requirementData: requirementData }  // ส่งข้อมูลที่แก้ไขแล้ว
-                        });
-                      }}
+                      onClick={() => navigate(`/UpdateRequirement?project_id=${projectId}&requirement_id=${data.requirement_id}`)}
                       className="action-button edit-req"
                     >
-                      <FontAwesomeIcon icon={faPen} className="action-icon" />
+                      <FontAwesomeIcon icon={faPen} />
                     </button>
-
                     <button
-                      onClick={() => handleDelete(data.requirement_id)}
+                      onClick={() => handleDeleteRequirement(data.requirement_id)}
                       className="action-button delete-req"
                     >
-                      <FontAwesomeIcon icon={faTrash} className="action-icon" />
+                      <FontAwesomeIcon icon={faTrash} />
                     </button>
                   </td>
-                  <td>{data.requirement_status}</td>
+                  <td>{data.status}</td>
                 </tr>
               ))}
             </tbody>
@@ -205,16 +206,42 @@ const RequirementPage = () => {
         )}
       </div>
 
-      {/* File Upload Section */}
       <div className="file-upload-section">
-        <h3>File</h3>
+        <h3>Files</h3>
         <div className="file-upload-container">
-          <input type="file" onChange={handleFileUpload} className="file-input" />
-          <button onClick={handleUploadSubmit} className="upload-button">
+          <button onClick={handleOpenModal} className="upload-button">
             <FontAwesomeIcon icon={faFileUpload} /> Add File
           </button>
         </div>
+        <div className="uploaded-files">
+          {fileList.length > 0 ? (
+            <ul className="file-list">
+              {fileList.map((file) => (
+                <li key={file.file_id} className="file-item">
+                  <a href={`http://localhost:3001/files/${file.file_id}/download`} target="_blank" rel="noopener noreferrer">
+                    {file.title}
+                  </a>
+                  <button onClick={() => handleDeleteFile(file.file_id)} className="delete-file-button">
+                    <FontAwesomeIcon icon={faTrash} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No files uploaded yet.</p>
+          )}
+        </div>
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={handleCloseModal}
+        contentLabel="Upload File Modal"
+        className="upload-file-modal"
+        overlayClassName="modal-overlay"
+      >
+        <UploadFile onClose={handleCloseModal} />
+      </Modal>
     </div>
   );
 };

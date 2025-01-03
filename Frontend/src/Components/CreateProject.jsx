@@ -6,24 +6,37 @@ import './CSS/CreateProject.css';
 import closeicon from '../image/close.png';
 import backarrow from '../image/arrow_left.png';
 
+// Popup Component
+const Popup = ({ message, onClose }) => {
+    return (
+        <div className="popup-overlay">
+            <div className="popup">
+                <p>{message}</p>
+                <button onClick={onClose}>Close</button>
+            </div>
+        </div>
+    );
+};
+
 const CreateProject = () => {
     const [members, setMembers] = useState([]);
     const [selectedMember, setSelectedMember] = useState(null);
-    const [selectedRoles, setSelectedRoles] = useState([]); // Changed to array for multiple roles
+    const [selectedRoles, setSelectedRoles] = useState([]);
     const [formProject, setFormProject] = useState({
         project_name: '',
         project_description: '',
         start_date: '',
         end_date: '',
         project_member: [],
-        project_status: ''
+        project_status: 'PENDING', // Default status
     });
     const [showPopup, setShowPopup] = useState(false);
     const [popupMessage, setPopupMessage] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
-        axios.get('http://localhost:3001/member')
+        axios
+            .get('http://localhost:3001/member')
             .then((res) => {
                 const memberOptions = res.data.map((member) => ({
                     value: member.member_name,
@@ -39,7 +52,7 @@ const CreateProject = () => {
     };
 
     const handleRoleChange = (selectedOptions) => {
-        setSelectedRoles(selectedOptions); // Update roles array
+        setSelectedRoles(selectedOptions);
     };
 
     const handleAddMember = (e) => {
@@ -52,34 +65,33 @@ const CreateProject = () => {
 
             if (existingMember) {
                 existingMember.roles = existingMember.roles || [];
-                const newRoles = selectedRoles.map(role => role.value);
+                const newRoles = selectedRoles.map((role) => role.value);
                 existingMember.roles = [...new Set([...existingMember.roles, ...newRoles])];
             } else {
                 const newMember = {
                     name: selectedMember.value,
-                    roles: selectedRoles.map(role => role.value),
+                    roles: selectedRoles.map((role) => role.value),
                 };
                 setFormProject((prevFormProject) => ({
                     ...prevFormProject,
-                    project_member: [...prevFormProject.project_member, newMember]
+                    project_member: [...prevFormProject.project_member, newMember],
                 }));
             }
 
-            setSelectedMember(null); // Reset selected member
-            setSelectedRoles([]); // Reset selected roles
+            setSelectedMember(null);
+            setSelectedRoles([]);
         } else {
             setPopupMessage('Please select a member and at least one role.');
             setShowPopup(true);
         }
     };
 
-    // ฟังก์ชันสำหรับลบสมาชิกจากทีม
     const handleDeleteMember = (memberName) => {
         setFormProject((prevFormProject) => ({
             ...prevFormProject,
             project_member: prevFormProject.project_member.filter(
                 (member) => member.name !== memberName
-            )
+            ),
         }));
     };
 
@@ -90,20 +102,33 @@ const CreateProject = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if (!formProject.project_name.trim() || !formProject.start_date || !formProject.end_date || !formProject.project_status) {
+        if (!formProject.project_name.trim() || !formProject.start_date || !formProject.end_date) {
             setPopupMessage('Please fill all required fields.');
             setShowPopup(true);
             return;
         }
 
+        //ตั้ง Status
+        const today = new Date();
+        const startDate = new Date(formProject.start_date);
+        const endDate = new Date(formProject.end_date);
+        let updatedStatus = 'PENDING';
+
+        // เงื่อนไขการเปลี่ยนแปลงของ status
+        if (today > endDate) {
+            updatedStatus = 'DELAYED';
+        } else if (today >= startDate && today <= endDate) {
+            updatedStatus = 'IN PROGRESS';
+        } else if (today < startDate) {
+            updatedStatus = 'PENDING';
+        }
         const payload = {
             ...formProject,
+            project_status: updatedStatus, // Update status
             start_date: formatDateForInput(formProject.start_date),
             end_date: formatDateForInput(formProject.end_date),
             project_member: JSON.stringify(formProject.project_member),
         };
-
-        console.log('Payload:', payload);
 
         axios
             .post('http://localhost:3001/project', payload)
@@ -125,6 +150,7 @@ const CreateProject = () => {
 
     return (
         <div className="project-page">
+            {/* Create Project Section */}
             <div className="create-project">
                 <button onClick={() => navigate('/Project')} className="back-button">
                     <img src={backarrow} alt="Back arrow" className="backarrow" />
@@ -151,7 +177,10 @@ const CreateProject = () => {
                             value={formProject.project_description}
                             className="project-textarea"
                             onChange={(e) =>
-                                setFormProject({ ...formProject, project_description: e.target.value })
+                                setFormProject({
+                                    ...formProject,
+                                    project_description: e.target.value,
+                                })
                             }
                             rows="5"
                         />
@@ -183,25 +212,11 @@ const CreateProject = () => {
                             />
                         </label>
                     </div>
-                    <label>Select Status:</label>
-                    <select
-                        id="requirementStatus"
-                        className="select-status"
-                        value={formProject.project_status}
-                        onChange={(e) =>
-                            setFormProject({ ...formProject, project_status: e.target.value })
-                        }
-                    >
-                        <option value="" disabled>Select Status</option>
-                        <option value="DRAFT">DRAFT</option>
-                        <option value="IN PROGRESS">IN PROGRESS</option>
-                        <option value="CLOSED">CLOSED</option>
-                    </select>
 
-                    <p className='invite-topic'>Invite Team Member</p>
+                    <p className="invite-topic">Invite Team Member</p>
                     <label>Select Member:</label>
                     <Select
-                        placeholder='Select Member'
+                        placeholder="Select Member"
                         options={members}
                         className="select-mem"
                         onChange={handleMemberChange}
@@ -214,36 +229,31 @@ const CreateProject = () => {
                             <Select
                                 isMulti
                                 options={[
-                                    { value: "Product Owner", label: "Product Owner" },
-                                    { value: "Designer", label: "Designer" },
-                                    { value: "Tester", label: "Tester" },
-                                    { value: "Developer", label: "Developer" }
+                                    { value: 'Customer', label: 'Customer' },
+                                    { value: 'Analyst', label: 'Analyst' },
+                                    { value: 'Designer', label: 'Designer' },
+                                    { value: 'Developer', label: 'Developer' },
+                                    { value: 'Technical Leader', label: 'Technical Leader' },
+                                    { value: 'Work Team', label: 'Work Team' },
                                 ]}
                                 className="select-roles"
                                 value={selectedRoles}
                                 onChange={handleRoleChange}
-                                placeholder='Select Roles'
+                                placeholder="Select Roles"
                             />
-                            <button className="addmember-button" onClick={handleAddMember}>Add Member</button>
+                            <button className="addmember-button" onClick={handleAddMember}>
+                                Add Member
+                            </button>
                         </div>
                     </div>
 
-
-
-
+                    <button className="createproject-button" type="submit">
+                        Create Project
+                    </button>
                 </form>
             </div>
 
-            {/* Popup ขึ้นหากไม่เลือก role */}
-            {showPopup && (
-                <div className="popup">
-                    <div className="popup-content">
-                        <p>{popupMessage}</p>
-                        <button onClick={handlePopupClose}>OK</button>
-                    </div>
-                </div>
-            )}
-
+            {/* Team Members Section */}
             <div className="team-members">
                 <h2>Team Members</h2>
                 <div className="team-members-list">
@@ -251,14 +261,19 @@ const CreateProject = () => {
                         <div key={index} className="team-member">
                             <span>{member.name}</span>
                             <span>Roles: {member.roles ? member.roles.join(', ') : ''}</span>
-                            <button className="delete-button" onClick={() => handleDeleteMember(member.name)}>
+                            <button
+                                className="delete-button"
+                                onClick={() => handleDeleteMember(member.name)}
+                            >
                                 <img src={closeicon} alt="Close Icon" className="closeicon" />
                             </button>
                         </div>
                     ))}
                 </div>
-                <button className='createproject-button' type="submit">Create Project</button>
             </div>
+
+            {/* Popup Message */}
+            {showPopup && <Popup message={popupMessage} onClose={handlePopupClose} />}
         </div>
     );
 };

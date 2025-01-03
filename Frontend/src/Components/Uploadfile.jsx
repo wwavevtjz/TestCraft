@@ -1,70 +1,87 @@
-import React from 'react';
-import axios from 'axios';
+import React, { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUpload } from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
+import "./CSS/Uploadfile.css";
 
-const UploadFile = () => {
-    const [title, setTitle] = React.useState(""); // State สำหรับเก็บชื่อไฟล์
-    const [file, setFile] = React.useState(null); // State สำหรับเก็บไฟล์ที่เลือก (ใช้ null แทน "")
+const UploadFile = ({ onClose }) => {
+    const [file, setFile] = useState(null);
+    const [fileName, setFileName] = useState("");
+    const [title, setTitle] = useState("");
+    const [isUploading, setIsUploading] = useState(false);
 
-    // ฟังก์ชันสำหรับการอัพโหลดไฟล์ไปยัง backend
-    const handleSubmit = (e) => {
-        e.preventDefault(); // ป้องกันการ reload หน้าเว็บเมื่อ submit form
+    const handleFileChange = (e) => {
+        const selectedFile = e.target.files[0];
+        setFile(selectedFile);
+        setFileName(selectedFile ? selectedFile.name : "");
+    };
 
+    const handleSave = async () => {
         if (!file) {
-            alert("กรุณาเลือกไฟล์");
+            alert("Please select a file.");
+            return;
+        }
+        if (!title) {
+            alert("Please enter a title.");
             return;
         }
 
-        const formData = new FormData(); // สร้าง FormData object
-        formData.append("title", title); // เพิ่มชื่อไฟล์ใน FormData
-        formData.append("file", file); // เพิ่มไฟล์ใน FormData
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("title", title);
 
-        // ส่งคำขอ POST ไปยัง backend
-        axios.post('http://localhost:3001/filereq', formData) // ตรวจสอบว่า URL ตรงกับที่กำหนดในเซิร์ฟเวอร์
-            .then(response => {
-                alert('ไฟล์อัพโหลดสำเร็จ');
-            })
-            .catch(error => {
-                if (error.response) {
-                    console.error('Error response:', error.response);
-                    alert(`เกิดข้อผิดพลาดในการอัพโหลดไฟล์: ${error.response.data.message}`);
-                } else if (error.request) {
-                    console.error('Error request:', error.request);
-                    alert('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
-                } else {
-                    console.error('Error message:', error.message);
-                    alert('เกิดข้อผิดพลาดทั่วไป');
-                }
+        setIsUploading(true);
+
+        try {
+            const response = await axios.post("http://localhost:3001/upload", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
             });
+            alert("File uploaded successfully.");
+            onClose();
+        } catch (error) {
+            console.error("Error uploading file:", error.response || error.message);
+            alert("Failed to upload file. Please try again.");
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     return (
-        <div>
-            <form onSubmit={handleSubmit}>
-                <h4>Upload File</h4>
-                <br />
-                {/* ฟอร์มกรอกชื่อไฟล์ */}
+        <div className="upload-file-container">
+            <button className="upload-file-close" onClick={onClose} disabled={isUploading}>
+                ×
+            </button>
+            <div className="upload-file-header">Add File</div>
+
+            <div className="form-group">
+                <label htmlFor="title">Title:</label>
                 <input
+                    id="title"
                     type="text"
-                    className="form-control"
-                    placeholder="Title"
-                    required
-                    onChange={(e) => setTitle(e.target.value)} // เมื่อมีการพิมพ์จะอัพเดต title
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter file title"
+                    disabled={isUploading}
                 />
-                <br />
-                {/* ฟอร์มเลือกไฟล์ */}
-                <input
-                    type="file"
-                    className="form-control"
-                    accept="application/pdf" // กำหนดประเภทไฟล์ที่รองรับ
-                    required
-                    onChange={(e) => setFile(e.target.files[0])} // เมื่อเลือกไฟล์จะอัพเดต file
-                />
-                <br />
-                {/* ปุ่มส่งฟอร์ม */}
-                <button type="submit">
-                    Submit
-                </button>
-            </form>
+            </div>
+
+            <label htmlFor="file-upload" className="upload-button">
+                <FontAwesomeIcon icon={faUpload} className="upload-button-icon" />
+                <span className="upload-text">Upload File</span>
+            </label>
+            <input
+                id="file-upload"
+                type="file"
+                accept="application/pdf"
+                style={{ display: "none" }}
+                onChange={handleFileChange}
+            />
+
+            {fileName && <div className="file-name">Selected File: {fileName}</div>}
+
+            <button className="save-button" onClick={handleSave} disabled={isUploading}>
+                {isUploading ? "Uploading..." : "Save"}
+            </button>
         </div>
     );
 };
