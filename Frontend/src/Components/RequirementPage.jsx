@@ -3,20 +3,19 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen, faTrash, faFileUpload, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
-import { FileAddOutlined } from '@ant-design/icons';
-import Modal from 'react-modal';
-import UploadFile from './Uploadfile';
+import { FileAddOutlined } from "@ant-design/icons";
+import Modal from "react-modal";
+import UploadFile from "./Uploadfile";
 import "./CSS/RequirementPage.css";
-import checkmark from '../image/check_mark.png';
-import checklist from '../image/attendance_list.png';
-import eyeview from '../image/views.png';
+import checkmark from "../image/check_mark.png";
+import checklist from "../image/attendance_list.png";
 
-Modal.setAppElement('#root'); // For accessibility
+Modal.setAppElement("#root"); // For accessibility
 
 const RequirementPage = () => {
   const [requirementList, setRequirementList] = useState([]);
   const [selectedRequirements, setSelectedRequirements] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [projectName, setProjectName] = useState("");
@@ -76,7 +75,7 @@ const RequirementPage = () => {
   }, [projectId]);
 
   const handleSelectRequirement = (id) => {
-    const selectedRequirement = requirementList.find(req => req.requirement_id === id);
+    const selectedRequirement = requirementList.find((req) => req.requirement_id === id);
     setSelectedRequirements((prev) =>
       prev.some((req) => req.requirement_id === id)
         ? prev.filter((req) => req.requirement_id !== id)
@@ -124,9 +123,6 @@ const RequirementPage = () => {
         });
     }
   };
-
-
-
 
   return (
     <div className="requirement-container">
@@ -189,7 +185,9 @@ const RequirementPage = () => {
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedRequirements.some((req) => req.requirement_id === data.requirement_id)}
+                      checked={selectedRequirements.some(
+                        (req) => req.requirement_id === data.requirement_id
+                      )}
                       onChange={() => handleSelectRequirement(data.requirement_id)}
                     />
                   </td>
@@ -199,7 +197,11 @@ const RequirementPage = () => {
                   <td>{data.requirement_description}</td>
                   <td>
                     <button
-                      onClick={() => navigate(`/UpdateRequirement?project_id=${projectId}&requirement_id=${data.requirement_id}`)}
+                      onClick={() =>
+                        navigate(
+                          `/UpdateRequirement?project_id=${projectId}&requirement_id=${data.requirement_id}`
+                        )
+                      }
                       className="action-button edit-req colored-edit-button"
                     >
                       <FontAwesomeIcon icon={faPen} className="action-icon" />
@@ -247,23 +249,30 @@ const RequirementPage = () => {
               <tbody>
                 {files.map((file) => (
                   <tr key={file.filereq_id}>
-                    <td>{file.filereq_name}</td>
+                    <td>{file.title || file.filereq_name}</td>
                     <td>
                       <button
-                        onClick={() => window.open(`http://localhost:3001/files/${file.filereq_id}`, "_blank")}
+                        onClick={() => {
+                          const link = document.createElement("a");
+                          link.href = `http://localhost:3001/files/${file.filereq_id}`;
+                          link.download = file.filereq_name.endsWith(".pdf")
+                            ? file.filereq_name
+                            : `${file.filereq_name}.pdf`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
                         className="download-button"
                       >
-                        Download
+                        Download PDF
                       </button>
                     </td>
                     <td>
-
                       <button
                         className="delete-file-button"
-                        onClick={() => handleDeleteFile(file.filereq_id)} // Call handleDeleteFile when clicked
+                        onClick={() => handleDeleteFile(file.filereq_id)}
                       >
                         <FontAwesomeIcon icon={faTrash} className="delete-file" />
-
                       </button>
                     </td>
                   </tr>
@@ -272,10 +281,9 @@ const RequirementPage = () => {
             </table>
           )}
         </div>
-
       </div>
 
-
+      {/* Modal for UploadFile */}
       {/* Modal for UploadFile */}
       <Modal
         isOpen={isModalOpen}
@@ -284,9 +292,18 @@ const RequirementPage = () => {
         className="upload-file-modal"
         overlayClassName="modal-overlay"
       >
-        <UploadFile onClose={handleCloseModal} />
+        <UploadFile
+          onClose={handleCloseModal}
+          onUploadSuccess={(newFile) => {
+            if (!newFile.title) {
+              newFile.title = newFile.filereq_name; // Ensure title fallback
+            }
+            setFiles((prevFiles) => [newFile, ...prevFiles]); // Add new file to the top of the list
+          }}
+        />
       </Modal>
-    </div >
+
+    </div>
   );
 };
 

@@ -4,7 +4,7 @@ import { faUpload } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import "./CSS/Uploadfile.css";
 
-const UploadFile = ({ onClose }) => {
+const UploadFile = ({ onClose, onUploadSuccess }) => { // เพิ่ม onUploadSuccess
     const [file, setFile] = useState(null);
     const [fileName, setFileName] = useState("");
     const [title, setTitle] = useState("");
@@ -36,7 +36,14 @@ const UploadFile = ({ onClose }) => {
             const response = await axios.post("http://localhost:3001/upload", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
+
+            const newFile = response.data; // File data returned from backend
             alert("File uploaded successfully.");
+
+            if (onUploadSuccess) {
+                onUploadSuccess(newFile); // Pass file data to RequirementPage
+            }
+
             onClose();
         } catch (error) {
             console.error("Error uploading file:", error.response || error.message);
@@ -45,6 +52,7 @@ const UploadFile = ({ onClose }) => {
             setIsUploading(false);
         }
     };
+
 
     return (
         <div className="upload-file-container">

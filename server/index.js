@@ -582,15 +582,19 @@ app.get('/files/:filereq_id', (req, res) => {
         }
 
         const file = result[0];
-        const fileName = file.filereq_name;
+        const fileName = file.filereq_name.endsWith('.pdf') 
+            ? file.filereq_name 
+            : `${file.filereq_name}.pdf`; // เพิ่ม .pdf ถ้าไม่มีนามสกุล
         const fileData = file.filereq_data;
 
-        // Assuming the file is a PDF, set the appropriate headers
-        res.setHeader('Content-Disposition', `attachment; filename="${fileName}.pdf"`);
+        // ตั้งค่าหัวข้อสำหรับดาวน์โหลดไฟล์ PDF
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
         res.setHeader('Content-Type', 'application/pdf');
         res.send(fileData);
     });
 });
+
+
 
 
 
