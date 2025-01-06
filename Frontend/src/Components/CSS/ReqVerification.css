@@ -101,7 +101,8 @@
     border-collapse: collapse;
 }
 
-.requirements-section th, .requirements-section td {
+.requirements-section th,
+.requirements-section td {
     border: 1px solid #ddd;
     padding: 10px;
     text-align: left;
@@ -127,55 +128,41 @@
     color: #666;
 }
 
-/* Popup styles */
-.popup {
+.modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+    background-color: rgba(0, 0, 0, 0.7);
+    /* พื้นหลังมืด */
+    z-index: 999;
 }
 
-.popup-content {
-    background: white;
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 8px;
+    z-index: 1000;
+    width: 400px;
     text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    max-width: 400px;
-    width: 100%;
 }
 
-.popup-content p {
-    margin-bottom: 20px;
-    font-size: 16px;
-    color: #333;
-}
-
-.popup-content button {
-    background-color: #007BFF;
+.modal-content button {
+    background-color: #007bff;
     color: white;
     border: none;
     padding: 10px 20px;
-    border-radius: 5px;
+    margin: 10px;
     cursor: pointer;
-    margin: 0 5px;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s;
 }
 
-.popup-content button:hover {
+.modal-content button:hover {
     background-color: #0056b3;
-}
-
-/* Additional button styles */
-.popup-content button:last-child {
-    background-color: #dc3545;
-}
-
-.popup-content button:last-child:hover {
-    background-color: #c82333;
 }

@@ -1,28 +1,29 @@
 import React, { useState } from 'react';
 import './CSS/Login.css';
 import logo from '../image/testcraft-logo.png';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const Login = () => {
     const [formData, setFormData] = useState({
         username: '',
         password: '',
     });
-    const [showModal, setShowModal] = useState(false); // State to show modal
-    const [modalMessage, setModalMessage] = useState(''); // Message to display in modal
+    const navigate = useNavigate(); // Initialize navigate
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({
-            ...formData,
+    const handleChange = ({ target: { name, value } }) => { // Destructuring for handleChange
+        setFormData((prevData) => ({
+            ...prevData,
             [name]: value,
-        });
+        }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!formData.username || !formData.password) {
-            alert('Please fill in all required fields.');
+            toast.warning('Please fill in all required fields.');
             return;
         }
 
@@ -33,29 +34,24 @@ const Login = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    user_name: formData.username, // ส่งข้อมูล username
-                    user_password: formData.password, // ส่งข้อมูล password
+                    user_name: formData.username,
+                    user_password: formData.password,
                 }),
             });
 
+            console.log('Response:', response); // ล็อกการตอบกลับ
             if (response.ok) {
-                const data = await response.json();
-                window.location.href = '/Home'; // เปลี่ยนเส้นทางไปยังหน้า Home
+                toast.success(`User ${formData.username} Login Success`);
+                navigate('/Home'); // นำทางไปยังหน้า Home หลังจากล็อกอินสำเร็จ
             } else {
                 const errorData = await response.json();
-                // Show modal with error message
-                setModalMessage('Username or password is incorrect. Please try again.');
-                setShowModal(true);
+                console.error('Error Data:', errorData); // ล็อกข้อมูลข้อผิดพลาดจากเซิร์ฟเวอร์
+                toast.error('Username or password is incorrect. Please try again.');
             }
         } catch (error) {
             console.error('Error during login:', error);
-            alert('Something went wrong. Please try again later.');
+            toast.error('Something went wrong. Please try again later.');
         }
-    };
-
-    // Modal to show error message
-    const closeModal = () => {
-        setShowModal(false);
     };
 
     return (
@@ -99,15 +95,8 @@ const Login = () => {
                 </form>
             </div>
 
-            {/* Modal Popup */}
-            {showModal && (
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <p>{modalMessage}</p>
-                        <button onClick={closeModal}>OK</button>
-                    </div>
-                </div>
-            )}
+            {/* เพิ่มการตั้งค่าตำแหน่งของ ToastContainer */}
+            <ToastContainer />
         </div>
     );
 };

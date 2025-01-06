@@ -1,140 +1,122 @@
+/* Container for the upload modal */
 .upload-file-container {
-    position: relative;
-    width: 400px;
+    background-color: white;
+    border-radius: 10px; /* Slightly more rounded corners */
     padding: 30px;
-    background: linear-gradient(to bottom right, #f0f4ff, #d9e8ff);
-    border-radius: 15px;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-    font-family: 'Roboto', sans-serif;
-}
-
-.upload-file-container .form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 15px;
-}
-
-.upload-file-header {
-    font-size: 24px;
-    font-weight: bold;
-    color: #003d99;
-    margin-bottom: 25px;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.upload-file-close {
+    max-width: 500px; /* Increased width */
+    width: 100%;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Close button */
+  .upload-file-close {
     position: absolute;
     top: 15px;
     right: 15px;
-    cursor: pointer;
-    font-size: 22px;
-    color: #ff5e57;
+    font-size: 24px; /* Larger close icon */
+    background: transparent;
     border: none;
-    background: none;
-    transition: transform 0.3s ease, color 0.3s ease;
-}
-
-.upload-file-close:hover {
-    color: #e8453c;
-    transform: scale(1.2);
-}
-
-.upload-button {
+    color: #333;
+    cursor: pointer;
+    transition: color 0.3s;
+  }
+  
+  .upload-file-close:hover {
+    color: #f44336; /* Red color on hover */
+  }
+  
+  /* Header */
+  .upload-file-header {
+    font-size: 22px; /* Larger font size */
+    font-weight: bold;
+    margin-bottom: 25px;
+    color: #333;
+    text-align: center;
+  }
+  
+  /* Form group */
+  .form-group {
+    margin-bottom: 20px; /* Increased space between form elements */
+  }
+  
+  .form-group label {
+    display: block;
+    font-size: 16px; /* Larger label */
+    color: #555;
+    margin-bottom: 10px;
+  }
+  
+  /* Title input */
+  #title {
+    width: 100%;
+    padding: 12px; /* Larger padding */
+    border: 1px solid #ccc;
+    border-radius: 6px; /* Slightly more rounded */
+    font-size: 16px; /* Larger text */
+    color: #333;
+    box-sizing: border-box;
+  }
+  
+  #title:disabled {
+    background-color: #f0f0f0;
+  }
+  
+  /* File upload button */
+  .upload-button {
     display: flex;
     align-items: center;
-    justify-content: flex-start; /* Align to the left */
-    width: 200px;
-    height: 50px;
-    background: linear-gradient(to right, #007acc, #005fa3);
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 16px;
-    color: #fff;
-    font-weight: bold;
-    margin-bottom: 20px;
-    transition: transform 0.3s ease, background 0.3s ease;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
-
-.upload-button:hover {
-    background: linear-gradient(to right, #005fa3, #004078);
-    transform: translateY(-3px);
-}
-
-.upload-button-icon {
-    margin-right: 8px;
-    font-size: 20px;
-}
-
-.file-name {
-    font-size: 14px;
-    color: #4d4d4d;
-    margin-top: 10px;
-    text-align: center;
-    word-break: break-word;
-    font-style: italic;
-}
-
-.save-button {
-    width: 100%;
-    height: 45px;
-    background: linear-gradient(to right, #28a745, #218838);
-    border: none;
-    border-radius: 25px;
-    font-size: 18px;
-    font-weight: bold;
+    background-color: #4caf50; /* Green */
     color: white;
+    padding: 12px; /* Larger padding */
+    border-radius: 6px; /* Slightly more rounded */
     cursor: pointer;
-    transition: background 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.save-button:hover {
-    background: linear-gradient(to right, #218838, #1c6e32);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
-}
-
-.upload-file-footer {
+    font-size: 16px; /* Larger text */
+    margin-bottom: 20px;
+    justify-content: center;
+  }
+  
+  .upload-button-icon {
+    margin-right: 12px; /* More space between icon and text */
+  }
+  
+  .upload-button:hover {
+    background-color: #45a049; /* Darker green on hover */
+  }
+  
+  .upload-button:disabled {
+    background-color: #cccccc; /* Disabled state */
+    cursor: not-allowed;
+  }
+  
+  /* File name display */
+  .file-name {
+    font-size: 16px; /* Larger text */
+    color: #333;
+    margin-top: 15px;
     text-align: center;
-    font-size: 14px;
-    color: #777;
-    margin-top: 20px;
-    font-style: italic;
-}
-
-.upload-text {
-    font-size: 16px;
-    font-weight: bold;
-    color: #fff;
-}
-
-.upload-file-container::before {
-    content: "";
-    position: absolute;
-    top: -50px;
-    right: -50px;
-    width: 200px;
-    height: 200px;
-    background: rgba(0, 122, 204, 0.2);
-    border-radius: 50%;
-    z-index: 0;
-}
-
-.upload-file-container::after {
-    content: "";
-    position: absolute;
-    bottom: -50px;
-    left: -50px;
-    width: 200px;
-    height: 200px;
-    background: rgba(40, 167, 69, 0.2);
-    border-radius: 50%;
-    z-index: 0;
-}
-
-.upload-file-container > * {
-    position: relative;
-    z-index: 1;
-}
+  }
+  
+  /* Save button */
+  .save-button {
+    width: 100%;
+    padding: 14px; /* Larger padding */
+    background-color: #2196f3; /* Blue */
+    color: white;
+    border: none;
+    border-radius: 6px; /* Slightly more rounded */
+    cursor: pointer;
+    font-size: 16px; /* Larger text */
+    transition: background-color 0.3s;
+  }
+  
+  .save-button:hover {
+    background-color: #1976d2; /* Darker blue on hover */
+  }
+  
+  .save-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  

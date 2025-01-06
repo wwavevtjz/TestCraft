@@ -10,6 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+// app.use('/files', express.static(path.join(__dirname, 'uploads')));
 
 // ตั้งค่า multer เพื่อใช้ memoryStorage (เก็บไฟล์ใน memory)
 const storage = multer.memoryStorage();
@@ -188,15 +189,25 @@ app.get('/project/:project_id/requirement', (req, res) => {
 
 // Add a new requirement for a specific project
 app.post('/requirement', (req, res) => {
-    const { requirement_name, requirement_type, requirement_description, requirement_status, project_id } = req.body;
+    const {
+        requirement_name,
+        requirement_type,
+        requirement_description,
+        requirement_status,
+        project_id,
+        filereq_id // เพิ่ม filereq_id
+    } = req.body;
 
-    if (!requirement_name || !requirement_type || !requirement_description || !requirement_status || !project_id) {
+    // ตรวจสอบว่ามีข้อมูลที่จำเป็นทั้งหมดหรือไม่
+    if (!requirement_name || !requirement_type || !requirement_description || !requirement_status || !project_id || !filereq_id) {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const sql = "INSERT INTO requirement (requirement_name, requirement_type, requirement_description,requirement_status, project_id) VALUES (?, ?, ?, ?, ?)";
-    const values = [requirement_name, requirement_type, requirement_description, requirement_status, project_id];
+    // สร้าง SQL query สำหรับการแทรกข้อมูล
+    const sql = "INSERT INTO requirement (requirement_name, requirement_type, requirement_description, requirement_status, project_id, filereq_id) VALUES (?, ?, ?, ?, ?, ?)";
+    const values = [requirement_name, requirement_type, requirement_description, requirement_status, project_id, filereq_id];
 
+    // เรียกใช้ SQL query
     db.query(sql, values, (err, data) => {
         if (err) {
             console.error(err);
@@ -205,6 +216,7 @@ app.post('/requirement', (req, res) => {
         return res.status(201).json({ message: "Requirement added successfully", data });
     });
 });
+
 
 
 // Update requirement
@@ -224,6 +236,21 @@ app.put("/requirement/:id", (req, res) => {
             return res.status(500).json({ message: "Error updating requirement" });
         }
         return res.status(200).json({ message: "Requirement updated successfully" });
+    });
+});
+
+// PUT /requirement/:id - Update requirement status
+app.put("/statusrequirement/:id", (req, res) => {
+    const { id } = req.params;
+    const { requirement_status } = req.body;  // Only update the status
+    const sql = "UPDATE requirement SET requirement_status = ? WHERE requirement_id = ?";
+
+    db.query(sql, [requirement_status, id], (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: "Error updating requirement status" });
+        }
+        return res.status(200).json({ message: "Requirement status updated successfully" });
     });
 });
 
@@ -434,12 +461,16 @@ app.get('/login', (req, res) => {
     const sql = "SELECT * FROM login";
     db.query(sql, (err, result) => {
         if (err) {
-            console.error('Error fetching :', err);
-            return res.status(500).send('Error fetching ');
+            console.error('Error fetching:', err);
+            return res.status(500).send('Error fetching');
         }
-        res.json(result);
+        res.json(result);  // Send the result as JSON
     });
 });
+
+
+
+
 
 app.post('/signup', (req, res) => {
     console.log('Request Body:', req.body); // ดูข้อมูลที่ส่งมา
@@ -503,10 +534,9 @@ app.post("/upload", upload.single("file"), (req, res) => {
         return res.status(400).json({ message: "Only PDF files are allowed." });
     }
 
-    if (file.size > 10 * 1024 * 1024 * 1024) {
-        return res.status(400).json({ message: "File size exceeds 10GB." });
+    if (file.size > 10 * 1024 * 1024) {
+        return res.status(400).json({ message: "File size exceeds 10MB." });
     }
-    
 
     const sql = "INSERT INTO file_requirement (filereq_name, filereq_data) VALUES (?, ?)";
     const values = [title, file.buffer];
@@ -521,51 +551,70 @@ app.post("/upload", upload.single("file"), (req, res) => {
     });
 });
 
-//ดึงไฟล์
-app.get('/files', (req, res) => {
-    const sql = `
-        SELECT 
-            filereq_id AS file_id, 
-            filereq_name AS title, 
-            uploaded_at 
-        FROM 
-            file_requirement`;
 
-    db.query(sql, (err, results) => {
+
+app.get('/files', (req, res) => {
+    const sql = "SELECT * FROM file_requirement";
+    db.query(sql, (err, result) => {
         if (err) {
-            console.error("Database error:", err);
-            return res.status(500).json({ error: 'Failed to fetch files.' });
+            console.error('Error fetching Requirement Criteria:', err);
+            return res.status(500).send('Error fetching Requirement Criteria');
         }
-        res.json(results);
+        res.json(result);
     });
 });
 
-//โหลดไฟล์
-// app.get('/files/:file_id/download', (req, res) => {
-//     const fileId = req.params.file_id;
-//     const filePath = `uploads/${fileId}`; // หรือ path ที่ไฟล์ถูกเก็บไว้
-  
-//     res.download(filePath, (err) => {
-//       if (err) {
-//         console.error('Error downloading file:', err);
-//         res.status(500).send('Error downloading file');
-//       }
-//     });
-//   });
-  
-//ลบไฟล์
-app.delete('/files/:fileId', (req, res) => {
-    const fileId = req.params.fileId;
-    db.query('DELETE FROM files WHERE file_id = ?', [fileId], (err, results) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: "Error deleting file" });
-      }
-      res.sendStatus(204); // No Content
+
+
+// เส้นทางดาวน์โหลดไฟล์
+app.get('/files/:filereq_id', (req, res) => {
+    const filereqId = req.params.filereq_id;
+
+    const sql = 'SELECT filereq_name, filereq_data FROM file_requirement WHERE filereq_id = ?';
+    db.query(sql, [filereqId], (err, result) => {
+        if (err) {
+            console.error('Error fetching file:', err);
+            return res.status(500).send('Error fetching file');
+        }
+
+        if (result.length === 0) {
+            return res.status(404).send('File not found');
+        }
+
+        const file = result[0];
+        const fileName = file.filereq_name;
+        const fileData = file.filereq_data;
+
+        // Assuming the file is a PDF, set the appropriate headers
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}.pdf"`);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.send(fileData);
     });
-  });
-  
-  
+});
+
+
+
+// ลบไฟล์
+app.delete('/files/:fileId', (req, res) => {
+    const fileId = req.params.fileId; // รับ fileId จาก URL
+    const sql = "DELETE FROM file_requirement WHERE filereq_id = ?";
+
+    db.query(sql, [fileId], (err, result) => {
+        if (err) {
+            console.error('Error deleting file:', err);
+            return res.status(500).send('Error deleting file');
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).send('File not found');
+        }
+
+        res.status(200).send('File deleted successfully');
+    });
+});
+
+
+
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;
 app.listen(PORT, () => {

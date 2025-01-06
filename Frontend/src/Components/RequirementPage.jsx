@@ -4,11 +4,12 @@ import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen, faTrash, faFileUpload, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { FileAddOutlined } from '@ant-design/icons';
-import Modal from 'react-modal'; // Importing Modal
-import UploadFile from './Uploadfile'; // Importing UploadFile component
+import Modal from 'react-modal';
+import UploadFile from './Uploadfile';
 import "./CSS/RequirementPage.css";
 import checkmark from '../image/check_mark.png';
 import checklist from '../image/attendance_list.png';
+import eyeview from '../image/views.png';
 
 Modal.setAppElement('#root'); // For accessibility
 
@@ -19,6 +20,7 @@ const RequirementPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [projectName, setProjectName] = useState("");
+  const [files, setFiles] = useState([]); // State for files
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,6 +59,19 @@ const RequirementPage = () => {
           setError("Failed to load requirements. Please try again.");
           setLoading(false);
         });
+
+      // Fetch files for the project
+      axios
+        .get(`http://localhost:3001/files?project_id=${projectId}`)
+        .then((res) => {
+          setFiles(res.data); // Store fetched files data
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error("Error fetching files:", err);
+          setError("Failed to load files. Please try again.");
+          setLoading(false);
+        });
     }
   }, [projectId]);
 
@@ -68,7 +83,7 @@ const RequirementPage = () => {
         : [...prev, selectedRequirement]
     );
   };
-  
+
   const handleDelete = (requirementId) => {
     if (window.confirm("Are you sure you want to delete this requirement?")) {
       axios
@@ -92,6 +107,26 @@ const RequirementPage = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false); // Close the modal
   };
+
+  const handleDeleteFile = (fileId) => {
+    if (window.confirm("Are you sure you want to delete this file?")) {
+      axios
+        .delete(`http://localhost:3001/files/${fileId}`)
+        .then((response) => {
+          console.log("File deleted:", response.data);
+          setFiles((prevFiles) =>
+            prevFiles.filter((file) => file.filereq_id !== fileId)
+          );
+        })
+        .catch((err) => {
+          console.error("Error deleting file:", err);
+          setError("Failed to delete file. Please try again.");
+        });
+    }
+  };
+
+
+
 
   return (
     <div className="requirement-container">
@@ -121,7 +156,7 @@ const RequirementPage = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
         <FontAwesomeIcon icon={faMagnifyingGlass} className="search-icon-req" />
-        
+
         <button
           onClick={() => navigate(`/CreateRequirement?project_id=${projectId}`)}
           className="add-requirement-button"
@@ -188,13 +223,58 @@ const RequirementPage = () => {
 
       {/* File Upload Section */}
       <div className="file-upload-section">
-        <h3>File</h3>
-        <div className="file-upload-container">
-          <button onClick={handleOpenModal} className="upload-button">
+        <div className="upload-section">
+          <h3>Uploaded Files</h3>
+          <button onClick={handleOpenModal} className="upload-req">
             <FontAwesomeIcon icon={faFileUpload} /> Add File
           </button>
         </div>
+
+        <div className="file-upload-container">
+          {loading ? (
+            <p>Loading files...</p>
+          ) : error ? (
+            <p className="error-message">{error}</p>
+          ) : (
+            <table className="table-file">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>File</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {files.map((file) => (
+                  <tr key={file.filereq_id}>
+                    <td>{file.filereq_name}</td>
+                    <td>
+                      <button
+                        onClick={() => window.open(`http://localhost:3001/files/${file.filereq_id}`, "_blank")}
+                        className="download-button"
+                      >
+                        Download
+                      </button>
+                    </td>
+                    <td>
+
+                      <button
+                        className="delete-file-button"
+                        onClick={() => handleDeleteFile(file.filereq_id)} // Call handleDeleteFile when clicked
+                      >
+                        <FontAwesomeIcon icon={faTrash} className="delete-file" />
+
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
       </div>
+
 
       {/* Modal for UploadFile */}
       <Modal
@@ -206,7 +286,7 @@ const RequirementPage = () => {
       >
         <UploadFile onClose={handleCloseModal} />
       </Modal>
-    </div>
+    </div >
   );
 };
 

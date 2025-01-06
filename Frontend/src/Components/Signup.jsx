@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CSS/Login.css';
 import logo from '../image/testcraft-logo.png';
+import { toast } from 'react-toastify';
 
 const Signup = () => {
     const [formData, setFormData] = useState({
@@ -23,12 +24,12 @@ const Signup = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+    
         if (!formData.agreeToTerms) {
-            alert('You must agree to the Terms & Conditions to sign up.');
+            toast.warning('You must agree to the Terms & Conditions to sign up.'); // ใช้ toast แทน alert
             return;
         }
-
+    
         try {
             const response = await fetch('http://localhost:3001/signup', {
                 method: 'POST',
@@ -40,19 +41,31 @@ const Signup = () => {
                     user_password: formData.password,
                 }),
             });
-
+    
             if (response.ok) {
-                alert('Sign Up Successful!');
+                toast.success('Sign up successful! Welcome to TestCraft!'); // แสดงข้อความสำเร็จ
                 navigate('/'); // เปลี่ยนเส้นทางไปหน้า Login
             } else {
                 const errorData = await response.json();
-                alert('Sign Up Failed: ' + errorData.message);
+    
+                // ตรวจสอบข้อผิดพลาดที่เกิดขึ้น
+                if (errorData.code === 'DUPLICATE_USER') {
+                    // สร้าง username แบบแนะนำ
+                    const suggestedUsername = formData.fullName + '_' + Math.random().toString(36).substring(2, 6);
+    
+                    toast.error(
+                        `The username "${formData.fullName}" is already in use. Please try another username like "${suggestedUsername}".`
+                    );
+                } else {
+                    toast.error('Sign up failed: ' + errorData.message);
+                }
             }
         } catch (error) {
             console.error('Error signing up:', error);
-            alert('Something went wrong. Please try again later.');
+            toast.error('Something went wrong. Please try again later.');
         }
     };
+    
 
     return (
         <div className="login-page">
