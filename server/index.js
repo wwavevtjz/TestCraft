@@ -567,35 +567,34 @@ app.get('/files', (req, res) => {
 
 
 // เส้นทางดาวน์โหลดไฟล์
-app.get('/files/:filereq_id', (req, res) => {
-    const filereqId = req.params.filereq_id;
-
-    const sql = 'SELECT filereq_name, filereq_data FROM file_requirement WHERE filereq_id = ?';
-    db.query(sql, [filereqId], (err, result) => {
-        if (err) {
-            console.error('Error fetching file:', err);
-            return res.status(500).send('Error fetching file');
-        }
-
-        if (result.length === 0) {
-            return res.status(404).send('File not found');
-        }
-
-        const file = result[0];
-        const fileName = file.filereq_name.endsWith('.pdf') 
-            ? file.filereq_name 
-            : `${file.filereq_name}.pdf`; // เพิ่ม .pdf ถ้าไม่มีนามสกุล
-        const fileData = file.filereq_data;
-
-        // ตั้งค่าหัวข้อสำหรับดาวน์โหลดไฟล์ PDF
-        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-        res.setHeader('Content-Type', 'application/pdf');
-        res.send(fileData);
+app.get("/files/:id", (req, res) => {
+    const fileId = req.params.id;
+  
+    const sql = "SELECT filereq_name, filereq_data FROM file_requirement WHERE filereq_id = ?";
+    db.query(sql, [fileId], (err, results) => {
+      if (err) {
+        console.error("Error fetching file:", err);
+        return res.status(500).send("Internal Server Error");
+      }
+  
+      if (results.length === 0) {
+        return res.status(404).send("File not found");
+      }
+  
+      const file = results[0];
+      const fileName = encodeURIComponent(file.filereq_name || "download.pdf"); // กำหนดชื่อไฟล์ที่ปลอดภัย
+  
+      // ตั้งค่า Content-Type และ Content-Disposition
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${fileName}"`
+      );
+  
+      // ส่งข้อมูลไฟล์กลับ
+      res.send(file.filereq_data);
     });
-});
-
-
-
+  });
 
 
 // ลบไฟล์

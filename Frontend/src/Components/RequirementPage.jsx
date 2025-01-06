@@ -264,7 +264,7 @@ const RequirementPage = () => {
                         }}
                         className="download-button"
                       >
-                        Download PDF
+                        Download
                       </button>
                     </td>
                     <td>
