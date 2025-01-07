@@ -1,11 +1,22 @@
 import React from 'react';
 import { Button } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './CSS/Home.css';
 import logo from '../image/testcraft-logo.png';
-
+import { toast } from 'react-toastify';  // เพิ่มการนำเข้า toast
 
 const Home = () => {
+  const navigate = useNavigate();
+  const username = localStorage.getItem('username');  // ตรวจสอบว่า user login หรือยัง
+
+  const handleTryNowClick = () => {
+    if (!username) {
+      toast.error('Please sign up or log in to try TestCraft!');  // แจ้งเตือน
+    } else {
+      navigate('/Project');  // ถ้าล็อกอินแล้วให้ไปที่หน้า Project
+    }
+  };
+
   return (
     <div className="testcraft-home">
       <div className="promo-banner">
@@ -23,13 +34,10 @@ const Home = () => {
           </p>
         </div>
         <div className='try-now'>
-          <Link to="/Project">
-            <Button className="button-try">Try Now</Button>
-          </Link>
+          <Button onClick={handleTryNowClick} className="button-try">Try Now</Button>
         </div>
       </div>
     </div>
-
   );
 }
 

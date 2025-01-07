@@ -5,6 +5,13 @@ body {
     background-color: #f0f2f5;
 }
 
+.welcome-topic {
+    margin-left: -40px;
+    white-space: nowrap;
+    font-weight: bolder;
+}
+
+
 .login-page {
     display: flex;
     height: 100vh;
