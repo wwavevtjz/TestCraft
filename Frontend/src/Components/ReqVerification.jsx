@@ -30,23 +30,23 @@ const ReqVerification = () => {
       // Load saved checkbox state from localStorage
       const savedCheckboxState = JSON.parse(localStorage.getItem("checkboxState")) || {};
 
-      // ตรวจสอบว่า requirement_status เป็น "WORKING" หรือไม่
       const updatedList = criteriaList.map((criteria) => {
-        // ถ้า requirement_status เป็น WORKING ให้ isChecked เป็น false
         const isWorking = criteria.requirement_status === "WORKING";
         return {
           ...criteria,
-          isChecked: isWorking ? false : savedCheckboxState[criteria.reqcri_id] || false, // ถ้าเป็น WORKING จะตั้งค่าเป็น false
+          isChecked: isWorking ? false : savedCheckboxState[criteria.reqcri_id] || false, // ถ้า requirement_status เป็น WORKING ให้ตั้ง isChecked เป็น false
         };
       });
 
-      setReqcriList(updatedList); // ตั้งค่ารายการที่อัปเดต
+      setReqcriList(updatedList); // อัปเดตรายการ
     } catch (error) {
       console.error("มีปัญหาในการดึงข้อมูล:", error);
     } finally {
       setLoading(false);
     }
   };
+
+
 
   const handleCheckboxChange = (e, id) => {
     const updatedList = reqcriList.map((criteria) =>
@@ -63,7 +63,6 @@ const ReqVerification = () => {
     }, {});
     localStorage.setItem("checkboxState", JSON.stringify(updatedCheckboxState)); // บันทึกสถานะใหม่ใน localStorage
   };
-
 
 
   const handleVerify = async () => {
