@@ -6,6 +6,7 @@ import { faMagnifyingGlass, faPenToSquare, faTrash } from '@fortawesome/free-sol
 import { Modal, Button } from 'react-bootstrap';  // นำเข้า Modal
 import './CSS/Project.css';
 import { toast } from 'react-toastify';
+import clearsearch from '../image/clearsearch.png'
 
 const Project = () => {
   const [projectList, setProjectList] = useState([]);
@@ -105,13 +106,20 @@ const Project = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+
             {searchQuery && (
-              <button className="clear-search-btn" onClick={() => setSearchQuery('')}>
-                Clear
-              </button>
+              <img
+                src={clearsearch}
+                alt="clearsearch-project"
+                className="clearsearch-project"
+                onClick={() => setSearchQuery('')}
+              />
             )}
+
             <FontAwesomeIcon icon={faMagnifyingGlass} className="search-icon" />
           </div>
+
+
 
           {loading ? (
             <p>Loading projects...</p>
@@ -189,22 +197,24 @@ const Project = () => {
       </div>
 
       {/* Modal สำหรับยืนยันการลบ */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-        <Modal.Header>
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered className="custom-modal">
+        <Modal.Header className="custom-modal-header">
           <Modal.Title>Confirm Deletion</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="custom-modal-body">
           Are you sure you want to delete the project "{projectToDelete?.project_name}"?
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+        <Modal.Footer className="custom-modal-footer">
+          <Button variant="secondary" onClick={() => setShowModal(false)} className="custom-btn-secondary">
             Cancel
           </Button>
-          <Button variant="danger" onClick={handleDeleteProject}>
+          <Button variant="danger" onClick={handleDeleteProject} className="custom-btn-danger">
             Delete
           </Button>
         </Modal.Footer>
       </Modal>
+
+
     </div>
   );
 };

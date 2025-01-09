@@ -190,27 +190,33 @@ app.get('/project/:project_id/requirement', (req, res) => {
 // ดึงข้อมูลจาก requirement มา update
 app.get('/requirement/:id', (req, res) => {
     const { id } = req.params;
+    // ดึงข้อมูล Requirement พร้อมกับข้อมูลไฟล์ที่เชื่อมโยง
     const sql = `
         SELECT 
-            requirement_id,
-            requirement_name,
-            requirement_type,
-            requirement_description,
-            filereq_id
-        FROM requirement
-        WHERE requirement_id = ?
+            r.requirement_id,
+            r.requirement_name,
+            r.requirement_type,
+            r.requirement_description,
+            r.requirement_status,
+            r.filereq_id
+        FROM requirement r
+        LEFT JOIN file_requirement f ON r.filereq_id = f.filereq_id
+        WHERE r.requirement_id = ?
     `;
+
     db.query(sql, [id], (err, results) => {
         if (err) {
-            console.error(err);
+            console.error('Error fetching requirement:', err);
             return res.status(500).json({ message: 'Error fetching requirement' });
         }
         if (results.length === 0) {
             return res.status(404).json({ message: 'Requirement not found' });
         }
-        return res.status(200).json(results[0]);
+        return res.status(200).json(results[0]); // ส่งข้อมูล requirement ที่รวม filereq_name มา
     });
 });
+
+
 
 
 
@@ -602,6 +608,18 @@ app.get('/files', (req, res) => {
         res.json(result);
     });
 });
+
+app.get('/filename', (req, res) => {
+    const sql = "SELECT filereq_id, filereq_name FROM file_requirement"; // เลือก filereq_id และ filereq_name
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.error('Error fetching Requirement Criteria:', err);
+            return res.status(500).send('Error fetching Requirement Criteria');
+        }
+        res.json(result); // ส่งผลลัพธ์ให้ client
+    });
+});
+
 
 
 

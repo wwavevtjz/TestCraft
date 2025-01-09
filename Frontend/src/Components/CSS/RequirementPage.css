@@ -17,7 +17,7 @@
 }
 
 .top-section .action-buttons button {
-  margin: 0 10px;
+  margin: 0 20px;
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
@@ -139,7 +139,7 @@
 
 .search-icon-req {
   position: absolute;
-  left: 30px;
+  left: 25px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 1.2rem;
@@ -195,7 +195,7 @@
 }
 
 .add-requirement-button {
-  margin-left: 53%;
+  margin-left: 52%;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -630,4 +630,9 @@ p {
 .status-not-complete {
   background-color: #F4A300;
   color: white;
+}
+
+.clearsearch-req {
+  cursor: pointer;
+  width: 25px;
 }

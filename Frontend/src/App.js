@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-route
 import CreateProject from './Components/CreateProject';
 import CreateRequirement from './Components/CreateRequirement';
 import RequirementPage from './Components/RequirementPage';
+import ViewEditReq from './Components/ViewEditReq';
 import UpdateRequirement from './Components/UpdateRequirement';
 import ReqVerification from './Components/ReqVerification';
 import Project from './Components/Project';
@@ -54,6 +55,7 @@ const App = () => {
 
         {/* Routes สำหรับ Requirements */}
         <Route path="/requirementPage" element={<RequirementPage />} />
+        <Route path="/ViewEditReq" element={<ViewEditReq />} />
         <Route path="/CreateRequirement" element={<CreateRequirement />} />
         <Route path="/UpdateRequirement" element={<UpdateRequirement />} />
         <Route path="/ReqVerification" element={<ReqVerification />} />

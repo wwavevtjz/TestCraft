@@ -13,6 +13,7 @@ import close from "../image/close.png";
 import verified from "../image/verified.png";
 import { jsPDF } from "jspdf"
 import "jspdf-autotable";
+import clearsearch from '../image/clearsearch.png'
 
 
 Modal.setAppElement("#root"); // For accessibility
@@ -28,11 +29,10 @@ const RequirementPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
   const navigate = useNavigate();
   const location = useLocation();
-
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get("project_id");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [selectedRequirementId, setSelectedRequirementId] = useState(null);
+  const [filteredRequirements, setFilteredRequirements] = useState([]);
 
 
   useEffect(() => {
@@ -81,6 +81,21 @@ const RequirementPage = () => {
         });
     }
   }, [projectId]);
+
+  useEffect(() => {
+    if (searchQuery) {
+      const filtered = requirementList.filter((requirement) =>
+        requirement.requirement_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        requirement.requirement_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        `REQ-${requirement.requirement_id.toString()}`.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredRequirements(filtered);
+    } else {
+      setFilteredRequirements(requirementList); // Show all if searchQuery is empty
+    }
+  }, [searchQuery, requirementList]);
+
+
 
 
   const handleSelectRequirement = (id) => {
@@ -133,7 +148,7 @@ const RequirementPage = () => {
     );
 
     const tableData = verifiedRequirements.map((req) => [
-      `REQ-00${req.requirement_id}`,
+      `REQ-0${req.requirement_id}`,
       req.requirement_name,
       req.requirement_description,
       req.requirement_type,
@@ -210,6 +225,14 @@ const RequirementPage = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
+        {searchQuery && (
+          <img
+            src={clearsearch}
+            alt="clearsearch-req"
+            className="clearsearch-req"
+            onClick={() => setSearchQuery('')}
+          />
+        )}
         <FontAwesomeIcon icon={faMagnifyingGlass} className="search-icon-req" />
 
         <button
@@ -233,13 +256,12 @@ const RequirementPage = () => {
                 <th>ID</th>
                 <th>Name</th>
                 <th>Type</th>
-                <th>Description</th>
                 <th>Actions</th>
                 <th>Status</th>
               </tr>
             </thead>
             <tbody>
-              {requirementList.map((data) => (
+              {filteredRequirements.map((data) => (
                 <tr key={data.requirement_id}>
                   <td>
                     <input
@@ -250,11 +272,19 @@ const RequirementPage = () => {
                       onChange={() => handleSelectRequirement(data.requirement_id)}
                     />
                   </td>
-                  <td>REQ-00{data.requirement_id}</td>
+                  <td>REQ-0{data.requirement_id}</td>
                   <td>{data.requirement_name}</td>
                   <td>{data.requirement_type}</td>
-                  <td>{data.requirement_description}</td>
                   <td>
+                    <button
+                      onClick={() =>
+                        navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, { state: { requirement: data } })
+                      }
+                      className="action-button view-req colored-view-button"
+                    >
+                      <FontAwesomeIcon icon={faEye} className="action-icon" />
+                    </button>
+
                     <button
                       onClick={() =>
                         navigate(
@@ -273,13 +303,11 @@ const RequirementPage = () => {
                       <FontAwesomeIcon icon={faTrash} className="action-icon" />
                     </button>
                   </td>
-
                   <td>
                     <button className={`status-button 
-                      ${data.requirement_status === 'VERIFIED' ? 'status-verified' : ''}
-                      ${data.requirement_status === 'WORKING' ? 'status-working' : ''}
-                      ${data.requirement_status === 'VERIFY NOT COMPLETE' ? 'status-not-complete' : ''}
-                    `}>
+                      ${data.requirement_status === 'VERIFIED' ? 'status-verified' : ''} 
+                      ${data.requirement_status === 'WORKING' ? 'status-working' : ''} 
+                      ${data.requirement_status === 'VERIFY NOT COMPLETE' ? 'status-not-complete' : ''}`}>
                       {data.requirement_status}
                     </button>
                   </td>
@@ -308,18 +336,21 @@ const RequirementPage = () => {
             <table className="table-file">
               <thead>
                 <tr>
+                  <th>ID</th>
                   <th>Name</th>
+                  <th>Requirement ID</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {files.map((file) => (
                   <tr key={file.filereq_id}>
+                    <td>{file.filereq_id}</td> {/* เพิ่มการแสดง filereq_id ที่นี่ */}
                     <td>{file.title || file.filereq_name}</td>
+                    <td>{file.requirement_id ? `REQ-${file.requirement_id}` : "N/A"}</td> {/* แสดง requirement_id */}
                     <td className="file-actions">
                       <button
                         className="view-requirement-button"
-
                       >
                         <FontAwesomeIcon icon={faEye} />
                       </button>
@@ -346,16 +377,15 @@ const RequirementPage = () => {
                       >
                         <FontAwesomeIcon icon={faTrash} className="delete-file" />
                       </button>
-
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-
           )}
         </div>
       </div>
+
 
       {/* Modal for UploadFile */}
       <Modal
@@ -403,7 +433,7 @@ const RequirementPage = () => {
                     .filter((req) => req.requirement_status === "VERIFIED")
                     .map((req) => (
                       <tr key={req.requirement_id}>
-                        <td>REQ-00{req.requirement_id}</td>
+                        <td>REQ-0{req.requirement_id}</td>
                         <td>{req.requirement_name}</td>
                         <td>{req.requirement_description}</td>
                         <td>{req.requirement_type}</td>
