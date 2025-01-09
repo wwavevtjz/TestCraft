@@ -2,13 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPen, faTrash, faFileUpload, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { faPen, faTrash, faFileUpload, faMagnifyingGlass, faDownload, faEye } from "@fortawesome/free-solid-svg-icons";
 import { FileAddOutlined } from "@ant-design/icons";
 import Modal from "react-modal";
 import UploadFile from "./Uploadfile";
 import "./CSS/RequirementPage.css";
 import checkmark from "../image/check_mark.png";
 import checklist from "../image/attendance_list.png";
+import close from "../image/close.png";
+import verified from "../image/verified.png";
+import { jsPDF } from "jspdf"
+import "jspdf-autotable";
+
 
 Modal.setAppElement("#root"); // For accessibility
 
@@ -26,6 +31,9 @@ const RequirementPage = () => {
 
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get("project_id");
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [selectedRequirementId, setSelectedRequirementId] = useState(null);
+
 
   useEffect(() => {
     if (projectId) {
@@ -74,6 +82,7 @@ const RequirementPage = () => {
     }
   }, [projectId]);
 
+
   const handleSelectRequirement = (id) => {
     const selectedRequirement = requirementList.find((req) => req.requirement_id === id);
     setSelectedRequirements((prev) =>
@@ -98,6 +107,54 @@ const RequirementPage = () => {
         });
     }
   };
+
+  const handleOpenReviewModal = () => {
+    setIsReviewModalOpen(true);
+
+    // กำหนด requirement_status ให้เป็น "VERIFIED" สำหรับแค่การแสดงใน Modal เท่านั้น
+    const verifiedRequirements = requirementList.filter((req) => req.requirement_status === "WORKING");
+
+    // ส่งข้อมูล requirements ที่มีสถานะ "WORKING" มาแสดงใน Modal
+    setSelectedRequirements(verifiedRequirements);
+  };
+
+
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+
+    // สร้างหัวข้อใน PDF
+    doc.setFontSize(18);
+    doc.text("Verified Requirements", 14, 20);
+
+    // สร้างตารางข้อมูล
+    const verifiedRequirements = requirementList.filter(
+      (req) => req.requirement_status === "VERIFIED"
+    );
+
+    const tableData = verifiedRequirements.map((req) => [
+      `REQ-00${req.requirement_id}`,
+      req.requirement_name,
+      req.requirement_description,
+      req.requirement_type,
+      req.requirement_status,
+    ]);
+
+    // ใส่ข้อมูลลงในตาราง PDF
+    doc.autoTable({
+      head: [["REQ-ID", "Name", "Description", "Type", "Status"]],
+      body: tableData,
+      startY: 30, // ตำแหน่งเริ่มต้นของตาราง
+    });
+
+    // ดาวน์โหลด PDF
+    doc.save(`${projectName}_verified_requirements.pdf`);
+  };
+
+  const handleCloseReviewModal = () => {
+    setIsReviewModalOpen(false);
+  };
+
 
   const handleOpenModal = () => {
     setIsModalOpen(true); // Open the modal
@@ -124,14 +181,16 @@ const RequirementPage = () => {
     }
   };
 
+
   return (
     <div className="requirement-container">
       <div className="top-section">
         <h1 className="requirement-title">Project {projectName || projectId} Requirements</h1>
         <div className="action-buttons">
-          <button className="review-button" onClick={() => navigate("/ReviewReqVeri")}>
-            <img src={checkmark} alt="checkmark" className="checkmark" />Review Verified
+          <button className="review-button" onClick={handleOpenReviewModal}>
+            <img src={checkmark} alt="checkmark" className="checkmark" /> Review Verified
           </button>
+
           <button
             className="verify-button"
             onClick={() =>
@@ -215,7 +274,15 @@ const RequirementPage = () => {
                     </button>
                   </td>
 
-                  <td>{data.requirement_status}</td>
+                  <td>
+                    <button className={`status-button 
+                      ${data.requirement_status === 'VERIFIED' ? 'status-verified' : ''}
+                      ${data.requirement_status === 'WORKING' ? 'status-working' : ''}
+                      ${data.requirement_status === 'VERIFY NOT COMPLETE' ? 'status-not-complete' : ''}
+                    `}>
+                      {data.requirement_status}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -241,8 +308,7 @@ const RequirementPage = () => {
             <table className="table-file">
               <thead>
                 <tr>
-                  <th>Title</th>
-                  <th>File</th>
+                  <th>Name</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -250,8 +316,16 @@ const RequirementPage = () => {
                 {files.map((file) => (
                   <tr key={file.filereq_id}>
                     <td>{file.title || file.filereq_name}</td>
-                    <td>
+                    <td className="file-actions">
                       <button
+                        className="view-requirement-button"
+
+                      >
+                        <FontAwesomeIcon icon={faEye} />
+                      </button>
+
+                      <button
+                        className="download-file-button"
                         onClick={() => {
                           const link = document.createElement("a");
                           link.href = `http://localhost:3001/files/${file.filereq_id}`;
@@ -262,28 +336,27 @@ const RequirementPage = () => {
                           link.click();
                           document.body.removeChild(link);
                         }}
-                        className="download-button"
                       >
-                        Download
+                        <FontAwesomeIcon icon={faDownload} />
                       </button>
-                    </td>
-                    <td>
+
                       <button
                         className="delete-file-button"
                         onClick={() => handleDeleteFile(file.filereq_id)}
                       >
                         <FontAwesomeIcon icon={faTrash} className="delete-file" />
                       </button>
+
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
           )}
         </div>
       </div>
 
-      {/* Modal for UploadFile */}
       {/* Modal for UploadFile */}
       <Modal
         isOpen={isModalOpen}
@@ -302,6 +375,56 @@ const RequirementPage = () => {
           }}
         />
       </Modal>
+
+      <Modal
+        isOpen={isReviewModalOpen}
+        onRequestClose={handleCloseReviewModal}
+        contentLabel="Review Verified PDF"
+        className="review-modal"
+        overlayClassName="modal-overlay"
+      >
+        <div className="modal-content-reviewreq">
+          <div className="verified-requirements-section">
+            <h3 className="ver-topic">Verified Requirements</h3>
+            <img onClick={handleCloseReviewModal} src={close} alt="close-reviewreq" className="close-reviewreq" />
+            {requirementList.length > 0 ? (
+              <table className="verified-requirements-table">
+                <thead>
+                  <tr>
+                    <th>REQ-ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requirementList
+                    .filter((req) => req.requirement_status === "VERIFIED")
+                    .map((req) => (
+                      <tr key={req.requirement_id}>
+                        <td>REQ-00{req.requirement_id}</td>
+                        <td>{req.requirement_name}</td>
+                        <td>{req.requirement_description}</td>
+                        <td>{req.requirement_type}</td>
+                        <td>{req.requirement_status}<img src={verified} alt="verified" className="verified" /></td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>No verified requirements yet.</p>
+            )}
+            <button className="ExportPDF" onClick={handleExportPDF}>Export PDF</button>
+          </div>
+        </div>
+      </Modal>
+
+
+
+
+
+
 
     </div>
   );

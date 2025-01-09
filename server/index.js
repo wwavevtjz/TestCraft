@@ -168,6 +168,7 @@ app.get('/member', (req, res) => {
 });
 
 // ------------------------- REQUIREMENT ROUTES -------------------------
+// API ดึงข้อมูล requirements ของ project
 app.get('/project/:project_id/requirement', (req, res) => {
     const { project_id } = req.params;
 
@@ -185,6 +186,63 @@ app.get('/project/:project_id/requirement', (req, res) => {
         return res.status(200).json(data);
     });
 });
+
+// ดึงข้อมูลจาก requirement มา update
+app.get('/requirement/:id', (req, res) => {
+    const { id } = req.params;
+    const sql = `
+        SELECT 
+            requirement_id,
+            requirement_name,
+            requirement_type,
+            requirement_description,
+            filereq_id
+        FROM requirement
+        WHERE requirement_id = ?
+    `;
+    db.query(sql, [id], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Error fetching requirement' });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Requirement not found' });
+        }
+        return res.status(200).json(results[0]);
+    });
+});
+
+
+
+
+
+// API สำหรับการอัปเดต requirement
+app.put("/requirement/:id", (req, res) => {
+    const { id } = req.params;
+    const { requirement_name, requirement_description, requirement_type, filereq_id } = req.body;
+
+    // ตรวจสอบว่าข้อมูลที่จำเป็นทั้งหมดมีหรือไม่
+    if (!requirement_name || !requirement_description || !requirement_type || !filereq_id) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // สร้าง SQL สำหรับการอัปเดตข้อมูล requirement
+    const sql =
+        "UPDATE requirement SET requirement_name = ?, requirement_description = ?, requirement_type = ?, filereq_id = ? WHERE requirement_id = ?";
+
+    db.query(sql, [requirement_name, requirement_description, requirement_type, filereq_id, id], (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: "Error updating requirement" });
+        }
+        // ตรวจสอบว่ามีการอัปเดตหรือไม่
+        if (data.affectedRows === 0) {
+            return res.status(404).json({ message: "Requirement not found or no changes made" });
+        }
+        return res.status(200).json({ message: "Requirement updated successfully" });
+    });
+});
+
 
 
 // Add a new requirement for a specific project
@@ -219,25 +277,6 @@ app.post('/requirement', (req, res) => {
 
 
 
-// Update requirement
-app.put("/requirement/:id", (req, res) => {
-    const { id } = req.params;
-    const { requirement_name, requirement_description, requirement_type } = req.body;
-
-    if (!requirement_name || !requirement_description || !requirement_type) {
-        return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    const sql =
-        "UPDATE requirement SET requirement_name = ?, requirement_description = ?, requirement_type = ? WHERE requirement_id = ?";
-    db.query(sql, [requirement_name, requirement_description, requirement_type, id], (err, data) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Error updating requirement" });
-        }
-        return res.status(200).json({ message: "Requirement updated successfully" });
-    });
-});
 
 // PUT /requirement/:id - Update requirement status
 app.put("/statusrequirement/:id", (req, res) => {
@@ -569,32 +608,32 @@ app.get('/files', (req, res) => {
 // เส้นทางดาวน์โหลดไฟล์
 app.get("/files/:id", (req, res) => {
     const fileId = req.params.id;
-  
+
     const sql = "SELECT filereq_name, filereq_data FROM file_requirement WHERE filereq_id = ?";
     db.query(sql, [fileId], (err, results) => {
-      if (err) {
-        console.error("Error fetching file:", err);
-        return res.status(500).send("Internal Server Error");
-      }
-  
-      if (results.length === 0) {
-        return res.status(404).send("File not found");
-      }
-  
-      const file = results[0];
-      const fileName = encodeURIComponent(file.filereq_name || "download.pdf"); // กำหนดชื่อไฟล์ที่ปลอดภัย
-  
-      // ตั้งค่า Content-Type และ Content-Disposition
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename="${fileName}"`
-      );
-  
-      // ส่งข้อมูลไฟล์กลับ
-      res.send(file.filereq_data);
+        if (err) {
+            console.error("Error fetching file:", err);
+            return res.status(500).send("Internal Server Error");
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send("File not found");
+        }
+
+        const file = results[0];
+        const fileName = encodeURIComponent(file.filereq_name || "download.pdf"); // กำหนดชื่อไฟล์ที่ปลอดภัย
+
+        // ตั้งค่า Content-Type และ Content-Disposition
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${fileName}"`
+        );
+
+        // ส่งข้อมูลไฟล์กลับ
+        res.send(file.filereq_data);
     });
-  });
+});
 
 
 // ลบไฟล์

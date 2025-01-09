@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import './CSS/ProjectConfig.css';
 
 const ProjectConfig = () => {
     const [newCriteria, setNewCriteria] = useState("");
@@ -68,37 +69,34 @@ const ProjectConfig = () => {
     };
 
     return (
-        <div className="req-verification-container">
-            <div className="header">
+        <div className="project-config-container">
+            <div className="project-config-header">
                 <h1>Project Configuration</h1>
             </div>
 
-            <div className="content">
-                <div className="checklist-section">
+            <div className="project-config-content">
+                <div className="project-config-checklist-section">
                     <h2>SRS Verification Criteria</h2>
-                    <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+                    <div className="project-config-input-container">
                         <input
                             type="text"
                             value={newCriteria}
                             onChange={(e) => setNewCriteria(e.target.value)}
                             placeholder="Add New Criteria"
+                            className="project-config-input"
                         />
-                        <button className="add-button" onClick={handleAdd}>
+                        <button className="project-config-add-button" onClick={handleAdd}>
                             Add
                         </button>
                     </div>
                     {loading ? (
                         <p>Loading...</p>
                     ) : (
-                        <ul>
+                        <ul className="project-config-criteria-list">
                             {reqcriList.map((criteria) => (
                                 <li
                                     key={criteria.reqcri_id}
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "10px",
-                                    }}
+                                    className="project-config-criteria-item"
                                 >
                                     {editingId === criteria.reqcri_id ? (
                                         <>
@@ -106,20 +104,34 @@ const ProjectConfig = () => {
                                                 type="text"
                                                 value={editValue}
                                                 onChange={(e) => setEditValue(e.target.value)}
+                                                className="project-config-input"
                                             />
-                                            <button onClick={handleUpdate}>Save</button>
-                                            <button onClick={() => setEditingId(null)}>Cancel</button>
+                                            <button className="project-config-save-button" onClick={handleUpdate}>
+                                                Save
+                                            </button>
+                                            <button
+                                                className="project-config-cancel-button"
+                                                onClick={() => setEditingId(null)}
+                                            >
+                                                Cancel
+                                            </button>
                                         </>
                                     ) : (
                                         <>
                                             <span>{criteria.reqcri_name}</span>
-                                            <button onClick={() => {
-                                                setEditingId(criteria.reqcri_id);
-                                                setEditValue(criteria.reqcri_name);
-                                            }}>
+                                            <button
+                                                className="project-config-edit-button"
+                                                onClick={() => {
+                                                    setEditingId(criteria.reqcri_id);
+                                                    setEditValue(criteria.reqcri_name);
+                                                }}
+                                            >
                                                 Edit
                                             </button>
-                                            <button onClick={() => handleDelete(criteria.reqcri_id)}>
+                                            <button
+                                                className="project-config-delete-button"
+                                                onClick={() => handleDelete(criteria.reqcri_id)}
+                                            >
                                                 Delete
                                             </button>
                                         </>

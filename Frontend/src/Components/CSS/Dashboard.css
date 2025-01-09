@@ -5,7 +5,7 @@
 }
 
 .dashboard-sidebar {
-  width: 170px;
+  width: 270px;
   background-color: #1e3a56;
   padding: 20px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
@@ -46,15 +46,17 @@
   overflow-y: auto;
 }
 
+
+
 .dashboard-close-project-btn {
   background-color: #ff4d4d;
   color: white;
-  padding: 10px 20px;
+  padding: 10px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   width: 100%;
-  margin-top: 40px;
+  margin-top: 100px;
 }
 
 .dashboard-close-project-btn:hover {
@@ -143,10 +145,6 @@
     width: 100%;
   }
 
-  .dashboard-content-container {
-    padding: 10px;
-  }
-
   .dashboard-nav-link {
     margin: 0 5px;
     font-size: 16px;
@@ -155,7 +153,7 @@
 
 .dashboard-container {
   display: flex;
-  height: 100vh;
+  height: auto;
   color: #fff;
 }
 
@@ -192,26 +190,4 @@
 .dashboard-nav-link.active {
   background-color: #357ab7;
   border-radius: 5px;
-}
-
-.dashboard-content-container {
-  flex-grow: 1;
-  padding: 20px;
-  color: #000;
-  overflow-y: auto;
-}
-
-.dashboard-close-project-btn {
-  background-color: #ff4d4d;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  width: 100%;
-  margin-top: 40px;
-}
-
-.dashboard-close-project-btn:hover {
-  background-color: #e60000;
 }

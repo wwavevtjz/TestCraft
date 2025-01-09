@@ -1,0 +1,118 @@
+/* ProjectConfig.css */
+.project-config-container {
+    font-family: Arial, sans-serif;
+    width: 80%;
+    margin: 0 auto;
+    background-color: #f4f4f4;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 20px;
+}
+
+.project-config-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.project-config-header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #333;
+}
+
+.project-config-content {
+    margin-top: 20px;
+}
+
+.project-config-checklist-section h2 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.project-config-input-container {
+    display: flex;
+    margin-bottom: 15px;
+    justify-content: space-between;
+}
+
+.project-config-input {
+    flex: 1;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+.project-config-add-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.project-config-add-button:hover {
+    background-color: #0056b3;
+}
+
+.project-config-criteria-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.project-config-criteria-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #fff;
+    margin-bottom: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.project-config-criteria-item span {
+    flex: 1;
+    font-size: 1rem;
+    color: #333;
+}
+
+.project-config-edit-button,
+.project-config-delete-button,
+.project-config-save-button,
+.project-config-cancel-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.project-config-delete-button {
+    background-color: #dc3545;
+}
+
+.project-config-delete-button:hover {
+    background-color: #c82333;
+}
+
+.project-config-edit-button:hover,
+.project-config-save-button:hover {
+    background-color: #0056b3;
+}
+
+.project-config-cancel-button {
+    background-color: #6c757d;
+}
+
+.project-config-cancel-button:hover {
+    background-color: #5a6268;
+}

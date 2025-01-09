@@ -311,7 +311,8 @@ h3 {
 }
 
 .table-file {
-  width: 100%;
+  margin-right: 30%;
+  width: 70%;
   border-collapse: collapse;
   margin-bottom: 20px;
 }
@@ -468,4 +469,165 @@ h3 {
 /* Style for the delete icon */
 .delete-file {
   font-size: 18px;
+}
+
+/* Modal Content */
+.modal-content-reviewreq {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  width: auto;
+  max-width: 800px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Close Button */
+.close-reviewreq {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+}
+
+.close-reviewreq:hover {
+  transform: rotate(90deg);
+}
+
+/* Title */
+h3 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Table */
+.verified-requirements-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.verified-requirements-table th,
+.verified-requirements-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.verified-requirements-table th {
+  background-color: #f5f5f5;
+  color: #666;
+  font-weight: 500;
+}
+
+.verified-requirements-table td {
+  color: #333;
+}
+
+/* Export Button - Positioned Bottom Right */
+.ExportPDF {
+  margin: 25px 0 0 75%;
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.ExportPDF:hover {
+  background-color: #45a049;
+}
+
+/* No requirements message */
+p {
+  font-size: 16px;
+  color: #777;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.table-file td .download-file-button {
+  background-color: #28a745;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  margin-right: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.table-file td .download-file-button:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
+
+.table-file td .delete-file-button {
+  background-color: #dc3545;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  margin-right: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.table-file td .delete-file-button:hover {
+  background-color: #c82333;
+  transform: scale(1.05);
+}
+
+.table-file td .view-requirement-button {
+  background-color: #6c757d;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  margin-right: 5px;
+}
+
+.table-file td .view-requirement-button:hover {
+  background-color: #5a6268;
+  transform: scale(1.05);
+}
+
+/* ปุ่ม Status */
+.status-button {
+  padding: 10px 20px;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+/* สถานะ VERIFIED (สีเขียว) */
+.status-verified {
+  background-color: #28a745;
+  /* สีเขียว */
+  color: white;
+}
+
+/* สถานะ WORKING (สีฟ้า) */
+.status-working {
+  background-color: #007bff;
+  /* สีฟ้า */
+  color: white;
+}
+
+/* สถานะ VERIFY NOT COMPLETE (สีแดง) */
+.status-not-complete {
+  background-color: #F4A300;
+  color: white;
 }
