@@ -599,15 +599,22 @@ app.post("/upload", upload.single("file"), (req, res) => {
 
 
 app.get('/files', (req, res) => {
-    const sql = "SELECT * FROM file_requirement";
-    db.query(sql, (err, result) => {
+    const { project_id } = req.query; // ดึง project_id จาก query parameters
+
+    if (!project_id) {
+        return res.status(400).send('project_id is required');
+    }
+
+    const sql = "SELECT * FROM file_requirement WHERE project_id = ?";
+    db.query(sql, [project_id], (err, result) => {
         if (err) {
-            console.error('Error fetching Requirement Criteria:', err);
-            return res.status(500).send('Error fetching Requirement Criteria');
+            console.error('Error fetching files:', err);
+            return res.status(500).send('Error fetching files');
         }
         res.json(result);
     });
 });
+
 
 app.get('/filename', (req, res) => {
     const sql = "SELECT filereq_id, filereq_name FROM file_requirement"; // เลือก filereq_id และ filereq_name
