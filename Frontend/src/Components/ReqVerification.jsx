@@ -31,10 +31,11 @@ const ReqVerification = () => {
       const savedCheckboxState = JSON.parse(localStorage.getItem("checkboxState")) || {};
 
       const updatedList = criteriaList.map((criteria) => {
-        const isWorking = criteria.requirement_status === "WORKING";
+        // ถ้าสถานะเป็น WORKING ให้ไม่มีการถูกเลือก Checkbox
+        const isChecked = criteria.requirement_status === "WORKING" ? false : savedCheckboxState[criteria.reqcri_id] || false;
         return {
           ...criteria,
-          isChecked: isWorking ? false : savedCheckboxState[criteria.reqcri_id] || false, // ถ้า requirement_status เป็น WORKING ให้ตั้ง isChecked เป็น false
+          isChecked, // ตั้งค่า isChecked ตามสถานะ
         };
       });
 
@@ -48,9 +49,13 @@ const ReqVerification = () => {
 
 
 
+
   const handleCheckboxChange = (e, id) => {
+    // ตรวจสอบสถานะว่าเป็น WORKING หรือไม่
     const updatedList = reqcriList.map((criteria) =>
-      criteria.reqcri_id === id ? { ...criteria, isChecked: e.target.checked } : criteria
+      criteria.reqcri_id === id && criteria.requirement_status !== "WORKING" // ถ้าไม่ใช่ WORKING จะสามารถเปลี่ยนสถานะได้
+        ? { ...criteria, isChecked: e.target.checked }
+        : criteria
     );
     setReqcriList(updatedList);
 
@@ -63,6 +68,7 @@ const ReqVerification = () => {
     }, {});
     localStorage.setItem("checkboxState", JSON.stringify(updatedCheckboxState)); // บันทึกสถานะใหม่ใน localStorage
   };
+
 
 
   const handleVerify = async () => {

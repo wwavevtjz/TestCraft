@@ -33,6 +33,7 @@ const RequirementPage = () => {
   const projectId = queryParams.get("project_id");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [filteredRequirements, setFilteredRequirements] = useState([]);
+  const [alertMessage, setAlertMessage] = useState(""); // เก็บข้อความแจ้งเตือน
 
 
   useEffect(() => {
@@ -196,6 +197,15 @@ const RequirementPage = () => {
     }
   };
 
+  const handleVerification = () => {
+    if (selectedRequirements.length === 0) {
+      setAlertMessage("Please select at least one requirement to verify."); // ตั้งข้อความแจ้งเตือน
+    } else {
+      setAlertMessage(""); // ล้างข้อความแจ้งเตือน
+      navigate(`/ReqVerification?project_id=${projectId}`, { state: { selectedRequirements } });
+    }
+  }
+
 
   return (
     <div className="requirement-container">
@@ -208,15 +218,14 @@ const RequirementPage = () => {
 
           <button
             className="verify-button"
-            onClick={() =>
-              navigate(`/ReqVerification?project_id=${projectId}`, { state: { selectedRequirements } })
-            }
+            onClick={handleVerification}
           >
             <img src={checklist} alt="checklist" className="checklist" /> Verification
           </button>
+
         </div>
       </div>
-
+      {alertMessage && <p className="alert-message">{alertMessage}</p>}
       <div className="req-search">
         <input
           type="text"
@@ -249,7 +258,9 @@ const RequirementPage = () => {
         ) : error ? (
           <p className="error-message">{error}</p>
         ) : (
+
           <table className="requirement-table">
+
             <thead>
               <tr>
                 <th>Select</th>
@@ -263,6 +274,7 @@ const RequirementPage = () => {
             <tbody>
               {filteredRequirements.map((data) => (
                 <tr key={data.requirement_id}>
+                  {/* Checkbox */}
                   <td>
                     <input
                       type="checkbox"
@@ -270,11 +282,15 @@ const RequirementPage = () => {
                         (req) => req.requirement_id === data.requirement_id
                       )}
                       onChange={() => handleSelectRequirement(data.requirement_id)}
+                      disabled={data.requirement_status === "VERIFIED"} // Disable checkbox if VERIFIED
                     />
                   </td>
+
                   <td>REQ-0{data.requirement_id}</td>
                   <td>{data.requirement_name}</td>
                   <td>{data.requirement_type}</td>
+
+                  {/* Actions */}
                   <td>
                     <button
                       onClick={() =>
@@ -285,6 +301,7 @@ const RequirementPage = () => {
                       <FontAwesomeIcon icon={faEye} className="action-icon" />
                     </button>
 
+                    {/* Disable Edit button if VERIFIED */}
                     <button
                       onClick={() =>
                         navigate(
@@ -292,6 +309,7 @@ const RequirementPage = () => {
                         )
                       }
                       className="action-button edit-req colored-edit-button"
+                      disabled={data.requirement_status === "VERIFIED"} // Disable Edit button if VERIFIED
                     >
                       <FontAwesomeIcon icon={faPen} className="action-icon" />
                     </button>
@@ -303,17 +321,21 @@ const RequirementPage = () => {
                       <FontAwesomeIcon icon={faTrash} className="action-icon" />
                     </button>
                   </td>
+
                   <td>
-                    <button className={`status-button 
-                      ${data.requirement_status === 'VERIFIED' ? 'status-verified' : ''} 
-                      ${data.requirement_status === 'WORKING' ? 'status-working' : ''} 
-                      ${data.requirement_status === 'VERIFY NOT COMPLETE' ? 'status-not-complete' : ''}`}>
+                    <button
+                      className={`status-button 
+            ${data.requirement_status === 'VERIFIED' ? 'status-verified' : ''} 
+            ${data.requirement_status === 'WORKING' ? 'status-working' : ''} 
+            ${data.requirement_status === 'VERIFY NOT COMPLETE' ? 'status-not-complete' : ''}`}
+                    >
                       {data.requirement_status}
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
+
           </table>
         )}
       </div>
@@ -347,7 +369,7 @@ const RequirementPage = () => {
                   <tr key={file.filereq_id}>
                     <td>{file.filereq_id}</td> {/* เพิ่มการแสดง filereq_id ที่นี่ */}
                     <td>{file.title || file.filereq_name}</td>
-                    <td>{file.requirement_id ? `REQ-${file.requirement_id}` : "N/A"}</td> {/* แสดง requirement_id */}
+                    <td>{file.requirement_id ? `REQ-0${file.requirement_id}` : "N/A"}</td> {/* แสดง requirement_id */}
                     <td className="file-actions">
                       <button
                         className="view-requirement-button"

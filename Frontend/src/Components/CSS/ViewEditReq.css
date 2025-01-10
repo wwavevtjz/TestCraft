@@ -1,5 +1,5 @@
 .view-requirement-container {
-    max-width: 70%;
+    max-width: 60%;
     margin: 20px auto;
     padding: 20px;
     border: 1px solid #ddd;
@@ -49,8 +49,7 @@
 
 .view-requirement-paragraph {
     text-indent: 30px;
-    margin-top: 10px;
-    margin-bottom: 10px; 
+    margin: 10px 65% 10px 0;
     font-size: 16px;
     line-height: 1.6; 
     color: #444; 
@@ -63,8 +62,7 @@
 .view-requirement-header {
     display: flex;
     margin-bottom: 20px;
-    gap: 80px;
-    justify-content: space-between;
+    gap: 200px;
 }
 
 .view-requirement-header-with-button {
