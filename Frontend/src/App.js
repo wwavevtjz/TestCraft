@@ -16,6 +16,7 @@ import Uploadfile from './Components/Uploadfile';
 import Login from './Components/Login';
 import Signup from './Components/Signup';
 import ProjectConfig from './Components/ProjectConfig';
+import ViewFile from './Components/ViewFile';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Make sure Bootstrap CSS is imported
 
 
@@ -59,6 +60,7 @@ const App = () => {
         <Route path="/CreateRequirement" element={<CreateRequirement />} />
         <Route path="/UpdateRequirement" element={<UpdateRequirement />} />
         <Route path="/ReqVerification" element={<ReqVerification />} />
+        <Route path="/ViewFile" element={<ViewFile />} />
 
         {/* Routes สำหรับ Login */}
         <Route path="/" element={<Login setUsername={setUsername} />} />

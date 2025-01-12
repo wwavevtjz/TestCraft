@@ -4,20 +4,22 @@
     padding: 20px;
     border: 1px solid #ddd;
     border-radius: 8px;
-    background-color: #fff; /* ปรับพื้นหลังให้เป็นสีขาวเพื่อความสะอาดตา */
+    background-color: #fff;
+    /* ปรับพื้นหลังให้เป็นสีขาวเพื่อความสะอาดตา */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     font-family: Arial, sans-serif;
-    transition: box-shadow 0.3s ease; /* เพิ่มเอฟเฟ็กต์เมื่อ hover */
+    transition: box-shadow 0.3s ease;
+    /* เพิ่มเอฟเฟ็กต์เมื่อ hover */
 }
 
 .view-requirement-container:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15); /* เอฟเฟ็กต์เมื่อ hover */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    /* เอฟเฟ็กต์เมื่อ hover */
 }
 
 .view-requirement-title {
     font-size: 24px;
     font-weight: bold;
-    text-align: start;
     margin-bottom: 20px;
     color: #333;
 }
@@ -51,26 +53,37 @@
     text-indent: 30px;
     margin: 10px 65% 10px 0;
     font-size: 16px;
-    line-height: 1.6; 
-    color: #444; 
+    line-height: 1.6;
+    color: #444;
     white-space: pre-wrap;
-    word-wrap: break-word; 
-    max-width: 100%; 
+    word-wrap: break-word;
+    max-width: 100%;
 }
 
 
 .view-requirement-header {
     display: flex;
     margin-bottom: 20px;
-    gap: 200px;
+    gap: 150px;
 }
 
 .view-requirement-header-with-button {
-    display: flex;
-    justify-content: flex-end;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
+    margin-left: 36%;
+    position: relative;
+}
+
+.backreq-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.backtoreq {
+    width: 26px;
+    height: auto;
 }
 
 .edit-requirement-button {
@@ -85,7 +98,8 @@
 }
 
 .edit-requirement-button:hover {
-    background-color: #0056b3; /* เพิ่มสีเมื่อ hover */
+    background-color: #0056b3;
+    /* เพิ่มสีเมื่อ hover */
 }
 
 .edit-buttons {
@@ -102,8 +116,10 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    width: 40%; /* ลดขนาดปุ่มเพื่อให้พอดีกับ 2 ปุ่ม */
-    transition: background-color 0.3s ease; /* เพิ่ม transition เมื่อ hover */
+    width: 40%;
+    /* ลดขนาดปุ่มเพื่อให้พอดีกับ 2 ปุ่ม */
+    transition: background-color 0.3s ease;
+    /* เพิ่ม transition เมื่อ hover */
 }
 
 .save-button {
@@ -112,7 +128,8 @@
 }
 
 .save-button:hover {
-    background-color: #0056b3; /* สีเมื่อ hover */
+    background-color: #0056b3;
+    /* สีเมื่อ hover */
 }
 
 .cancel-button {
@@ -121,5 +138,6 @@
 }
 
 .cancel-button:hover {
-    background-color: #d32f2f; /* สีเมื่อ hover */
+    background-color: #d32f2f;
+    /* สีเมื่อ hover */
 }

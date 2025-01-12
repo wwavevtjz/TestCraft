@@ -17,7 +17,7 @@
 }
 
 .top-section .action-buttons button {
-  margin: 0 20px;
+  margin: 0 15px;
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
@@ -164,6 +164,31 @@
 .review-button:hover {
   background-color: #005f99;
   transform: scale(1.05);
+}
+
+.verhistory-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  background-color: #9b59b6;
+  /* สีเขียวสดใส */
+  color: white;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.verhistory-button:hover {
+  background-color: #884aa8;
+  transform: scale(1.05);
+}
+
+
+.history {
+  width: 20px;
+  height: 20px;
 }
 
 .checkmark {
@@ -626,7 +651,7 @@ p {
   color: white;
 }
 
-/* สถานะ VERIFY NOT COMPLETE (สีแดง) */
+/* สถานะ VERIFY NOT COMPLETE */
 .status-not-complete {
   background-color: #F4A300;
   color: white;
@@ -647,7 +672,7 @@ input[type="checkbox"]:disabled {
 }
 
 .alert-message {
-  margin-right: 78%;
+  margin-right: 70%;
   color: red;
   margin-top: 10px;
   font-size: 16px;

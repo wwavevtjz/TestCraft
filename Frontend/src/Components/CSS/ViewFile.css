@@ -1,0 +1,47 @@
+.view-file-container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 100%;
+    max-width: 500px;
+    text-align: left;
+}
+
+/* Heading Style */
+.view-file-container h1 {
+    font-size: 24px;
+    color: #333333;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+/* Paragraph Style */
+.view-file-container p {
+    font-size: 14px;
+    color: #555555;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+/* Strong Element Styling */
+.view-file-container strong {
+    color: #222222;
+    font-weight: 600;
+}
+
+/* ID and Details styling */
+.view-file-container p strong {
+    color: #3a3a3a;
+}
+
+/* Optional Responsive Adjustment */
+@media (max-width: 600px) {
+    .view-file-container {
+        padding: 15px;
+    }
+
+    .view-file-container h1 {
+        font-size: 20px;
+    }
+}

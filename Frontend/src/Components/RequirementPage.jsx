@@ -11,6 +11,7 @@ import checkmark from "../image/check_mark.png";
 import checklist from "../image/attendance_list.png";
 import close from "../image/close.png";
 import verified from "../image/verified.png";
+import history from "../image/history.png";
 import { jsPDF } from "jspdf"
 import "jspdf-autotable";
 import clearsearch from '../image/clearsearch.png'
@@ -206,12 +207,21 @@ const RequirementPage = () => {
     }
   }
 
+  const handleViewFile = (file) => {
+    navigate(`/ViewFile`, { state: { file } });
+  };
+
+
 
   return (
     <div className="requirement-container">
       <div className="top-section">
         <h1 className="requirement-title">Project {projectName || projectId} Requirements</h1>
         <div className="action-buttons">
+          <button className="verhistory-button">
+            <img src={history} alt="history" className="history" /> Verification History
+          </button>
+
           <button className="review-button" onClick={handleOpenReviewModal}>
             <img src={checkmark} alt="checkmark" className="checkmark" /> Review Verified
           </button>
@@ -286,15 +296,45 @@ const RequirementPage = () => {
                     />
                   </td>
 
-                  <td>REQ-0{data.requirement_id}</td>
-                  <td>{data.requirement_name}</td>
-                  <td>{data.requirement_type}</td>
+                  {/* Clickable cells */}
+                  <td
+                    onClick={() =>
+                      navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, {
+                        state: { requirement: data },
+                      })
+                    }
+                    style={{ cursor: "pointer", userSelect: "none" }}
+                  >
+                    REQ-0{data.requirement_id}
+                  </td>
+                  <td
+                    onClick={() =>
+                      navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, {
+                        state: { requirement: data },
+                      })
+                    }
+                    style={{ cursor: "pointer", userSelect: "none" }}
+                  >
+                    {data.requirement_name}
+                  </td>
+                  <td
+                    onClick={() =>
+                      navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, {
+                        state: { requirement: data },
+                      })
+                    }
+                    style={{ cursor: "pointer", userSelect: "none" }}
+                  >
+                    {data.requirement_type}
+                  </td>
 
                   {/* Actions */}
                   <td>
                     <button
                       onClick={() =>
-                        navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, { state: { requirement: data } })
+                        navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, {
+                          state: { requirement: data },
+                        })
                       }
                       className="action-button view-req colored-view-button"
                     >
@@ -325,9 +365,9 @@ const RequirementPage = () => {
                   <td>
                     <button
                       className={`status-button 
-            ${data.requirement_status === 'VERIFIED' ? 'status-verified' : ''} 
-            ${data.requirement_status === 'WORKING' ? 'status-working' : ''} 
-            ${data.requirement_status === 'VERIFY NOT COMPLETE' ? 'status-not-complete' : ''}`}
+    ${data.requirement_status === 'VERIFIED' ? 'status-verified' : ''} 
+    ${data.requirement_status === 'WORKING' ? 'status-working' : ''} 
+    ${data.requirement_status === 'WAITING FOR VERIFICATION' ? 'status-not-complete' : ''}`}
                     >
                       {data.requirement_status}
                     </button>
@@ -367,12 +407,13 @@ const RequirementPage = () => {
               <tbody>
                 {files.map((file) => (
                   <tr key={file.filereq_id}>
-                    <td>{file.filereq_id}</td> {/* เพิ่มการแสดง filereq_id ที่นี่ */}
-                    <td>{file.title || file.filereq_name}</td>
-                    <td>{file.requirement_id ? `REQ-0${file.requirement_id}` : "N/A"}</td> {/* แสดง requirement_id */}
+                    <td>{file.filereq_id}</td> {/* แสดง `filereq_id` */}
+                    <td>{file.title || file.filereq_name}</td> {/* ใช้ `title` หรือ `filereq_name` */}
+                    <td>{file.requirement_id ? `REQ-0${file.requirement_id}` : "N/A"}</td> {/* แสดง `requirement_id` */}
                     <td className="file-actions">
                       <button
                         className="view-requirement-button"
+                        onClick={() => handleViewFile(file)}
                       >
                         <FontAwesomeIcon icon={faEye} />
                       </button>
@@ -406,6 +447,7 @@ const RequirementPage = () => {
             </table>
           )}
         </div>
+
       </div>
 
 

@@ -252,6 +252,7 @@ app.put("/requirement/:id", (req, res) => {
 
 
 // Add a new requirement for a specific project
+// Add a new requirement for a specific project
 app.post('/requirement', (req, res) => {
     const {
         requirement_name,
@@ -259,17 +260,20 @@ app.post('/requirement', (req, res) => {
         requirement_description,
         requirement_status,
         project_id,
-        filereq_id // เพิ่ม filereq_id
+        filereq_ids // array ของ filereq_id
     } = req.body;
 
     // ตรวจสอบว่ามีข้อมูลที่จำเป็นทั้งหมดหรือไม่
-    if (!requirement_name || !requirement_type || !requirement_description || !requirement_status || !project_id || !filereq_id) {
-        return res.status(400).json({ message: "Missing required fields" });
+    if (!requirement_name || !requirement_type || !requirement_description || !requirement_status || !project_id || !filereq_ids || !Array.isArray(filereq_ids)) {
+        return res.status(400).json({ message: "Missing required fields or filereq_ids is not an array" });
     }
+
+    // แปลง filereq_ids เป็น JSON string
+    const filereqIdsJson = JSON.stringify(filereq_ids);
 
     // สร้าง SQL query สำหรับการแทรกข้อมูล
     const sql = "INSERT INTO requirement (requirement_name, requirement_type, requirement_description, requirement_status, project_id, filereq_id) VALUES (?, ?, ?, ?, ?, ?)";
-    const values = [requirement_name, requirement_type, requirement_description, requirement_status, project_id, filereq_id];
+    const values = [requirement_name, requirement_type, requirement_description, requirement_status, project_id, filereqIdsJson];
 
     // เรียกใช้ SQL query
     db.query(sql, values, (err, data) => {
@@ -280,6 +284,8 @@ app.post('/requirement', (req, res) => {
         return res.status(201).json({ message: "Requirement added successfully", data });
     });
 });
+
+
 
 
 
@@ -611,9 +617,27 @@ app.get('/files', (req, res) => {
             console.error('Error fetching files:', err);
             return res.status(500).send('Error fetching files');
         }
-        res.json(result);
+
+        // เพิ่มการจัดการ requirement_id หากเป็น JSON string
+        const formattedResult = result.map(file => ({
+            ...file,
+            requirement_id: file.requirement_id
+                ? (() => {
+                    try {
+                        // แปลง JSON string เป็น Array
+                        return JSON.parse(file.requirement_id);
+                    } catch (e) {
+                        console.error('Invalid JSON format for requirement_id:', file.requirement_id);
+                        return []; // หาก JSON ไม่ถูกต้อง คืนค่าเป็น Array ว่าง
+                    }
+                })()
+                : [] // หาก requirement_id เป็น null หรือ undefined ให้คืน Array ว่าง
+        }));
+
+        res.json(formattedResult);
     });
 });
+
 
 
 app.get('/filename', (req, res) => {

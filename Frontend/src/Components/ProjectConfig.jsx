@@ -71,12 +71,12 @@ const ProjectConfig = () => {
     return (
         <div className="project-config-container">
             <div className="project-config-header">
-                <h1>Project Configuration</h1>
+                <h1>Configuration</h1>
             </div>
 
             <div className="project-config-content">
                 <div className="project-config-checklist-section">
-                    <h2>SRS Verification Criteria</h2>
+                    <h2>SRS Verification Criteria Configuration</h2>
                     <div className="project-config-input-container">
                         <input
                             type="text"

@@ -91,7 +91,7 @@ const ReqVerification = () => {
 
         const updatedRequirements = selectedRequirements.map((requirement) => ({
           ...requirement,
-          requirement_status: allChecked ? 'VERIFIED' : 'VERIFY NOT COMPLETE', // ถ้าทุก checkbox ถูกเลือกให้เป็น VERIFIED
+          requirement_status: allChecked ? 'VERIFIED' : 'WAITING FOR VERIFICATION', // ถ้าทุก checkbox ถูกเลือกให้เป็น VERIFIED
         }));
 
         // อัปเดตสถานะ requirements

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Select from "react-select"; // นำเข้า react-select
 import "./CSS/CreateRequirement.css";
 
 const CreateRequirement = () => {
@@ -9,7 +10,7 @@ const CreateRequirement = () => {
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState([]); // State สำหรับไฟล์ที่อัปโหลด
-  const [selectedFileId, setSelectedFileId] = useState(""); // State สำหรับเก็บ filereq_id
+  const [selectedFileIds, setSelectedFileIds] = useState([]); // State สำหรับเก็บ filereq_id หลายๆ ตัว
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(window.location.search);
   const projectId = queryParams.get("project_id");
@@ -33,7 +34,9 @@ const CreateRequirement = () => {
     e.preventDefault();
 
     // ตรวจสอบว่าข้อมูลที่กรอกครบถ้วนหรือไม่
-    if (!requirementStatement || !requirementType || !description || !selectedFileId) {
+    console.log("Form Data:", requirementStatement, requirementType, description, selectedFileIds);
+
+    if (!requirementStatement || !requirementType || !description || selectedFileIds.length === 0) {
       setError("Please fill in all fields.");
       return;
     }
@@ -44,14 +47,14 @@ const CreateRequirement = () => {
       requirement_type: requirementType,
       requirement_description: description,
       project_id: projectId,
-      filereq_id: selectedFileId, // ส่ง filereq_id
+      filereq_ids: selectedFileIds, // ส่งเป็น array ของ filereq_id (ไม่ต้อง stringify)
       requirement_status: "WORKING",
     };
 
     // ส่งข้อมูลไปยัง API
     try {
       const response = await axios.post("http://localhost:3001/requirement", newRequirement);
-
+      console.log("API Response:", response); // ตรวจสอบการตอบกลับจาก API
       if (response.status === 201) {
         alert("Requirement created successfully");
         navigate(`/Dashboard?project_id=${projectId}`, {
@@ -64,11 +67,19 @@ const CreateRequirement = () => {
     } catch (error) {
       console.error("Error creating requirement:", error);
       if (error.response) {
+        console.log("API Error Response:", error.response.data); // แสดงข้อความ error ที่ได้รับจาก API
         setError(error.response.data.message || "Something went wrong");
       } else {
         setError("Network error. Please try again.");
       }
     }
+  };
+
+  // ฟังก์ชันสำหรับการจัดการการเปลี่ยนแปลงของ react-select
+  const handleFileChange = (selectedOptions) => {
+    // เลือกหลายไฟล์โดยเก็บ `filereq_id` ของไฟล์ที่เลือก
+    const selectedFileIds = selectedOptions ? selectedOptions.map(option => option.value) : [];
+    setSelectedFileIds(selectedFileIds);
   };
 
   return (
@@ -123,21 +134,22 @@ const CreateRequirement = () => {
           ></textarea>
         </div>
         <div className="create-requirement-form-group">
-          <label htmlFor="fileSelect">Attach File</label>
-          <select
-            id="fileSelect"
-            value={selectedFileId}
-            onChange={(e) => setSelectedFileId(e.target.value)}
+          <label htmlFor="fileSelect">Attach File(s)</label>
+          <Select
+            isMulti
+            options={uploadedFiles.map((file) => ({
+              value: file.filereq_id,
+              label: file.filereq_name, // แสดงชื่อไฟล์
+            }))}
+            value={uploadedFiles.filter((file) => selectedFileIds.includes(file.filereq_id)).map((file) => ({
+              value: file.filereq_id,
+              label: file.filereq_name,
+            }))}
+            onChange={handleFileChange}
+            placeholder="Select files"
+            className="select-files"
             required
-            className="create-requirement-select"
-          >
-            <option value="" disabled>Select a file</option>
-            {uploadedFiles.map((file) => (
-              <option key={file.filereq_id} value={file.filereq_id}>
-                {file.filereq_name} {/* แสดงชื่อไฟล์ */}
-              </option>
-            ))}
-          </select>
+          />
         </div>
         <div className="create-requirement-form-buttons">
           <button
