@@ -6,6 +6,7 @@ import RequirementPage from './Components/RequirementPage';
 import ViewEditReq from './Components/ViewEditReq';
 import UpdateRequirement from './Components/UpdateRequirement';
 import ReqVerification from './Components/ReqVerification';
+import VerificationHis from './Components/VerificationHis';
 import Project from './Components/Project';
 import Navbar from './Components/Navbar';
 import Dashboard from './Components/Dashboard';
@@ -61,6 +62,7 @@ const App = () => {
         <Route path="/UpdateRequirement" element={<UpdateRequirement />} />
         <Route path="/ReqVerification" element={<ReqVerification />} />
         <Route path="/ViewFile" element={<ViewFile />} />
+        <Route path="/VerificationHis" element={<VerificationHis />} />
 
         {/* Routes สำหรับ Login */}
         <Route path="/" element={<Login setUsername={setUsername} />} />

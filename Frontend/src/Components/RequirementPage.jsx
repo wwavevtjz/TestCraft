@@ -211,6 +211,10 @@ const RequirementPage = () => {
     navigate(`/ViewFile`, { state: { file } });
   };
 
+  const handleVerificationHis= () => {
+    navigate(`/VerificationHis`);
+  }
+
 
 
   return (
@@ -218,7 +222,7 @@ const RequirementPage = () => {
       <div className="top-section">
         <h1 className="requirement-title">Project {projectName || projectId} Requirements</h1>
         <div className="action-buttons">
-          <button className="verhistory-button">
+          <button className="verhistory-button" onClick={handleVerificationHis}>
             <img src={history} alt="history" className="history" /> Verification History
           </button>
 
