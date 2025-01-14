@@ -1,0 +1,83 @@
+.create-verification-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.content {
+  display: flex;
+  justify-content: space-between;
+}
+
+.left-panel, .right-panel {
+  width: 48%;
+  background: #f9f9f9;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.requirements-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.requirements-table th, .requirements-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.requirements-table th {
+  background: #f4f4f4;
+}
+
+.reviewer-list {
+  list-style: none;
+  padding: 0;
+}
+
+.reviewer-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.reviewer-item input {
+  margin-right: 10px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.btn-create {
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.btn-cancel {
+  background: #f44336;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.btn-create:hover {
+  background: #45a049;
+}
+
+.btn-cancel:hover {
+  background: #e53935;
+}

@@ -8,7 +8,6 @@ import Modal from "react-modal";
 import UploadFile from "./Uploadfile";
 import "./CSS/RequirementPage.css";
 import checkmark from "../image/check_mark.png";
-import checklist from "../image/attendance_list.png";
 import close from "../image/close.png";
 import verified from "../image/verified.png";
 import history from "../image/history.png";
@@ -21,7 +20,7 @@ Modal.setAppElement("#root"); // For accessibility
 
 const RequirementPage = () => {
   const [requirementList, setRequirementList] = useState([]);
-  const [selectedRequirements, setSelectedRequirements] = useState([]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,6 +34,7 @@ const RequirementPage = () => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [filteredRequirements, setFilteredRequirements] = useState([]);
   const [alertMessage, setAlertMessage] = useState(""); // เก็บข้อความแจ้งเตือน
+  const [requirements, setRequirements] = useState([]);
 
 
   useEffect(() => {
@@ -97,17 +97,17 @@ const RequirementPage = () => {
     }
   }, [searchQuery, requirementList]);
 
-
-
-
-  const handleSelectRequirement = (id) => {
-    const selectedRequirement = requirementList.find((req) => req.requirement_id === id);
-    setSelectedRequirements((prev) =>
-      prev.some((req) => req.requirement_id === id)
-        ? prev.filter((req) => req.requirement_id !== id)
-        : [...prev, selectedRequirement]
-    );
-  };
+  useEffect(() => {
+    // ดึงข้อมูล requirements
+    axios
+      .get(`http://localhost:3001/requirements?project_id=${projectId}`)
+      .then((res) => {
+        setRequirements(res.data); // ใช้ setRequirements เพื่ออัปเดต state
+      })
+      .catch((err) => {
+        console.error("Error fetching requirements:", err);
+      });
+  }, []);
 
   const handleDelete = (requirementId) => {
     if (window.confirm("Are you sure you want to delete this requirement?")) {
@@ -124,18 +124,6 @@ const RequirementPage = () => {
         });
     }
   };
-
-  const handleOpenReviewModal = () => {
-    setIsReviewModalOpen(true);
-
-    // กำหนด requirement_status ให้เป็น "VERIFIED" สำหรับแค่การแสดงใน Modal เท่านั้น
-    const verifiedRequirements = requirementList.filter((req) => req.requirement_status === "WORKING");
-
-    // ส่งข้อมูล requirements ที่มีสถานะ "WORKING" มาแสดงใน Modal
-    setSelectedRequirements(verifiedRequirements);
-  };
-
-
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -198,15 +186,6 @@ const RequirementPage = () => {
     }
   };
 
-  const handleVerification = () => {
-    if (selectedRequirements.length === 0) {
-      setAlertMessage("Please select at least one requirement to verify."); // ตั้งข้อความแจ้งเตือน
-    } else {
-      setAlertMessage(""); // ล้างข้อความแจ้งเตือน
-      navigate(`/ReqVerification?project_id=${projectId}`, { state: { selectedRequirements } });
-    }
-  }
-
   const handleViewFile = (file) => {
     navigate(`/ViewFile`, { state: { file } });
   };
@@ -215,26 +194,46 @@ const RequirementPage = () => {
     navigate(`/VerificationHis`);
   }
 
+  const handleCreateVeri= () => {
+    navigate(`/CreateVeri?project_id=${projectId}`);
+  }
 
+  const handleReqVerification= () => {
+    navigate(`/ReqVerification`);
+  }
+
+  const handleCreateVar= () => {
+    navigate(`/CreateVar`);
+  }
 
   return (
     <div className="requirement-container">
       <div className="top-section">
         <h1 className="requirement-title">Project {projectName || projectId} Requirements</h1>
         <div className="action-buttons">
+
+          <button className="create-verification-button" onClick={handleCreateVeri}>
+            <img src={history} alt="history" className="history" />Create Verification
+          </button>
+
+          <button className="verify-button" onClick={handleReqVerification}>
+            <img src={history} alt="history" className="history" /> Verify
+          </button>
+
+          <button className="CreateVar-button" onClick={handleCreateVar}>
+            <img src={history} alt="history" className="history" /> Create Validation
+          </button>
+
           <button className="verhistory-button" onClick={handleVerificationHis}>
-            <img src={history} alt="history" className="history" /> Verification History
+            <img src={history} alt="history" className="history" /> Validation
           </button>
 
-          <button className="review-button" onClick={handleOpenReviewModal}>
-            <img src={checkmark} alt="checkmark" className="checkmark" /> Review Verified
+          <button className="review-button" onClick={handleVerificationHis}>
+            <img src={checkmark} alt="checkmark" className="checkmark" /> View Verification and Validation
           </button>
 
-          <button
-            className="verify-button"
-            onClick={handleVerification}
-          >
-            <img src={checklist} alt="checklist" className="checklist" /> Verification
+          <button className="verhistory-button" onClick={handleVerificationHis}>
+            <img src={history} alt="history" className="history" /> Version Control
           </button>
 
         </div>
@@ -277,7 +276,6 @@ const RequirementPage = () => {
 
             <thead>
               <tr>
-                <th>Select</th>
                 <th>ID</th>
                 <th>Name</th>
                 <th>Type</th>
@@ -288,18 +286,6 @@ const RequirementPage = () => {
             <tbody>
               {filteredRequirements.map((data) => (
                 <tr key={data.requirement_id}>
-                  {/* Checkbox */}
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedRequirements.some(
-                        (req) => req.requirement_id === data.requirement_id
-                      )}
-                      onChange={() => handleSelectRequirement(data.requirement_id)}
-                      disabled={data.requirement_status === "VERIFIED"} // Disable checkbox if VERIFIED
-                    />
-                  </td>
-
                   {/* Clickable cells */}
                   <td
                     onClick={() =>

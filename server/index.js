@@ -34,9 +34,6 @@ db.connect((err) => {
 });
 
 
-
-
-
 // ------------------------- PROJECT ROUTES -------------------------
 // Get all projects
 app.get('/project', (req, res) => {
@@ -44,6 +41,24 @@ app.get('/project', (req, res) => {
         if (err) {
             console.error(err);
             res.status(500).send('Error fetching projects');
+        } else {
+            res.send(result);
+        }
+    });
+});
+
+app.get('/projectname', (req, res) => {
+    const projectId = req.query.project_id;
+
+    // ถ้ามีการระบุ project_id
+    const query = projectId
+        ? "SELECT project_member FROM project WHERE project_id = ?" // ตาม project_id
+        : "SELECT project_member FROM project"; // ดึงทุก project_member 
+
+    db.query(query, projectId ? [projectId] : [], (err, result) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Error fetching project members');
         } else {
             res.send(result);
         }
@@ -138,7 +153,6 @@ app.put('/project/:id', (req, res) => {
 });
 
 
-
 // Delete a project
 app.delete('/project/:id', (req, res) => {
     const sql = "DELETE FROM project WHERE project_id = ?";
@@ -190,7 +204,6 @@ app.get('/project/:project_id/requirement', (req, res) => {
 // ดึงข้อมูลจาก requirement มา update
 app.get('/requirement/:id', (req, res) => {
     const { id } = req.params;
-    // ดึงข้อมูล Requirement พร้อมกับข้อมูลไฟล์ที่เชื่อมโยง
     const sql = `
         SELECT 
             r.requirement_id,
@@ -215,11 +228,6 @@ app.get('/requirement/:id', (req, res) => {
         return res.status(200).json(results[0]); // ส่งข้อมูล requirement ที่รวม filereq_name มา
     });
 });
-
-
-
-
-
 
 
 // API สำหรับการอัปเดต requirement
@@ -251,7 +259,6 @@ app.put("/requirement/:id", (req, res) => {
 
 
 
-// Add a new requirement for a specific project
 // Add a new requirement for a specific project
 app.post('/requirement', (req, res) => {
     const {
@@ -285,11 +292,6 @@ app.post('/requirement', (req, res) => {
     });
 });
 
-
-
-
-
-
 // PUT /requirement/:id - Update requirement status
 app.put("/statusrequirement/:id", (req, res) => {
     const { id } = req.params;
@@ -304,7 +306,6 @@ app.put("/statusrequirement/:id", (req, res) => {
         return res.status(200).json({ message: "Requirement status updated successfully" });
     });
 });
-
 
 
 // Delete a requirement
@@ -332,7 +333,7 @@ app.get('/project/:id/requirement', (req, res) => {
             p.project_id
         FROM requirement r
         INNER JOIN project p ON r.project_id = p.project_id
-        WHERE r.project_id = ?
+        WHERE r.project_id = ? AND r.requirement_status = 'WORKING'
     `;
     const projectId = req.params.id;
 
@@ -492,7 +493,6 @@ app.put('/project/:id/reqverified', (req, res) => {
     });
 });
 
-
 app.post('/reqverified', (req, res) => {
     const { reqver_name } = req.body;
 
@@ -518,10 +518,6 @@ app.get('/login', (req, res) => {
         res.json(result);  // Send the result as JSON
     });
 });
-
-
-
-
 
 app.post('/signup', (req, res) => {
     console.log('Request Body:', req.body); // ดูข้อมูลที่ส่งมา
@@ -704,7 +700,22 @@ app.delete('/files/:fileId', (req, res) => {
     });
 });
 
-
+// ------------------------- VERSION CONTROL -------------------------
+// Endpoint to fetch history for a specific criteria
+app.post("/reqcriteria/log", (req, res) => {
+    const { reqcri_id, action, modified_by } = req.body;
+    const query = `
+        INSERT INTO history (reqcri_id, action, modified_by, modified_at)
+        VALUES (?, ?, ?, NOW());
+    `;
+    db.query(query, [reqcri_id, action, modified_by], (err, result) => {
+        if (err) {
+            console.error("Error logging action:", err);
+            return res.status(500).json({ error: "Failed to log action." });
+        }
+        res.json({ message: "Action logged successfully." });
+    });
+});
 
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;

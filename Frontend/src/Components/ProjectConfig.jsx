@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import './CSS/ProjectConfig.css';
 
 const ProjectConfig = () => {
@@ -9,11 +10,13 @@ const ProjectConfig = () => {
     const [editingId, setEditingId] = useState(null);
     const [editValue, setEditValue] = useState("");
 
+    const navigate = useNavigate(); // ใช้เพื่อไปยังหน้า VersionControl.jsx
+
     useEffect(() => {
         fetchCriteria();
     }, []);
 
-    // ฟังก์ชันดึงข้อมูล Criteria
+    // Fetch Criteria List
     const fetchCriteria = async () => {
         try {
             setLoading(true);
@@ -26,7 +29,7 @@ const ProjectConfig = () => {
         }
     };
 
-    // ฟังก์ชันเพิ่ม Criteria ใหม่
+    // Add New Criteria
     const handleAdd = async () => {
         if (newCriteria.trim() === "") {
             alert("กรุณากรอกชื่อ Criteria ก่อน");
@@ -41,7 +44,7 @@ const ProjectConfig = () => {
         }
     };
 
-    // ฟังก์ชันแก้ไข Criteria
+    // Edit Criteria
     const handleUpdate = async () => {
         if (editValue.trim() === "") {
             alert("กรุณากรอกค่าที่ต้องการแก้ไข");
@@ -57,7 +60,7 @@ const ProjectConfig = () => {
         }
     };
 
-    // ฟังก์ชันลบ Criteria
+    // Delete Criteria
     const handleDelete = async (id) => {
         if (!window.confirm("คุณแน่ใจหรือว่าต้องการลบ Criteria นี้?")) return;
         try {
@@ -68,6 +71,11 @@ const ProjectConfig = () => {
         }
     };
 
+    // Navigate to VersionControl Page
+    const handleViewHistory = (id) => {
+        navigate(`/version-control/${id}`);
+    };
+
     return (
         <div className="project-config-container">
             <div className="project-config-header">
@@ -76,7 +84,7 @@ const ProjectConfig = () => {
 
             <div className="project-config-content">
                 <div className="project-config-checklist-section">
-                    <h2>SRS Verification Criteria Configuration</h2>
+                    <h2>Software Requirement Specification Verification Criteria</h2>
                     <div className="project-config-input-container">
                         <input
                             type="text"
@@ -133,6 +141,12 @@ const ProjectConfig = () => {
                                                 onClick={() => handleDelete(criteria.reqcri_id)}
                                             >
                                                 Delete
+                                            </button>
+                                            <button
+                                                className="project-config-history-button"
+                                                onClick={() => handleViewHistory(criteria.reqcri_id)}
+                                            >
+                                                History
                                             </button>
                                         </>
                                     )}
