@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./CSS/CreateVeri.css";
 
 const CreateVeri = () => {
@@ -11,11 +11,14 @@ const CreateVeri = () => {
   const [selectedReviewers, setSelectedReviewers] = useState({});
   const [loading, setLoading] = useState(true);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
-  const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [requirementsError, setRequirementsError] = useState(null);
+  const [membersError, setMembersError] = useState(null);
+
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get("project_id");
-
+  const navigate = useNavigate();
   // Fetch working requirements
   useEffect(() => {
     if (projectId) {
@@ -27,10 +30,12 @@ const CreateVeri = () => {
             (requirement) => requirement.requirement_status === "WORKING"
           );
           setWorkingRequirements(working);
-          setLoading(false);
+          setRequirementsError(null); // Clear previous error
         })
         .catch(() => {
-          setError("Failed to load requirements. Please try again.");
+          setRequirementsError("Failed to load requirements. Please try again.");
+        })
+        .finally(() => {
           setLoading(false);
         });
     }
@@ -45,24 +50,92 @@ const CreateVeri = () => {
         .then((res) => {
           if (Array.isArray(res.data)) {
             setMembers(res.data);
+            setMembersError(null); // Clear previous error
           } else {
-            setError("Invalid project member data.");
+            setMembersError("Invalid project member data.");
           }
-          setIsLoadingMembers(false);
         })
         .catch(() => {
-          setError("Failed to load project members.");
+          setMembersError("Failed to load project members.");
+        })
+        .finally(() => {
           setIsLoadingMembers(false);
         });
     }
   }, [projectId]);
 
   // Generalized handle select for requirements
-  const handleSelect = (id, setter, selectedList) => {
+  const handleSelect = (id, setter) => {
     setter((prev) =>
       prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
     );
   };
+
+// Handle create verification
+const handleCreateVerification = async () => {
+  const selectedReviewerNames = Object.keys(selectedReviewers).filter(
+    (name) => selectedReviewers[name]
+  );
+
+  
+  // ตรวจสอบว่า Project ID, Requirements และ Reviewers ถูกเลือก
+  if (!projectId) {
+    toast.error("Invalid project ID.");
+    return;
+  }
+
+  if (selectedRequirements.length === 0 || selectedReviewerNames.length === 0) {
+    toast.warning("Please select at least one requirement and one reviewer.");
+    return;
+  }
+
+  const payload = {
+    requirements: [...new Set(selectedRequirements)], // ลบ duplicate requirements
+    reviewers: selectedReviewerNames,
+    project_id: projectId,
+  };
+
+  console.log("Payload to send:", payload); // ตรวจสอบข้อมูลที่ส่งไป
+
+  setIsSubmitting(true);
+
+  try {
+    // POST request to create verification(s)
+    const response = await axios.post("http://localhost:3001/createveri", payload);
+
+    // ตรวจสอบ response.status ที่เป็น 201
+    if (response.status === 201) {
+      toast.success("Verification(s) created successfully!");
+
+      // อัปเดตสถานะของ requirements ที่ถูกเลือกเป็น "WAITING FOR VERIFICATION"
+      await Promise.all(
+        selectedRequirements.map((requirementId) =>
+          axios.put(`http://localhost:3001/update-requirements-status/${requirementId}`, {
+            requirement_status: "WAITING FOR VERIFICATION"
+          })
+        )
+      );
+
+      // รีเฟรชรายการ requirements ใหม่หลังจากการอัปเดต
+      const refreshedRequirements = await axios.get(`http://localhost:3001/project/${projectId}/requirement`);
+      const working = refreshedRequirements.data.filter(
+        (requirement) => requirement.requirement_status === "WORKING"
+      );
+      setWorkingRequirements(working);
+
+      // รีเซ็ตการเลือก requirements และ reviewers
+      setSelectedRequirements([]);
+      setSelectedReviewers({});
+    } else {
+      toast.error(response.data.message || "Failed to create verification(s).");
+    }
+  } catch (error) {
+    console.error("Error creating verification(s):", error);
+    toast.error(error.response?.data?.message || "An error occurred. Please try again.");
+  } finally {
+    setIsSubmitting(false); 
+  }
+};
 
   // Handle checkbox for reviewers
   const handleCheckboxReviewer = (memberName) => {
@@ -72,31 +145,9 @@ const CreateVeri = () => {
     }));
   };
 
-  // Handle create verification
-  const handleCreateVerification = () => {
-    const selectedReviewerNames = Object.keys(selectedReviewers).filter(
-      (name) => selectedReviewers[name]
-    );
-
-    if (selectedRequirements.length === 0 || selectedReviewerNames.length === 0) {
-      toast.warning("Please select at least one requirement and one reviewer.");
-      return;
-    }
-
-    const payload = {
-      requirements: [...new Set(selectedRequirements)],
-      reviewers: selectedReviewerNames,
-    };
-
-    // Perform API call with the payload here (e.g., axios.post(...))
-    console.log("Payload for creation:", payload);
-  };
-
   // Handle cancel
   const handleCancel = () => {
-    setSelectedRequirements([]);
-    setSelectedReviewers({});
-    toast.info("Cancelled the selection.");
+    navigate(`/Dashboard?project_id=${projectId}`);
   };
 
   return (
@@ -108,8 +159,8 @@ const CreateVeri = () => {
           <h2>Requirements</h2>
           {loading ? (
             <p>Loading requirements...</p>
-          ) : error ? (
-            <p className="error-message">{error}</p>
+          ) : requirementsError ? (
+            <p className="error-message">{requirementsError}</p>
           ) : workingRequirements.length === 0 ? (
             <p>No requirements found in 'WORKING' status.</p>
           ) : (
@@ -131,11 +182,7 @@ const CreateVeri = () => {
                         type="checkbox"
                         checked={selectedRequirements.includes(req.requirement_id)}
                         onChange={() =>
-                          handleSelect(
-                            req.requirement_id,
-                            setSelectedRequirements,
-                            selectedRequirements
-                          )
+                          handleSelect(req.requirement_id, setSelectedRequirements)
                         }
                       />
                     </td>
@@ -155,15 +202,21 @@ const CreateVeri = () => {
           <h2>Reviewers</h2>
           {isLoadingMembers ? (
             <p>Loading reviewers...</p>
-          ) : error ? (
-            <p className="error-message">{error}</p>
+          ) : membersError ? (
+            <p className="error-message">{membersError}</p>
           ) : members.length === 0 ? (
             <p>No reviewers found.</p>
           ) : (
             members.map((member, index) => {
-              const memberInfo = member.project_member
-                ? JSON.parse(member.project_member)
-                : [];
+              let memberInfo = [];
+              try {
+                memberInfo = member.project_member
+                  ? JSON.parse(member.project_member)
+                  : [];
+              } catch (e) {
+                console.error("Invalid JSON in member data:", e);
+                setMembersError("Invalid project member data.");
+              }
 
               return (
                 <div key={index}>
@@ -189,8 +242,12 @@ const CreateVeri = () => {
 
       {/* Action Buttons */}
       <div className="action-buttons">
-        <button className="btn-create" onClick={handleCreateVerification}>
-          Create
+        <button
+          className="btn-create"
+          onClick={handleCreateVerification}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Creating..." : "Create"}
         </button>
         <button className="btn-cancel" onClick={handleCancel}>
           Cancel

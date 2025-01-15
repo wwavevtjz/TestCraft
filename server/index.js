@@ -4,6 +4,7 @@ const multer = require('multer');
 const mysql = require('mysql');
 const cors = require('cors');
 const app = express();
+const router = express.Router();
 
 // Middleware
 app.use(cors());
@@ -506,7 +507,78 @@ app.post('/reqverified', (req, res) => {
     });
 });
 
+//-------------------------- VERIFICATION ------------------
+// Create Verification
+app.post('/createveri', (req, res) => {
+    const { requirements, reviewers, project_id } = req.body;
 
+    // ตรวจสอบว่าข้อมูลที่จำเป็นถูกส่งมาครบถ้วน
+    if (!requirements || !reviewers || !project_id) {
+        return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    // เตรียมข้อมูลสำหรับ insert
+    const values = reviewers.flatMap(reviewer =>
+        requirements.map(requirement => [
+            project_id, reviewer, requirement, new Date() // verification_at เป็นวันที่ปัจจุบัน
+        ])
+    );
+
+    console.log("Values to insert:", values); // ตรวจสอบค่าที่จะ insert
+
+    const sql = `
+        INSERT INTO verification (project_id, verification_member, requirement_id, verification_at)
+        VALUES ?
+    `;
+
+    // query บันทึกข้อมูล
+    db.query(sql, [values], (err, result) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Error adding verification.", error: err });
+        }
+        return res.status(201).json({
+            message: "Verification created successfully!",
+            data: result
+        });
+    });
+});
+
+// Get all verifications
+app.get('/verifications', (req, res) => {
+    const sql = `SELECT * FROM verification`;
+
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Error fetching verifications.", error: err });
+        }
+
+        // Map results to include more readable data if needed
+        const verifications = result.map(row => ({
+            id: row.id,
+            requirements: [row.requirement_id], // You can enhance this if you have multiple requirements
+            created_by: row.verification_member, // Assuming you have this field
+            created_at: row.verification_at
+        }));
+
+        return res.status(200).json(verifications);
+    });
+});
+
+app.put("/update-requirements-status/:id", (req, res) => {
+    const { id } = req.params;
+    const { requirement_status } = req.body;  // Only update the status
+    const sql = "UPDATE requirement SET requirement_status = ? WHERE requirement_id = ?";
+
+    db.query(sql, [requirement_status, id], (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: "Error updating requirement status" });
+        }
+        return res.status(200).json({ message: "Requirement status updated successfully" });
+    });
+});
 // ------------------------- Login -------------------------
 app.get('/login', (req, res) => {
     const sql = "SELECT * FROM login";

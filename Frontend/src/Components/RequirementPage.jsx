@@ -198,6 +198,10 @@ const RequirementPage = () => {
     navigate(`/CreateVeri?project_id=${projectId}`);
   }
 
+  const handleVerilist= () => {
+    navigate(`/VerificationList?project_id=${projectId}`);
+  }
+
   const handleReqVerification= () => {
     navigate(`/ReqVerification`);
   }
@@ -208,16 +212,16 @@ const RequirementPage = () => {
 
   return (
     <div className="requirement-container">
-      <div className="top-section">
+      <div className="req-top-section">
         <h1 className="requirement-title">Project {projectName || projectId} Requirements</h1>
-        <div className="action-buttons">
+        <div className="req-action-buttons">
 
           <button className="create-verification-button" onClick={handleCreateVeri}>
             <img src={history} alt="history" className="history" />Create Verification
           </button>
 
-          <button className="verify-button" onClick={handleReqVerification}>
-            <img src={history} alt="history" className="history" /> Verify
+          <button className="verify-button" onClick={handleVerilist}>
+            <img src={history} alt="history" className="history" /> Verification List
           </button>
 
           <button className="CreateVar-button" onClick={handleCreateVar}>

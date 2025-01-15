@@ -1,0 +1,67 @@
+.verification-list-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.verification-list-container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.verification-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background-color: #fff;
+}
+
+.verification-table th,
+.verification-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.verification-table th {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.verification-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.verification-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+.search-icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #555;
+}
+
+.search-icon-button:hover {
+  color: #333;
+}
+
+.verify-button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.verify-button:hover {
+  background-color: #45a049;
+}
