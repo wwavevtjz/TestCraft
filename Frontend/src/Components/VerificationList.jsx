@@ -19,7 +19,7 @@ const VerificationList = () => {
         let filteredVerifications = response.data;
 
         // กรองข้อมูลหาก roles ไม่ใช่ Product Owner
-        if (currentRole !== "Product Owner") {
+        if (currentRole !== "Product Owner" && currentUsername !=="admin") {
           filteredVerifications = filteredVerifications.filter(
             (verification) => verification.verify_by === currentUsername
           );
