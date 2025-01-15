@@ -1,24 +1,34 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./CSS/ReqVerification.css";
 
 const ReqVerification = () => {
-  const location = useLocation(); // Use useLocation to get the state
-  const { selectedRequirements, project_id } = location.state || {}; // Get selectedRequirements and project_id from state
+  const location = useLocation(); // ใช้ useLocation เพื่อดึงข้อมูลจาก URL และ state
+  const navigate = useNavigate(); // ใช้ navigate เพื่อกลับไปยังหน้าอื่นหากเกิดข้อผิดพลาด
+  const { selectedRequirements, project_id } = location.state || {}; // ตรวจสอบว่า state มีค่าหรือไม่
 
-  const [reqcriList, setReqcriList] = useState([]); // For checklist items
-  const [requirementsDetails, setRequirementsDetails] = useState([]); // For detailed requirements
-  const [loading, setLoading] = useState(true);
+  const [reqcriList, setReqcriList] = useState([]); // สำหรับข้อมูล checklist
+  const [requirementsDetails, setRequirementsDetails] = useState([]); // สำหรับข้อมูลรายละเอียด requirements
+  const [loading, setLoading] = useState(true); // สถานะการโหลดข้อมูล
 
   useEffect(() => {
+    if (!project_id) {
+      // หากไม่มี project_id ให้ทำการแสดงข้อผิดพลาดหรือ redirect ไปหน้าอื่น
+      console.error("Project ID is missing or undefined");
+      navigate("/VerificationList"); // redirect ไปหน้า VerificationList หากไม่มี project_id
+      return; // หยุดการทำงาน
+    }
+
+    // ถ้ามี selectedRequirements ให้ดึงข้อมูลตามที่เลือก
     if (selectedRequirements && selectedRequirements.length > 0) {
       fetchRequirementsDetails(selectedRequirements);
     }
-    fetchCriteria();
-  }, [selectedRequirements]);
 
-  // Fetch Criteria List (checklist data)
+    fetchCriteria(); // ดึงข้อมูล criteria
+  }, [project_id, selectedRequirements, navigate]);
+
+  // ฟังก์ชันดึงข้อมูล Criteria (checklist)
   const fetchCriteria = async () => {
     try {
       setLoading(true);
@@ -31,7 +41,7 @@ const ReqVerification = () => {
     }
   };
 
-  // Fetch Requirements Details based on selectedRequirements
+  // ฟังก์ชันดึงข้อมูลรายละเอียดของ Requirements
   const fetchRequirementsDetails = async (requirements) => {
     try {
       const response = await axios.get("http://localhost:3001/requirements", {
@@ -49,8 +59,8 @@ const ReqVerification = () => {
     <div className="container">
       <h1 className="title">Verification Requirements</h1>
 
+      {/* แสดง Checklist Section */}
       <div className="flex-container">
-        {/* Checklist Section */}
         <div className="box">
           <h2>Checklist</h2>
           {loading ? (
@@ -69,14 +79,14 @@ const ReqVerification = () => {
           )}
         </div>
 
-        {/* Comment Section */}
+        {/* แสดง Comment Section */}
         <div className="box">
           <h2>Comment</h2>
           <textarea className="textarea" placeholder="Add your comment here..." />
         </div>
       </div>
 
-      {/* Requirements Section */}
+      {/* แสดง Requirements Section */}
       <div className="box requirements">
         <h2>Requirements</h2>
         <table className="table">
@@ -105,7 +115,7 @@ const ReqVerification = () => {
         </table>
       </div>
 
-      {/* Save Button */}
+      {/* ปุ่ม Save */}
       <div className="button-container">
         <button className="save-button">Save</button>
       </div>
