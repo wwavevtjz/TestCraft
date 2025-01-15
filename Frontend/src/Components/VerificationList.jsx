@@ -9,13 +9,24 @@ const VerificationList = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Fetch the list of verifications
+  const currentUsername = localStorage.getItem("username"); // ดึงชื่อผู้ใช้ที่ล็อกอิน
+  const currentRole = localStorage.getItem("role"); // ดึง roles ของผู้ใช้งาน
+
   useEffect(() => {
     axios
       .get("http://localhost:3001/verifications") // Adjust the URL based on your backend route
       .then((response) => {
-        setVerifications(response.data);
-        setError(null); // Clear previous error
+        let filteredVerifications = response.data;
+
+        // กรองข้อมูลหาก roles ไม่ใช่ Product Owner
+        if (currentRole !== "Product Owner") {
+          filteredVerifications = filteredVerifications.filter(
+            (verification) => verification.verify_by === currentUsername
+          );
+        }
+
+        setVerifications(filteredVerifications); // ตั้งค่ารายการที่กรองแล้ว
+        setError(null); // ลบข้อผิดพลาดก่อนหน้า
       })
       .catch((err) => {
         setError("Failed to load verification data.");
@@ -24,11 +35,11 @@ const VerificationList = () => {
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [currentUsername, currentRole]);
 
   const handleVerifyClick = (selectedRequirements, projectId) => {
-    navigate("/reqverification", {
-      state: { selectedRequirements, project_id: projectId }
+    navigate(`/reqverification?project_id=${projectId}`, {
+      state: { selectedRequirements, project_id: projectId },
     });
   };
 
@@ -41,14 +52,18 @@ const VerificationList = () => {
       ) : error ? (
         <p className="error-message">{error}</p>
       ) : verifications.length === 0 ? (
-        <p>No verifications found.</p>
+        <p>
+          {currentRole === "Product Owner"
+            ? "No verifications found."
+            : `No verifications assigned to ${currentUsername} found.`}
+        </p>
       ) : (
         <table className="verification-table">
           <thead>
             <tr>
               <th>Requirement ID</th>
-              <th>Create By</th>
-              <th>Date</th>
+              <th>Verify By</th>
+              <th>Date assigned</th>
               <th>Reviewer</th>
               <th>Action</th>
             </tr>
@@ -61,7 +76,7 @@ const VerificationList = () => {
                     <div key={index}>REQ-0{req}</div>
                   ))}
                 </td>
-                <td>{verification.created_by}</td>
+                <td>{verification.verify_by}</td>
                 <td>{new Date(verification.created_at).toLocaleDateString()}</td>
                 <td>
                   <button className="search-icon-button" title="Search Reviewer">

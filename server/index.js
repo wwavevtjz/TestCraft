@@ -48,6 +48,33 @@ app.get('/project', (req, res) => {
     });
 });
 
+app.get('/projectmember', (req, res) => {
+    const { username } = req.query; // รับชื่อผู้ใช้งานจาก query
+
+    // Query เพื่อดึงข้อมูลจากฐานข้อมูล project พร้อมกับ project_member
+    db.query("SELECT * FROM project", (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Error fetching projects');
+        }
+
+        // กรอง project โดยตรวจสอบว่า roles ของผู้ใช้งานเป็น "Product Owner"
+        const filteredProjects = result.filter((project) => {
+            const projectMembers = JSON.parse(project.project_member); // สมมติว่า project_member เป็น JSON
+            if (projectMembers.some(member => member.name === username && member.roles.includes("Product Owner"))) {
+                return true;
+            }
+            // ถ้าไม่ใช่ "Product Owner" ให้กรองโดยชื่อผู้ใช้และตรวจสอบ role
+            return projectMembers.some(member => member.name === username);
+        });
+
+        // ส่งกลับข้อมูลโครงการที่กรองแล้ว
+        res.send(filteredProjects);
+    });
+});
+
+
+
 app.get('/projectname', (req, res) => {
     const projectId = req.query.project_id;
 
@@ -65,6 +92,28 @@ app.get('/projectname', (req, res) => {
         }
     });
 });
+
+// เเสดง requirement ในหน้า reqverification
+app.get('/requirements', (req, res) => {
+    const { requirement_ids } = req.query; 
+
+   
+    if (!requirement_ids || !Array.isArray(requirement_ids)) {
+        return res.status(400).json({ message: "Invalid requirement_ids" });
+    }
+
+    // SQL query เพื่อดึงข้อมูล requirements ที่ตรงกับ requirement_ids
+    const sql = `SELECT requirement_id, requirement_name, requirement_type FROM requirement WHERE requirement_id IN (?)`;
+
+    db.query(sql, [requirement_ids], (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: "Error fetching requirements" });
+        }
+        res.status(200).json(data);
+    });
+});
+
 
 // Get a project by ID
 
@@ -558,7 +607,7 @@ app.get('/verifications', (req, res) => {
         const verifications = result.map(row => ({
             id: row.id,
             requirements: [row.requirement_id], // You can enhance this if you have multiple requirements
-            created_by: row.verification_member, // Assuming you have this field
+            verify_by: row.verification_member, // Assuming you have this field
             created_at: row.verification_at
         }));
 

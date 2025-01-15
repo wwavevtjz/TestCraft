@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import axios from "axios";
 import "./CSS/ReqVerification.css";
 
 const ReqVerification = () => {
-  const [reqcriList, setReqcriList] = useState([]);
+  const location = useLocation(); // Use useLocation to get the state
+  const { selectedRequirements, project_id } = location.state || {}; // Get selectedRequirements and project_id from state
+
+  const [reqcriList, setReqcriList] = useState([]); // For checklist items
+  const [requirementsDetails, setRequirementsDetails] = useState([]); // For detailed requirements
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (selectedRequirements && selectedRequirements.length > 0) {
+      fetchRequirementsDetails(selectedRequirements);
+    }
     fetchCriteria();
-  }, []);
+  }, [selectedRequirements]);
 
-  // Fetch Criteria List
+  // Fetch Criteria List (checklist data)
   const fetchCriteria = async () => {
     try {
       setLoading(true);
@@ -23,17 +31,20 @@ const ReqVerification = () => {
     }
   };
 
- const fetchRequirement = async () => {
+  // Fetch Requirements Details based on selectedRequirements
+  const fetchRequirementsDetails = async (requirements) => {
     try {
-      setLoading(true);
-      const response = await axios.get("http://localhost:3001/verification");
-      setReqcriList(response.data);
+      const response = await axios.get("http://localhost:3001/requirements", {
+        params: {
+          requirement_ids: requirements, // ส่ง requirement_ids เป็น query parameter
+        },
+      });
+      setRequirementsDetails(response.data);
     } catch (error) {
-      console.error("Error fetching criteria:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching requirements:", error);
     }
   };
+
   return (
     <div className="container">
       <h1 className="title">Verification Requirements</h1>
@@ -61,10 +72,7 @@ const ReqVerification = () => {
         {/* Comment Section */}
         <div className="box">
           <h2>Comment</h2>
-          <textarea
-            className="textarea"
-            placeholder="Add your comment here..."
-          />
+          <textarea className="textarea" placeholder="Add your comment here..." />
         </div>
       </div>
 
@@ -80,12 +88,19 @@ const ReqVerification = () => {
             </tr>
           </thead>
           <tbody>
-            {/* Example empty rows */}
-            <tr>
-              <td> </td>
-              <td> </td>
-              <td> </td>
-            </tr>
+            {requirementsDetails.length > 0 ? (
+              requirementsDetails.map((req, index) => (
+                <tr key={index}>
+                  <td>REQ-0{req.requirement_id}</td>
+                  <td>{req.requirement_name}</td>
+                  <td>{req.requirement_type}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="3">No requirements details found</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
