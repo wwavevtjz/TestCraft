@@ -95,9 +95,9 @@ app.get('/projectname', (req, res) => {
 
 // เเสดง requirement ในหน้า reqverification
 app.get('/requirements', (req, res) => {
-    const { requirement_ids } = req.query; 
+    const { requirement_ids } = req.query;
 
-   
+
     if (!requirement_ids || !Array.isArray(requirement_ids)) {
         return res.status(400).json({ message: "Invalid requirement_ids" });
     }
@@ -614,6 +614,23 @@ app.get('/verifications', (req, res) => {
         return res.status(200).json(verifications);
     });
 });
+
+app.put('/update-status-verifications', (req, res) => {
+    const { verification_id } = req.params;
+    const { verification_status } = req.body;
+    console.log("Received data:", { verification_id, verification_status });
+
+    const sql = "UPDATE verification SET verification_status = ? WHERE verification_id = ?";
+    db.query(sql, [verification_status, verification_id], (err, data) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Error updating requirement status" });
+        }
+        console.log("Database Response:", data);
+        return res.status(200).json({ message: "Requirement status updated successfully" });
+    });
+});
+
 
 app.put("/update-requirements-status/:id", (req, res) => {
     const { id } = req.params;

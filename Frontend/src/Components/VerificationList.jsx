@@ -13,21 +13,22 @@ const Modal = ({ show, onClose, requirement }) => {
             <div className="modal-content">
                 <h2>Requirement Verification Info</h2>
                 {requirement && requirement.length > 0 ? (
-                    requirement.map((req, index) => {
-                        // ตรวจสอบว่า req.verifiedBy เป็นอาร์เรย์หรือไม่
-                        const verifiedBy = Array.isArray(req.verifiedBy) ? req.verifiedBy : [req.verifiedBy];
+    requirement.map((req, index) => {
+        const verifiedBy = Array.isArray(req.verifiedBy) ? req.verifiedBy : [req.verifiedBy];
 
-                        return (
-                            <div key={index}>
-                                <p><strong>Requirement ID:</strong> {req.reqId}</p>
-                                <p><strong>Verified By:</strong> {verifiedBy.length > 0 ? verifiedBy.join(", ") : "No reviewers"}</p>
-                                <hr />
-                            </div>
-                        );
-                    })
-                ) : (
-                    <p>No requirements found.</p>
-                )}
+        return (
+            <div key={index}>
+                <p><strong>Requirement ID:</strong> {req.reqId}</p>
+                <p><strong>Verified By:</strong> {verifiedBy.length > 0 ? verifiedBy.join(", ") : "No reviewers"}</p>
+                <hr />
+            </div>
+        );
+    })
+) : (
+    <p>No requirements found.</p>
+)}
+
+
                 <button className="close-modal-button" onClick={onClose}>Close</button>
             </div>
         </div>
@@ -66,10 +67,9 @@ const VerificationList = () => {
 
 
     const handleVerifyClick = (selectedRequirements) => {
-        // Extract projectId from URL search params directly
-        const projectId = new URLSearchParams(window.location.search).get("project_id");
-        
+        // ใช้ projectId ที่ดึงจาก URL
         console.log("project_id from handleVerifyClick:", projectId); // ตรวจสอบว่า project_id ถูกส่งมาหรือไม่
+    
         if (projectId) {
             navigate(`/ReqVerification?project_id=${projectId}`, {
                 state: { selectedRequirements, project_id: projectId },
@@ -79,24 +79,24 @@ const VerificationList = () => {
         }
     };
     
-    
-
-
-
 
     const handleSearchClick = (requirements, verification) => {
         // สร้างข้อมูล requirement ที่ต้องการแสดงใน modal
         const requirementInfo = requirements.map((req) => {
+            // ตรวจสอบว่า verification.verify_by เป็นอาร์เรย์หรือไม่
             const verifiedBy = Array.isArray(verification.verify_by) ? verification.verify_by : [verification.verify_by];
+    
             return {
                 reqId: `REQ-0${req}`,
                 verifiedBy: verifiedBy // เก็บข้อมูลผู้ตรวจสอบทั้งหมด
             };
         });
-
+    
         setSelectedRequirement(requirementInfo);
         setShowModal(true); // แสดง modal
     };
+    
+
 
     const closeModal = () => {
         setShowModal(false); // ปิด modal

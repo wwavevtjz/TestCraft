@@ -105,7 +105,7 @@ const handleCreateVerification = async () => {
 
     // ตรวจสอบ response.status ที่เป็น 201
     if (response.status === 201) {
-      toast.success("Verification(s) created successfully!");
+      toast.success("Verification created successfully!");
 
       // อัปเดตสถานะของ requirements ที่ถูกเลือกเป็น "WAITING FOR VERIFICATION"
       await Promise.all(
