@@ -559,43 +559,73 @@ app.post('/reqverified', (req, res) => {
 //-------------------------- VERIFICATION ------------------
 // Create Verification
 app.post('/createveri', (req, res) => {
-    const { requirements, reviewers, project_id } = req.body;
+    const { requirements, reviewers, project_id, create_by } = req.body;
 
-    // ตรวจสอบว่าข้อมูลที่จำเป็นถูกส่งมาครบถ้วน
     if (!requirements || !reviewers || !project_id) {
         return res.status(400).json({ message: "Missing required fields." });
     }
 
-    // เตรียมข้อมูลสำหรับ insert
-    const values = reviewers.flatMap(reviewer =>
-        requirements.map(requirement => [
-            project_id, reviewer, requirement, new Date() // verification_at เป็นวันที่ปัจจุบัน
-        ])
-    );
-
-    console.log("Values to insert:", values); // ตรวจสอบค่าที่จะ insert
-
-    const sql = `
-        INSERT INTO verification (project_id, verification_member, requirement_id, verification_at)
+    // สร้างรายการ verification
+    const createVerificationQuery = `
+        INSERT INTO verification (project_id, create_by, requirement_id, verification_status, verification_at)
         VALUES ?
     `;
 
-    // query บันทึกข้อมูล
-    db.query(sql, [values], (err, result) => {
+    const verificationValues = requirements.map(requirement_id => [
+        project_id,
+        create_by,
+        requirement_id,
+        "WAITING FOR VERIFICATION",
+        new Date() // เวลาปัจจุบัน
+    ]);
+
+    db.query(createVerificationQuery, [verificationValues], (err, verificationResult) => {
         if (err) {
-            console.error("Database Error:", err);
-            return res.status(500).json({ message: "Error adding verification.", error: err });
+            console.error("Database Error (Inserting verifications):", err);
+            return res.status(500).json({ message: "Error creating verification records." });
         }
-        return res.status(201).json({
-            message: "Verification created successfully!",
-            data: result
+
+        const verificationIds = verificationResult.insertId;
+
+        // จัดการ reviewers เชื่อมโยงกับ verification
+        const reviewerValues = reviewers.flatMap((reviewer, index) =>
+            requirements.map((requirement, reqIndex) => [
+                reviewer,
+                requirement,
+                verificationIds + reqIndex // เชื่อมโยง verification_id
+            ])
+        );
+
+        const insertReviewerQuery = `
+            INSERT INTO reviewer (reviewer_name, requirement_id, verification_id)
+            VALUES ?
+        `;
+
+        db.query(insertReviewerQuery, [reviewerValues], (err) => {
+            if (err) {
+                console.error("Database Error (Inserting reviewers):", err);
+                return res.status(500).json({ message: "Error adding reviewers.", error: err });
+            }
+
+            res.status(201).json({ message: "Verification and reviewers created successfully!" });
         });
     });
 });
 
-// Get all verifications
+
+
+// Get all verifications with reviewers
 app.get('/verifications', (req, res) => {
-    const sql = `SELECT * FROM verification`;
+    const sql = `
+        SELECT 
+            v.verification_id AS id,
+            v.create_by,
+            v.verification_at AS created_at,
+            v.verification_status,
+            r.reviewer_name
+        FROM verification v
+        LEFT JOIN reviewer r ON v.verification_id = r.verification_id
+    `;
 
     db.query(sql, (err, result) => {
         if (err) {
@@ -603,17 +633,57 @@ app.get('/verifications', (req, res) => {
             return res.status(500).json({ message: "Error fetching verifications.", error: err });
         }
 
-        // Map results to include more readable data if needed
-        const verifications = result.map(row => ({
-            id: row.id,
-            requirements: [row.requirement_id], // You can enhance this if you have multiple requirements
-            verify_by: row.verification_member, // Assuming you have this field
-            created_at: row.verification_at
-        }));
+        // Map results to group reviewers by verification ID
+        const verifications = result.reduce((acc, row) => {
+            const existing = acc.find(v => v.id === row.id);
+            if (existing) {
+                existing.reviewers.push(row.reviewer_name);
+            } else {
+                acc.push({
+                    id: row.id,
+                    create_by: row.create_by,
+                    created_at: row.created_at,
+                    verification_status: row.verification_status,
+                    reviewers: row.reviewer_name ? [row.reviewer_name] : [],
+                });
+            }
+            return acc;
+        }, []);
 
         return res.status(200).json(verifications);
     });
 });
+
+
+// GET all reviewers
+app.get('/reviewer', (req, res) => {
+    const sql = `
+        SELECT 
+            r.reviewer_id AS id,
+            r.reviewer_name,
+            r.requirement_id,
+            r.verification_id
+        FROM reviewer r
+    `;
+
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Error fetching reviewers.", error: err });
+        }
+
+        // Map results to provide a structured response
+        const reviewers = result.map(row => ({
+            id: row.id,
+            reviewerName: row.reviewer_name,
+            requirementId: row.requirement_id,
+            verificationId: row.verification_id
+        }));
+
+        return res.status(200).json(reviewers);
+    });
+});
+
 
 app.put('/update-status-verifications', (req, res) => {
     const { verification_id } = req.params;

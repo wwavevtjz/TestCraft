@@ -288,87 +288,86 @@ const RequirementPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredRequirements.map((data) => (
-                <tr key={data.requirement_id}>
-                  {/* Clickable cells */}
-                  <td
-                    onClick={() =>
-                      navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, {
-                        state: { requirement: data },
-                      })
-                    }
-                    style={{ cursor: "pointer", userSelect: "none" }}
-                  >
-                    REQ-0{data.requirement_id}
-                  </td>
-                  <td
-                    onClick={() =>
-                      navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, {
-                        state: { requirement: data },
-                      })
-                    }
-                    style={{ cursor: "pointer", userSelect: "none" }}
-                  >
-                    {data.requirement_name}
-                  </td>
-                  <td
-                    onClick={() =>
-                      navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, {
-                        state: { requirement: data },
-                      })
-                    }
-                    style={{ cursor: "pointer", userSelect: "none" }}
-                  >
-                    {data.requirement_type}
-                  </td>
+  {filteredRequirements.map((data, index) => (
+    <tr key={data.requirement_id}>
+      {/* แสดง REQ-ID ที่มีเลข 3 หลัก */}
+      <td
+        onClick={() =>
+          navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, {
+            state: { requirement: data },
+          })
+        }
+        style={{ cursor: "pointer", userSelect: "none" }}
+      >
+        REQ-{(index + 1).toString().padStart(3, "0")} {/* เพิ่มเลขให้เป็น 3 หลัก */}
+      </td>
+      <td
+        onClick={() =>
+          navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, {
+            state: { requirement: data },
+          })
+        }
+        style={{ cursor: "pointer", userSelect: "none" }}
+      >
+        {data.requirement_name}
+      </td>
+      <td
+        onClick={() =>
+          navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, {
+            state: { requirement: data },
+          })
+        }
+        style={{ cursor: "pointer", userSelect: "none" }}
+      >
+        {data.requirement_type}
+      </td>
 
-                  {/* Actions */}
-                  <td>
-                    <button
-                      onClick={() =>
-                        navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, {
-                          state: { requirement: data },
-                        })
-                      }
-                      className="action-button view-req colored-view-button"
-                    >
-                      <FontAwesomeIcon icon={faEye} className="action-icon" />
-                    </button>
+      {/* Actions */}
+      <td>
+        <button
+          onClick={() =>
+            navigate(`/ViewEditReq?requirement_id=${data.requirement_id}`, {
+              state: { requirement: data },
+            })
+          }
+          className="action-button view-req colored-view-button"
+        >
+          <FontAwesomeIcon icon={faEye} className="action-icon" />
+        </button>
 
-                    {/* Disable Edit button if VERIFIED */}
-                    <button
-                      onClick={() =>
-                        navigate(
-                          `/UpdateRequirement?project_id=${projectId}&requirement_id=${data.requirement_id}`
-                        )
-                      }
-                      className="action-button edit-req colored-edit-button"
-                      disabled={data.requirement_status === "VERIFIED"} // Disable Edit button if VERIFIED
-                    >
-                      <FontAwesomeIcon icon={faPen} className="action-icon" />
-                    </button>
+        <button
+          onClick={() =>
+            navigate(
+              `/UpdateRequirement?project_id=${projectId}&requirement_id=${data.requirement_id}`
+            )
+          }
+          className="action-button edit-req colored-edit-button"
+          disabled={data.requirement_status === "VERIFIED"} // Disable Edit button if VERIFIED
+        >
+          <FontAwesomeIcon icon={faPen} className="action-icon" />
+        </button>
 
-                    <button
-                      onClick={() => handleDelete(data.requirement_id)}
-                      className="action-button delete-req colored-delete-button"
-                    >
-                      <FontAwesomeIcon icon={faTrash} className="action-icon" />
-                    </button>
-                  </td>
+        <button
+          onClick={() => handleDelete(data.requirement_id)}
+          className="action-button delete-req colored-delete-button"
+        >
+          <FontAwesomeIcon icon={faTrash} className="action-icon" />
+        </button>
+      </td>
 
-                  <td>
-                    <button
-                      className={`status-button 
-    ${data.requirement_status === 'VERIFIED' ? 'status-verified' : ''} 
-    ${data.requirement_status === 'WORKING' ? 'status-working' : ''} 
-    ${data.requirement_status === 'WAITING FOR VERIFICATION' ? 'status-not-complete' : ''}`}
-                    >
-                      {data.requirement_status}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+      <td>
+        <button
+          className={`status-button 
+            ${data.requirement_status === 'VERIFIED' ? 'status-verified' : ''} 
+            ${data.requirement_status === 'WORKING' ? 'status-working' : ''} 
+            ${data.requirement_status === 'WAITING FOR VERIFICATION' ? 'status-not-complete' : ''}`}
+        >
+          {data.requirement_status}
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
 
           </table>
         )}
@@ -398,46 +397,50 @@ const RequirementPage = () => {
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {files.map((file) => (
-                  <tr key={file.filereq_id}>
-                    <td>{file.filereq_id}</td> {/* แสดง `filereq_id` */}
-                    <td>{file.title || file.filereq_name}</td> {/* ใช้ `title` หรือ `filereq_name` */}
-                    <td>{file.requirement_id ? `REQ-0${file.requirement_id}` : "N/A"}</td> {/* แสดง `requirement_id` */}
-                    <td className="file-actions">
-                      <button
-                        className="view-requirement-button"
-                        onClick={() => handleViewFile(file)}
-                      >
-                        <FontAwesomeIcon icon={faEye} />
-                      </button>
+<tbody>
+  {files.map((file) => (
+    <tr key={file.filereq_id}>
+      <td>{file.filereq_id}</td> {/* แสดง `filereq_id` */}
+      <td>{file.title || file.filereq_name}</td> {/* ใช้ `title` หรือ `filereq_name` */}
+      <td>
+        {file.requirement_id ? `REQ-${file.requirement_id.toString().padStart(3, "0")}` : "N/A"} 
+        {/* แสดง `requirement_id` และทำให้เป็น 3 หลัก */}
+      </td>
+      <td className="file-actions">
+        <button
+          className="view-requirement-button"
+          onClick={() => handleViewFile(file)}
+        >
+          <FontAwesomeIcon icon={faEye} />
+        </button>
 
-                      <button
-                        className="download-file-button"
-                        onClick={() => {
-                          const link = document.createElement("a");
-                          link.href = `http://localhost:3001/files/${file.filereq_id}`;
-                          link.download = file.filereq_name.endsWith(".pdf")
-                            ? file.filereq_name
-                            : `${file.filereq_name}.pdf`;
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faDownload} />
-                      </button>
+        <button
+          className="download-file-button"
+          onClick={() => {
+            const link = document.createElement("a");
+            link.href = `http://localhost:3001/files/${file.filereq_id}`;
+            link.download = file.filereq_name.endsWith(".pdf")
+              ? file.filereq_name
+              : `${file.filereq_name}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }}
+        >
+          <FontAwesomeIcon icon={faDownload} />
+        </button>
 
-                      <button
-                        className="delete-file-button"
-                        onClick={() => handleDeleteFile(file.filereq_id)}
-                      >
-                        <FontAwesomeIcon icon={faTrash} className="delete-file" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+        <button
+          className="delete-file-button"
+          onClick={() => handleDeleteFile(file.filereq_id)}
+        >
+          <FontAwesomeIcon icon={faTrash} className="delete-file" />
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
             </table>
           )}
         </div>

@@ -3,58 +3,53 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import "./CSS/VerificationList.css";
 
-
 // Modal Component
-const Modal = ({ show, onClose, requirement }) => {
+const Modal = ({ show, onClose, reviewers }) => {
     if (!show) return null;
 
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h2>Requirement Verification Info</h2>
-                {requirement && requirement.length > 0 ? (
-    requirement.map((req, index) => {
-        const verifiedBy = Array.isArray(req.verifiedBy) ? req.verifiedBy : [req.verifiedBy];
-
-        return (
-            <div key={index}>
-                <p><strong>Requirement ID:</strong> {req.reqId}</p>
-                <p><strong>Verified By:</strong> {verifiedBy.length > 0 ? verifiedBy.join(", ") : "No reviewers"}</p>
-                <hr />
-            </div>
-        );
-    })
-) : (
-    <p>No requirements found.</p>
-)}
-
-
-                <button className="close-modal-button" onClick={onClose}>Close</button>
+                <h2>Reviewers</h2>
+                {reviewers && reviewers.length > 0 ? (
+                    reviewers.map((reviewer, index) => (
+                        <div key={index}>
+                            <p>{reviewer}</p>
+                            <hr />
+                        </div>
+                    ))
+                ) : (
+                    <p>No reviewers found.</p>
+                )}
+                <button className="close-modal-button" onClick={onClose}>
+                    Close
+                </button>
             </div>
         </div>
     );
 };
 
-
 const VerificationList = () => {
     const [verifications, setVerifications] = useState([]);
-    const [selectedRequirement, setSelectedRequirement] = useState([]); // เปลี่ยนเป็นอาร์เรย์
-    const [showModal, setShowModal] = useState(false); // ควบคุมการแสดง modal
+    const [selectedReviewers, setSelectedReviewers] = useState([]);
+    const [showModal, setShowModal] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
     const projectId = queryParams.get("project_id");
     const currentUsername = localStorage.getItem("username");
 
+    // Fetch verifications
     useEffect(() => {
         axios
-            .get("http://localhost:3001/verifications")
+            .get(`http://localhost:3001/verifications?project_id=${projectId}`)
             .then((response) => {
                 let filteredVerifications = response.data;
 
+                // Filter verifications for non-admin users
                 if (currentUsername !== "admin") {
                     filteredVerifications = filteredVerifications.filter(
-                        (verification) => verification.verify_by === currentUsername
+                        (verification) => verification.create_by === currentUsername
                     );
                 }
 
@@ -63,44 +58,28 @@ const VerificationList = () => {
             .catch((err) => {
                 console.error("Error fetching verifications:", err);
             });
-    }, [currentUsername]);
+    }, [currentUsername, projectId]);
 
 
-    const handleVerifyClick = (selectedRequirements) => {
-        // ใช้ projectId ที่ดึงจาก URL
-        console.log("project_id from handleVerifyClick:", projectId); // ตรวจสอบว่า project_id ถูกส่งมาหรือไม่
-    
+    // Handle Search Reviewer button
+    const handleSearchClick = (reviewers) => {
+        setSelectedReviewers(reviewers);
+        setShowModal(true);
+    };
+
+
+    // Handle Verify button
+    const handleViewClick = (selectedRequirements) => {
         if (projectId) {
-            navigate(`/ReqVerification?project_id=${projectId}`, {
+            navigate(`/VerificationReq?project_id=${projectId}`, {
                 state: { selectedRequirements, project_id: projectId },
             });
         } else {
             console.error("Project ID is missing");
         }
     };
-    
 
-    const handleSearchClick = (requirements, verification) => {
-        // สร้างข้อมูล requirement ที่ต้องการแสดงใน modal
-        const requirementInfo = requirements.map((req) => {
-            // ตรวจสอบว่า verification.verify_by เป็นอาร์เรย์หรือไม่
-            const verifiedBy = Array.isArray(verification.verify_by) ? verification.verify_by : [verification.verify_by];
-    
-            return {
-                reqId: `REQ-0${req}`,
-                verifiedBy: verifiedBy // เก็บข้อมูลผู้ตรวจสอบทั้งหมด
-            };
-        });
-    
-        setSelectedRequirement(requirementInfo);
-        setShowModal(true); // แสดง modal
-    };
-    
-
-
-    const closeModal = () => {
-        setShowModal(false); // ปิด modal
-    };
+    const closeModal = () => setShowModal(false);
 
     return (
         <div className="verification-list-container">
@@ -112,50 +91,48 @@ const VerificationList = () => {
                 <table className="verification-table">
                     <thead>
                         <tr>
-                            <th>Requirement ID</th>
-                            <th>Verify By</th>
-                            <th>Date assigned</th>
+                            <th>Verification</th>
+                            <th>Create By</th>
+                            <th>Date Assigned</th>
+                            <th>Status</th>
                             <th>Reviewer</th>
-                            <th>Action</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {verifications.map((verification) => (
-                            <tr key={verification.id}>
-                                <td>
-                                    {verification.requirements.map((req, index) => (
-                                        <div key={index}>REQ-0{req}</div>
-                                    ))}
-                                </td>
-                                <td>{verification.verify_by}</td>
-                                <td>{new Date(verification.created_at).toLocaleDateString()}</td>
-                                <td>
-                                    <button
-                                        className="search-icon-button"
-                                        title="Search Reviewer"
-                                        onClick={() => handleSearchClick(verification.requirements, verification)}
-                                    >
-                                        🔍
-                                    </button>
-                                </td>
-                                <td>
-                                    <button
-                                        className="verify-button"
-                                        onClick={() =>
-                                            handleVerifyClick(verification.requirements, verification.project_id)
-                                        }
-                                    >
-                                        Verify
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
+    {verifications.map((verification, index) => (
+        <tr key={verification.id}>
+            <td>{index + 1}</td> {/* ใช้ index + 1 เพื่อให้เป็นเลขที่เรียงลำดับ */}
+            <td>{verification.create_by}</td>
+            <td>{new Date(verification.created_at).toLocaleDateString()}</td>
+            <td>{verification.verification_status || "WAITING FOR VERIFICATION"}</td>
+            <td>
+                <button
+                    className="search-icon-button"
+                    title="Search Reviewers"
+                    onClick={() => handleSearchClick(verification.reviewers || [])}
+                >
+                    🔍
+                </button>
+            </td>
+            <td>
+                <button
+                    className="verify-button"
+                    onClick={() =>
+                        handleViewClick(verification.requirements)
+                    }
+                >
+                    Verify
+                </button>
+            </td>
+        </tr>
+    ))}
+</tbody>
+
                 </table>
             )}
 
-            {/* แสดง Modal หาก showModal เป็น true */}
-            <Modal show={showModal} onClose={closeModal} requirement={selectedRequirement} />
+            <Modal show={showModal} onClose={closeModal} reviewers={selectedReviewers} />
         </div>
     );
 };

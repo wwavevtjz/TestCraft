@@ -19,6 +19,7 @@ const CreateVeri = () => {
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get("project_id");
   const navigate = useNavigate();
+
   // Fetch working requirements
   useEffect(() => {
     if (projectId) {
@@ -30,7 +31,7 @@ const CreateVeri = () => {
             (requirement) => requirement.requirement_status === "WORKING"
           );
           setWorkingRequirements(working);
-          setRequirementsError(null); // Clear previous error
+          setRequirementsError(null);
         })
         .catch(() => {
           setRequirementsError("Failed to load requirements. Please try again.");
@@ -50,7 +51,7 @@ const CreateVeri = () => {
         .then((res) => {
           if (Array.isArray(res.data)) {
             setMembers(res.data);
-            setMembersError(null); // Clear previous error
+            setMembersError(null);
           } else {
             setMembersError("Invalid project member data.");
           }
@@ -71,59 +72,74 @@ const CreateVeri = () => {
     );
   };
 
-// Handle create verification
+  // Handle create verification
 const handleCreateVerification = async () => {
   const selectedReviewerNames = Object.keys(selectedReviewers).filter(
     (name) => selectedReviewers[name]
   );
 
-  
-  // ตรวจสอบว่า Project ID, Requirements และ Reviewers ถูกเลือก
+  // ตรวจสอบ Project ID
   if (!projectId) {
     toast.error("Invalid project ID.");
     return;
   }
 
+  // ตรวจสอบว่าเลือก Requirement และ Reviewer หรือไม่
   if (selectedRequirements.length === 0 || selectedReviewerNames.length === 0) {
     toast.warning("Please select at least one requirement and one reviewer.");
     return;
   }
 
-  const payload = {
-    requirements: [...new Set(selectedRequirements)], // ลบ duplicate requirements
-    reviewers: selectedReviewerNames,
-    project_id: projectId,
-  };
+  const user = JSON.parse(localStorage.getItem("user"));
+const createBy = user?.username; // ดึง username จาก localStorage
 
-  console.log("Payload to send:", payload); // ตรวจสอบข้อมูลที่ส่งไป
+const payload = {
+  requirements: [...new Set(selectedRequirements)], // ลบค่าที่ซ้ำใน Array
+  reviewers: selectedReviewerNames,
+  project_id: projectId,
+  create_by: createBy, // เพิ่มข้อมูลผู้ใช้
+};
+
+  
+  console.log("Payload being sent:", payload);
+  
+
+  // ป้องกันการกดซ้ำ
+  if (isSubmitting) {
+    toast.warning("Submitting in progress. Please wait.");
+    return;
+  }
 
   setIsSubmitting(true);
 
   try {
-    // POST request to create verification(s)
+    // เรียก API สร้าง Verification
     const response = await axios.post("http://localhost:3001/createveri", payload);
 
-    // ตรวจสอบ response.status ที่เป็น 201
     if (response.status === 201) {
       toast.success("Verification created successfully!");
 
-      // อัปเดตสถานะของ requirements ที่ถูกเลือกเป็น "WAITING FOR VERIFICATION"
+      // อัปเดตสถานะของ Requirements เป็น "WAITING FOR VERIFICATION"
       await Promise.all(
         selectedRequirements.map((requirementId) =>
           axios.put(`http://localhost:3001/update-requirements-status/${requirementId}`, {
-            requirement_status: "WAITING FOR VERIFICATION"
+            requirement_status: "WAITING FOR VERIFICATION",
           })
         )
       );
 
-      // รีเฟรชรายการ requirements ใหม่หลังจากการอัปเดต
-      const refreshedRequirements = await axios.get(`http://localhost:3001/project/${projectId}/requirement`);
+      // ดึงรายการ Requirement ใหม่
+      const refreshedRequirements = await axios.get(
+        `http://localhost:3001/project/${projectId}/requirement`
+      );
+
+      // กรอง Requirements ที่อยู่ในสถานะ "WORKING"
       const working = refreshedRequirements.data.filter(
         (requirement) => requirement.requirement_status === "WORKING"
       );
       setWorkingRequirements(working);
 
-      // รีเซ็ตการเลือก requirements และ reviewers
+      // รีเซ็ตการเลือก Requirement และ Reviewer
       setSelectedRequirements([]);
       setSelectedReviewers({});
     } else {
@@ -133,9 +149,11 @@ const handleCreateVerification = async () => {
     console.error("Error creating verification(s):", error);
     toast.error(error.response?.data?.message || "An error occurred. Please try again.");
   } finally {
-    setIsSubmitting(false); 
+    // ปิดสถานะกำลังส่ง
+    setIsSubmitting(false);
   }
 };
+
 
   // Handle checkbox for reviewers
   const handleCheckboxReviewer = (memberName) => {
