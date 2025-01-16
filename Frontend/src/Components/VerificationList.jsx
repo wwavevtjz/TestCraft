@@ -69,9 +69,9 @@ const VerificationList = () => {
 
 
     // Handle Verify button
-    const handleViewClick = (selectedRequirements) => {
+    const handleVerifyClick = (selectedRequirements) => {
         if (projectId) {
-            navigate(`/VerificationReq?project_id=${projectId}`, {
+            navigate(`/ReqVerification?project_id=${projectId}`, {
                 state: { selectedRequirements, project_id: projectId },
             });
         } else {
@@ -119,7 +119,7 @@ const VerificationList = () => {
                 <button
                     className="verify-button"
                     onClick={() =>
-                        handleViewClick(verification.requirements)
+                        handleVerifyClick(verification.requirements)
                     }
                 >
                     Verify
