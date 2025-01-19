@@ -72,89 +72,87 @@ const CreateVeri = () => {
     );
   };
 
-  // Handle create verification
-const handleCreateVerification = async () => {
-  const selectedReviewerNames = Object.keys(selectedReviewers).filter(
-    (name) => selectedReviewers[name]
-  );
-
-  // ตรวจสอบ Project ID
-  if (!projectId) {
-    toast.error("Invalid project ID.");
-    return;
-  }
-
-  // ตรวจสอบว่าเลือก Requirement และ Reviewer หรือไม่
-  if (selectedRequirements.length === 0 || selectedReviewerNames.length === 0) {
-    toast.warning("Please select at least one requirement and one reviewer.");
-    return;
-  }
-
-  const user = JSON.parse(localStorage.getItem("user"));
-const createBy = user?.username; // ดึง username จาก localStorage
-
-const payload = {
-  requirements: [...new Set(selectedRequirements)], // ลบค่าที่ซ้ำใน Array
-  reviewers: selectedReviewerNames,
-  project_id: projectId,
-  create_by: createBy, // เพิ่มข้อมูลผู้ใช้
-};
-
+  const handleCreateVerification = async () => {
+    const selectedReviewerNames = Object.keys(selectedReviewers).filter(
+      (name) => selectedReviewers[name]
+    );
   
-  console.log("Payload being sent:", payload);
-  
-
-  // ป้องกันการกดซ้ำ
-  if (isSubmitting) {
-    toast.warning("Submitting in progress. Please wait.");
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  try {
-    // เรียก API สร้าง Verification
-    const response = await axios.post("http://localhost:3001/createveri", payload);
-
-    if (response.status === 201) {
-      toast.success("Verification created successfully!");
-
-      // อัปเดตสถานะของ Requirements เป็น "WAITING FOR VERIFICATION"
-      await Promise.all(
-        selectedRequirements.map((requirementId) =>
-          axios.put(`http://localhost:3001/update-requirements-status/${requirementId}`, {
-            requirement_status: "WAITING FOR VERIFICATION",
-          })
-        )
-      );
-
-      // ดึงรายการ Requirement ใหม่
-      const refreshedRequirements = await axios.get(
-        `http://localhost:3001/project/${projectId}/requirement`
-      );
-
-      // กรอง Requirements ที่อยู่ในสถานะ "WORKING"
-      const working = refreshedRequirements.data.filter(
-        (requirement) => requirement.requirement_status === "WORKING"
-      );
-      setWorkingRequirements(working);
-
-      // รีเซ็ตการเลือก Requirement และ Reviewer
-      setSelectedRequirements([]);
-      setSelectedReviewers({});
-    } else {
-      toast.error(response.data.message || "Failed to create verification(s).");
+    if (!projectId) {
+      toast.error("Invalid project ID.");
+      return;
     }
-  } catch (error) {
-    console.error("Error creating verification(s):", error);
-    toast.error(error.response?.data?.message || "An error occurred. Please try again.");
-  } finally {
-    // ปิดสถานะกำลังส่ง
-    setIsSubmitting(false);
-  }
-};
-
-
+  
+    if (selectedRequirements.length === 0 || selectedReviewerNames.length === 0) {
+      toast.warning("Please select at least one requirement and one reviewer.");
+      return;
+    }
+  
+    const user = JSON.parse(localStorage.getItem("user"));
+    const createBy = user?.username;
+  
+    const payload = {
+      requirements: [...new Set(selectedRequirements)],
+      reviewers: selectedReviewerNames,
+      project_id: projectId,
+      create_by: createBy,
+    };
+  
+    if (isSubmitting) {
+      toast.warning("Submitting in progress. Please wait.");
+      return;
+    }
+  
+    setIsSubmitting(true);
+  
+    try {
+      // Create verification in backend
+      const response = await axios.post("http://localhost:3001/createveri", payload);
+  
+      if (response.status === 201) {
+        toast.success("Verification created successfully!");
+  
+        // Update the working requirements in the frontend
+        setWorkingRequirements((prev) =>
+          prev.filter((req) => !selectedRequirements.includes(req.requirement_id))
+        );
+  
+        // Update the status of requirements in the backend
+        const updateResults = await Promise.allSettled(
+          selectedRequirements.map((requirementId) =>
+            axios.put(`http://localhost:3001/update-requirements-status-waitingfor-ver/${requirementId}`, {
+              requirement_status: "WAITING FOR VERIFICATION",
+            })
+          )
+        );
+  
+        // Log errors from failed updates
+        updateResults.forEach((result, index) => {
+          if (result.status === "rejected") {
+            console.error(
+              `Failed to update status for requirement ID ${selectedRequirements[index]}:`,
+              result.reason
+            );
+          }
+        });
+  
+        // Reset the state for selected requirements and reviewers
+        setSelectedRequirements([]);
+        setSelectedReviewers({});
+      } else {
+        toast.error(response.data.message || "Failed to create verification(s).");
+      }
+    } catch (error) {
+      console.error("Error creating verification(s):", error);
+  
+      // Handle backend errors
+      const errorMessage =
+        error.response?.data?.message || "An error occurred. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   // Handle checkbox for reviewers
   const handleCheckboxReviewer = (memberName) => {
     setSelectedReviewers((prevState) => ({

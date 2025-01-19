@@ -7,6 +7,7 @@ import ViewEditReq from './Components/ViewEditReq';
 import UpdateRequirement from './Components/UpdateRequirement';
 import ReqVerification from './Components/ReqVerification';
 import CreateVeri from './Components/CreateVeri';
+import CreateVar from './Components/CreateVar';
 import VerificationList from './Components/VerificationList';
 import VerificationHis from './Components/VerificationHis';
 import Project from './Components/Project';
@@ -21,6 +22,7 @@ import Signup from './Components/Signup';
 import ProjectConfig from './Components/ProjectConfig';
 import ViewFile from './Components/ViewFile';
 import VersionControl from './Components/VersionControl';
+import Comment from './Components/Comment';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Make sure Bootstrap CSS is imported
 
 
@@ -58,10 +60,15 @@ const App = () => {
         {/* Routes สำหรับการตั้งค่า Project */}
         <Route path="/ProjectConfig" element={<ProjectConfig />} />
 
+        {/* Routes สำหรับ Verification and Validation */}
+        <Route path="/CreateVeri" element={<CreateVeri />} />
+        <Route path="/CreateVar" element={<CreateVar />} />
+
         {/* Routes สำหรับ Requirements */}
         <Route path="/requirementPage" element={<RequirementPage />} />
         <Route path="/ViewEditReq" element={<ViewEditReq />} />
-        <Route path="/CreateVeri" element={<CreateVeri />} />
+
+        
         <Route path="/CreateRequirement" element={<CreateRequirement />} />
         <Route path="/UpdateRequirement" element={<UpdateRequirement />} />
         <Route path="/ReqVerification" element={<ReqVerification />} />
@@ -79,6 +86,9 @@ const App = () => {
 
         {/* ทำ version control */}
         <Route path="/version-control/:id" element={<VersionControl />} />
+
+        {/* ทำ comment */}
+        <Route path="/Comment" element={<Comment />} />
       </Routes>
     </>
   );

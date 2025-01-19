@@ -6,6 +6,7 @@ const cors = require('cors');
 const app = express();
 const router = express.Router();
 
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -397,6 +398,25 @@ app.get('/project/:id/requirement', (req, res) => {
     });
 });
 
+app.put('/requirement/:requirementId/status', (req, res) => {
+    const { requirementId } = req.params;
+    const { status } = req.body; // รับสถานะใหม่จากฟรอนต์เอนด์
+  
+    // Query สำหรับอัปเดตในฐานข้อมูล
+    db.query(
+      'UPDATE requirements SET requirement_status = ? WHERE requirement_id = ?',
+      [status, requirementId],
+      (err, result) => {
+        if (err) {
+          console.error('Error updating status:', err);
+          res.status(500).send('Failed to update status.');
+        } else {
+          res.send({ message: 'Status updated successfully.' });
+        }
+      }
+    );
+  });
+  
 // ------------------------- Requirement Verification -------------------------
 // Fetch all criteria
 app.get('/reqcriteria', (req, res) => {
@@ -585,8 +605,9 @@ app.post('/createveri', (req, res) => {
             return res.status(500).json({ message: "Error creating verification records." });
         }
 
+        // สร้าง ID verification สำหรับการเชื่อมโยง
         const verificationIds = verificationResult.insertId;
-
+        
         // จัดการ reviewers เชื่อมโยงกับ verification
         const reviewerValues = reviewers.flatMap((reviewer, index) =>
             requirements.map((requirement, reqIndex) => [
@@ -607,37 +628,64 @@ app.post('/createveri', (req, res) => {
                 return res.status(500).json({ message: "Error adding reviewers.", error: err });
             }
 
-            res.status(201).json({ message: "Verification and reviewers created successfully!" });
+            // สร้างข้อมูลสำหรับ Log
+            const responseLog = {
+                verification_id: verificationIds,
+                create_by: create_by,
+                requirement_id: requirements,
+                created_at: new Date().toISOString(),
+                verification_status: 'WAITING FOR VERIFICATION',
+                reviewers: reviewers,
+            };
+
+            console.log("Verification and reviewers created successfully:", responseLog);
+
+            res.status(201).json({
+                message: "Verification created successfully!",
+                verification: responseLog
+            });
         });
     });
 });
 
-
-
-// Get all verifications with reviewers
 app.get('/verifications', (req, res) => {
-    const sql = `
+    const { project_id, status } = req.query; // รับค่า project_id และ status จาก query
+
+    let sql = `
         SELECT 
             v.verification_id AS id,
             v.create_by,
             v.verification_at AS created_at,
             v.verification_status,
-            r.reviewer_name
+            r.reviewer_name,
+            v.requirement_id
         FROM verification v
         LEFT JOIN reviewer r ON v.verification_id = r.verification_id
+        WHERE v.project_id = ? 
     `;
 
-    db.query(sql, (err, result) => {
+    const params = [project_id];
+
+    if (status) {
+        sql += ` AND v.verification_status = ?`;
+        params.push(status);
+    }
+
+    db.query(sql, params, (err, result) => {
         if (err) {
             console.error("Database Error:", err);
             return res.status(500).json({ message: "Error fetching verifications.", error: err });
         }
 
-        // Map results to group reviewers by verification ID
         const verifications = result.reduce((acc, row) => {
             const existing = acc.find(v => v.id === row.id);
             if (existing) {
-                existing.reviewers.push(row.reviewer_name);
+                if (row.reviewer_name && !existing.reviewers.includes(row.reviewer_name)) {
+                    existing.reviewers.push(row.reviewer_name);
+                }
+                if (row.requirement_id && !existing.requirements.includes(row.requirement_id)) {
+                    existing.requirements.push(row.requirement_id);
+                }
             } else {
                 acc.push({
                     id: row.id,
@@ -645,6 +693,7 @@ app.get('/verifications', (req, res) => {
                     created_at: row.created_at,
                     verification_status: row.verification_status,
                     reviewers: row.reviewer_name ? [row.reviewer_name] : [],
+                    requirements: row.requirement_id ? [row.requirement_id] : [],
                 });
             }
             return acc;
@@ -654,67 +703,84 @@ app.get('/verifications', (req, res) => {
     });
 });
 
+// Update verification status and requirements status
+app.put('/update-status-verifications', (req, res) => {
+    const { verification_ids, verification_status } = req.body;
 
-// GET all reviewers
-app.get('/reviewer', (req, res) => {
+    if (!verification_ids || verification_ids.length === 0) {
+        return res.status(400).json({ message: "No verification IDs provided." });
+    }
+
+    const sql = `UPDATE verification SET verification_status = ? WHERE verification_id IN (?)`;
+
+    db.query(sql, [verification_status, verification_ids], (err, data) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Error updating verification statuses" });
+        }
+        return res.status(200).json({ message: "Verification statuses updated successfully" });
+    });
+});
+
+app.put('/update-requirements-status-waitingfor-ver/:id', (req, res) => {
+    const { id } = req.params;
+    const { requirement_status } = req.body;
+  
+    if (!requirement_status) {
+      return res.status(400).json({ message: "Missing requirement_status field." });
+    }
+  
+    const query = `
+      UPDATE requirement
+      SET requirement_status = ?
+      WHERE requirement_id = ?
+    `;
+  
+    db.query(query, [requirement_status, id], (err, result) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: "Database error." });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Requirement not found." });
+      }
+  
+      res.status(200).json({ message: "Requirement status updated successfully." });
+    });
+  });
+  
+// Update multiple requirements status
+app.put('/update-requirements-status-verified', (req, res) => {
+    const { requirement_ids, requirement_status } = req.body;
+
+    if (!requirement_ids || requirement_ids.length === 0) {
+        return res.status(400).json({ message: "No requirement IDs provided." });
+    }
+    if (!requirement_status) {
+        return res.status(400).json({ message: "Missing requirement_status field." });
+    }
+
     const sql = `
-        SELECT 
-            r.reviewer_id AS id,
-            r.reviewer_name,
-            r.requirement_id,
-            r.verification_id
-        FROM reviewer r
+        UPDATE requirement
+        SET requirement_status = ?
+        WHERE requirement_id IN (?)
     `;
 
-    db.query(sql, (err, result) => {
+    db.query(sql, [requirement_status, requirement_ids], (err, result) => {
         if (err) {
-            console.error("Database Error:", err);
-            return res.status(500).json({ message: "Error fetching reviewers.", error: err });
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Database error." });
         }
 
-        // Map results to provide a structured response
-        const reviewers = result.map(row => ({
-            id: row.id,
-            reviewerName: row.reviewer_name,
-            requirementId: row.requirement_id,
-            verificationId: row.verification_id
-        }));
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "No requirements found to update." });
+        }
 
-        return res.status(200).json(reviewers);
+        res.status(200).json({ message: "Requirement statuses updated successfully." });
     });
 });
 
-
-app.put('/update-status-verifications', (req, res) => {
-    const { verification_id } = req.params;
-    const { verification_status } = req.body;
-    console.log("Received data:", { verification_id, verification_status });
-
-    const sql = "UPDATE verification SET verification_status = ? WHERE verification_id = ?";
-    db.query(sql, [verification_status, verification_id], (err, data) => {
-        if (err) {
-            console.error("Database Error:", err);
-            return res.status(500).json({ message: "Error updating requirement status" });
-        }
-        console.log("Database Response:", data);
-        return res.status(200).json({ message: "Requirement status updated successfully" });
-    });
-});
-
-
-app.put("/update-requirements-status/:id", (req, res) => {
-    const { id } = req.params;
-    const { requirement_status } = req.body;  // Only update the status
-    const sql = "UPDATE requirement SET requirement_status = ? WHERE requirement_id = ?";
-
-    db.query(sql, [requirement_status, id], (err, data) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Error updating requirement status" });
-        }
-        return res.status(200).json({ message: "Requirement status updated successfully" });
-    });
-});
 // ------------------------- Login -------------------------
 app.get('/login', (req, res) => {
     const sql = "SELECT * FROM login";
@@ -908,6 +974,141 @@ app.delete('/files/:fileId', (req, res) => {
     });
 });
 
+// ------------------------- COMMENT -------------------------
+
+// ดึง Comment ทั้งหมดตาม Verification ID และ Requirement ID
+app.get('/api/comments', (req, res) => {
+    const { verificationId, requirementId } = req.query;
+
+    if (!verificationId || !requirementId) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+    }
+
+    const sql = `
+        SELECT * FROM comment 
+        WHERE verification_id = ? AND requirement_id = ?
+    `;
+    db.query(sql, [verificationId, requirementId], (err, results) => {
+        if (err) {
+            console.error('Error fetching comments:', err);
+            return res.status(500).json({ message: 'Failed to fetch comments' });
+        }
+        res.status(200).json(results);
+    });
+});
+
+// เพิ่ม Comment ใหม่
+app.post('/api/comments', (req, res) => {
+    const { reviewer_id, reviewer_name, content, verification_id, requirement_id } = req.body;
+
+    // ตรวจสอบว่าค่าที่จำเป็นครบถ้วน
+    if (!reviewer_id || !reviewer_name || !content || !verification_id || !requirement_id) {
+        console.error('Missing required fields:', { reviewer_id, reviewer_name, content, verification_id, requirement_id });
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const sql = `
+        INSERT INTO comment (reviewer_id, reviewer_name, content, verification_id, requirement_id, comment_time)
+        VALUES (?, ?, ?, ?, ?, NOW())
+    `;
+    const values = [reviewer_id, reviewer_name, content, verification_id, requirement_id];
+
+    console.log('Executing SQL:', sql, values);
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('Error adding comment:', err);
+            return res.status(500).json({ message: 'Failed to add comment' });
+        }
+
+        const newComment = {
+            id: result.insertId,
+            reviewer_id,
+            reviewer_name,
+            content,
+            verification_id,
+            requirement_id,
+            comment_time: new Date(),
+        };
+
+        console.log('Added comment:', newComment);
+        res.status(201).json(newComment);
+    });
+});
+
+
+// ลบ Comment ตาม ID
+app.delete('/api/comments/:id', (req, res) => {
+    const { id } = req.params;
+
+    const sql = "DELETE FROM comment WHERE comment_id = ?";
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error('Error deleting comment:', err);
+            return res.status(500).json({ message: 'Failed to delete comment' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Comment not found' });
+        }
+
+        res.status(200).json({ message: 'Comment deleted successfully' });
+    });
+});
+
+// อัปเดต Comment ตาม ID
+app.put('/api/comments/:id', (req, res) => {
+    const { id } = req.params;
+    const { content } = req.body;
+
+    if (!content) {
+        return res.status(400).json({ message: 'Content is required' });
+    }
+
+    const sql = `
+        UPDATE comment 
+        SET content = ?, comment_time = NOW()
+        WHERE comment_id = ?
+    `;
+    db.query(sql, [content, id], (err, result) => {
+        if (err) {
+            console.error('Error updating comment:', err);
+            return res.status(500).json({ message: 'Failed to update comment' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Comment not found' });
+        }
+
+        res.status(200).json({ message: 'Comment updated successfully' });
+    });
+});
+
+app.post('/api/comments', (req, res) => {
+    console.log('Request body received:', req.body); // เพิ่ม Log ดู Request
+    const { reviewer_id, reviewer_name, content, verification_id, requirement_id } = req.body;
+
+    if (!reviewer_id || !reviewer_name || !content || !verification_id || !requirement_id) {
+        console.error('Missing required fields:', { reviewer_id, reviewer_name, content, verification_id, requirement_id });
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const sql = `INSERT INTO comment (reviewer_id, reviewer_name, content, verification_id, requirement_id, comment_time)
+                 VALUES (?, ?, ?, ?, ?, NOW())`;
+
+    const values = [reviewer_id, reviewer_name, content, verification_id, requirement_id];
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('Error executing SQL:', err);
+            return res.status(500).json({ message: 'Failed to add comment' });
+        }
+
+        console.log('Comment added successfully:', result);
+        res.status(201).json({ id: result.insertId, ...req.body, comment_time: new Date() });
+    });
+});
+
+
 // ------------------------- VERSION CONTROL -------------------------
 // Endpoint to fetch history for a specific criteria
 app.post("/reqcriteria/log", (req, res) => {
@@ -925,6 +1126,107 @@ app.post("/reqcriteria/log", (req, res) => {
     });
 });
 
+
+//-------------------------- MENT ------------------------------------
+// Get all comments
+app.get('/comments', (req, res) => {
+    const sql = 'SELECT * FROM comme_member';
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Error fetching comments');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Get comments by member_id
+app.get('/comments/:member_id', (req, res) => {
+    const { member_id } = req.params;
+    const sql = 'SELECT * FROM comme_member WHERE member_id = ?';
+    db.query(sql, [member_id], (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Error fetching comments by member_id');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Add new comment
+app.post('/comments', (req, res) => {
+    const { member_id, member_name, comment_text } = req.body;
+    const sql = 'INSERT INTO comme_member (member_id, member_name, comment_text) VALUES (?, ?, ?)';
+    db.query(sql, [member_id, member_name, comment_text], (err, result) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Error adding comment');
+        } else {
+            res.status(201).send('Comment added successfully');
+        }
+    });
+});
+
+// Update comment
+app.put('/comments/:comme_member_id', (req, res) => {
+    const { comme_member_id } = req.params;
+    const { comment_text } = req.body;
+    const sql = 'UPDATE comme_member SET comment_text = ? WHERE comme_member_id = ?';
+    db.query(sql, [comment_text, comme_member_id], (err, result) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Error updating comment');
+        } else {
+            res.send('Comment updated successfully');
+        }
+    });
+});
+
+// Delete comment
+app.delete('/comments/:comme_member_id', (req, res) => {
+    const { comme_member_id } = req.params;
+    const sql = 'DELETE FROM comme_member WHERE comme_member_id = ?';
+    db.query(sql, [comme_member_id], (err, result) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Error deleting comment');
+        } else {
+            res.send('Comment deleted successfully');
+        }
+    });
+});
+
+app.get('/comments', (req, res) => {
+    const sql = 'SELECT * FROM comme_member';
+    db.query(sql, (err, results) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send('Error fetching comments');
+      } else {
+        res.json(results);
+      }
+    });
+  });
+
+  app.post('/comments', (req, res) => {
+    const { member_id, member_name, comment_text } = req.body;
+  
+    // ตรวจสอบข้อมูลก่อนทำการ INSERT
+    console.log("Received data:", { member_id, member_name, comment_text });
+  
+    const sql = 'INSERT INTO comme_member (member_id, member_name, comment_text) VALUES (?, ?, ?)';
+    db.query(sql, [member_id, member_name, comment_text], (err, results) => {
+      if (err) {
+        console.error("Error inserting comment:", err);
+        res.status(500).send('Failed to insert comment.');
+      } else {
+        res.status(201).json({ comme_member_id: results.insertId });
+      }
+    });
+  });
+  
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;
 app.listen(PORT, () => {

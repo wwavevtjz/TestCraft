@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Comment from "./Comment";
 import "./CSS/ReqVerification.css";
 
 const ReqVerification = () => {
@@ -11,8 +12,8 @@ const ReqVerification = () => {
   const [reqcriList, setReqcriList] = useState([]);
   const [requirementsDetails, setRequirementsDetails] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [checkboxState, setCheckboxState] = useState({}); // เก็บสถานะของ checkbox
-  const [allChecked, setAllChecked] = useState(false); // เช็คว่าทุก checkbox ถูกเลือกหรือไม่
+  const [checkboxState, setCheckboxState] = useState({}); // Store checkbox states
+  const [allChecked, setAllChecked] = useState(false); // Check if all checkboxes are selected
 
   useEffect(() => {
     if (!project_id) {
@@ -33,7 +34,7 @@ const ReqVerification = () => {
       setLoading(true);
       const response = await axios.get("http://localhost:3001/reqcriteria");
       const initialCheckboxState = response.data.reduce((acc, criteria) => {
-        acc[criteria.reqcri_id] = false; // ตั้งค่า checkbox ทุกตัวเริ่มต้นเป็น false
+        acc[criteria.reqcri_id] = false; // Initialize all checkboxes to false
         return acc;
       }, {});
       setCheckboxState(initialCheckboxState);
@@ -62,41 +63,46 @@ const ReqVerification = () => {
       [id]: !checkboxState[id],
     };
     setCheckboxState(updatedState);
-  
-    // ตรวจสอบสถานะ checkbox ทุกตัว
+
+    // Check if all checkboxes are selected
     const isAllChecked = Object.values(updatedState).every((isChecked) => isChecked);
     setAllChecked(isAllChecked);
   };
-  
 
   const handleSave = async () => {
-  if (allChecked) {
-    if (!project_id) {
-      alert("Project ID is missing. Cannot update status.");
+    if (!allChecked) {
+      alert("Please select all checkboxes before saving.");
+      return;
+    }
+
+    if (!project_id || requirementsDetails.length === 0) {
+      alert("Project ID or requirements details are missing. Cannot update status.");
       return;
     }
 
     try {
-      // ส่งค่าที่ Backend ต้องการ
-      const response = await axios.put(`http://localhost:3001/update-status-verifications`, {
-        verification_status: "VERIFIED", // สถานะที่จะอัปเดต
+      const verificationIds = requirementsDetails.map((req) => req.verification_id);
+      const requirementIds = requirementsDetails.map((req) => req.requirement_id);
+
+      // Update verification status
+      await axios.put("http://localhost:3001/update-status-verifications", {
+        verification_ids: verificationIds,
+        verification_status: "VERIFIED",
       });
 
-      if (response.status === 200) {
-        alert("Status updated to VERIFIED successfully.");
-      } else {
-        alert("Unexpected response from server.");
-      }
+      // Update requirement status
+      await axios.put("http://localhost:3001/update-requirements-status-verified", {
+        requirement_ids: requirementIds,
+        requirement_status: "VERIFIED",
+      });
+
+      alert("Status updated to VERIFIED successfully.");
+      navigate(`/Dashboard?project_id=${project_id}`);
     } catch (error) {
       console.error("Error updating status:", error.response || error.message);
       alert("Failed to update status.");
     }
-  } else {
-    alert("Please select all checkboxes before saving.");
-  }
-};
-
-
+  };
 
   return (
     <div className="container">
@@ -127,8 +133,7 @@ const ReqVerification = () => {
         </div>
 
         <div className="box">
-          <h2>Comment</h2>
-          <textarea className="textarea" placeholder="Add your comment here..." />
+          <Comment />
         </div>
       </div>
 
