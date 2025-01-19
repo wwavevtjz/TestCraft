@@ -53,7 +53,6 @@ const VerificationList = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get("project_id");
-  const currentUsername = localStorage.getItem("username");
 
   // Fetch verifications
   const fetchVerifications = useCallback(() => {
@@ -61,21 +60,13 @@ const VerificationList = () => {
       .get(`http://localhost:3001/verifications?project_id=${projectId}`)
       .then((response) => {
         let filteredVerifications = response.data;
-
-        // Filter verifications for non-admin users
-        if (currentUsername !== "admin") {
-          filteredVerifications = filteredVerifications.filter(
-            (verification) => verification.create_by === currentUsername
-          );
-        }
-
         setVerifications(filteredVerifications);
       })
       .catch((err) => {
         console.error("Error fetching verifications:", err);
         toast.error("Error fetching verifications.");
       });
-  }, [projectId, currentUsername]);
+  }, [projectId]);
 
   useEffect(() => {
     fetchVerifications();
@@ -100,19 +91,6 @@ const VerificationList = () => {
     });
   };
 
-  // Remove VERIFIED requirements from state
-  const removeVerifiedRequirements = (verifiedRequirements) => {
-    setVerifications((prevVerifications) =>
-      prevVerifications
-        .map((verification) => ({
-          ...verification,
-          requirements: verification.requirements.filter(
-            (req) => !verifiedRequirements.includes(req)
-          ),
-        }))
-        .filter((verification) => verification.requirements.length > 0) // Remove empty verifications
-    );
-  };
 
   const closeModal = () => setShowModal(false);
 
