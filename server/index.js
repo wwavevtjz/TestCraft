@@ -1226,6 +1226,50 @@ app.post('/comments', (req, res) => {
     });
 });
 
+//-------------------------- VALIDATION --------------------
+//Create Validation
+app.post("/createvar", (req, res) => {
+    const { validations } = req.body; // รับข้อมูล payload จาก Frontend
+
+    // ตรวจสอบ payload
+    if (!validations || !Array.isArray(validations)) {
+        return res.status(400).json({ message: "Invalid payload format." });
+    }
+
+    // สร้าง SQL Query สำหรับ Batch Insert
+    const query = `
+      INSERT INTO validation (validation_id, create_by, requirement_id, validation_at, validation_status) 
+      VALUES ?
+    `;
+
+    // จัดรูปแบบข้อมูลให้เป็น Array ของ Array
+    const values = validations.map((item) => [
+        item.validation_id || null, // ใช้ค่า null หากไม่มี validation_id
+        item.create_by,
+        item.requirement_id,
+        item.validation_at,
+        item.validation_status,
+    ]);
+
+    // รัน Query
+    db.query(query, [values], (err, result) => {
+        if (err) {
+            console.error("Error inserting data into validation table:", err);
+            return res.status(500).json({ message: "Failed to create validation." });
+        }
+
+        // ตอบกลับเมื่อสำเร็จ
+        return res.status(201).json({
+            message: "Validation created successfully.",
+            affectedRows: result.affectedRows,
+        });
+    });
+});
+
+
+
+
+
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;
 app.listen(PORT, () => {

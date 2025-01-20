@@ -8,7 +8,6 @@ const ReqVerification = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { selectedRequirements, project_id } = location.state || {};
-
   const [reqcriList, setReqcriList] = useState([]);
   const [requirementsDetails, setRequirementsDetails] = useState([]);
   const [loading, setLoading] = useState(true);
