@@ -86,13 +86,7 @@ const ReqVerification = () => {
     }
 
     try {
-      const verificationIds = requirementsDetails.map((req) => req.verification_id);
       const requirementIds = requirementsDetails.map((req) => req.requirement_id);
-
-      await axios.put("http://localhost:3001/update-status-verifications", {
-        verification_ids: verificationIds,
-        requirement_status: "VERIFIED",
-      });
 
       await axios.put("http://localhost:3001/update-requirements-status-verified", {
         requirement_ids: requirementIds,

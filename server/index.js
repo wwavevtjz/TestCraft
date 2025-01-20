@@ -1213,7 +1213,99 @@ app.post("/createvar", (req, res) => {
 
 
 
+//-------------------------- VALIDATION ------------------
+// Create Validation
+// Create Validation
+app.post('/createvalidation', async (req, res) => {
+    const { requirements, create_by } = req.body;
 
+    console.log("Payload received:", { requirements, create_by });
+
+    if (!requirements || !create_by) {
+        return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    const createValidationQuery =
+        "INSERT INTO validation (requirement_id, create_by, validation_at, requirement_status) VALUES ?";
+    const validationValues = requirements.map(requirement_id => [
+        requirement_id,
+        create_by,
+        new Date(), // Current timestamp
+        "VALIDATED" // Default status
+    ]);
+
+    const updateRequirementStatusQuery = 
+        "UPDATE requirement SET requirement_status = ? WHERE requirement_id = ?"; // แก้ไขคำสั่ง SQL
+
+    try {
+        // Begin a transaction
+        await db.beginTransaction();
+
+        // Insert validation records
+        await db.query(createValidationQuery, [validationValues]);
+
+        // Update requirement statuses
+        for (const requirementId of requirements) {
+            await db.query(updateRequirementStatusQuery, ["WAITING FOR VALIDATION", requirementId]);
+        }
+
+        // Commit transaction
+        await db.commit();
+
+        res.status(201).json({ message: "Validation created and statuses updated successfully!" });
+    } catch (err) {
+        console.error("Error during validation creation:", err);
+
+        // Rollback transaction if any error occurs
+        await db.rollback();
+
+        res.status(500).json({ message: "Error creating validation or updating statuses." });
+    }
+});
+
+
+
+
+
+//ดึงข้อมูล validation มาแสดงที่ ValidationList
+app.get('/validations', (req, res) => {
+    const { project_id, status } = req.query; // รับ project_id และ status จาก query
+
+    let sql = `
+        SELECT 
+            validation_id AS id,
+            create_by,
+            validation_at AS created_at,
+            requirement_status,
+            requirement_id
+        FROM validation
+        WHERE project_id = ?`; // กำหนด filter project_id
+
+    const params = [project_id];
+
+    if (status) {
+        sql += ` AND requirement_status = ?`; // เพิ่ม filter status ถ้ามี
+        params.push(status);
+    }
+
+    db.query(sql, params, (err, result) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Error fetching validations.", error: err });
+        }
+
+        // จัดการ mapping ข้อมูล
+        const validations = result.map(row => ({
+            id: row.id,
+            create_by: row.create_by,
+            created_at: row.created_at,
+            requirement_status: row.requirement_status,
+            requirements: [row.requirement_id] // ออกแบบในรูป array
+        }));
+
+        return res.status(200).json(validations);
+    });
+});
 
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;
