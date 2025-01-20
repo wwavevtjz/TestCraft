@@ -91,7 +91,7 @@ const ReqVerification = () => {
 
       await axios.put("http://localhost:3001/update-status-verifications", {
         verification_ids: verificationIds,
-        verification_status: "VERIFIED",
+        requirement_status: "VERIFIED",
       });
 
       await axios.put("http://localhost:3001/update-requirements-status-verified", {
