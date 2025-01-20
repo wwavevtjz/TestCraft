@@ -208,10 +208,6 @@ const RequirementPage = () => {
     navigate(`/CreateVar?project_id=${projectId}`);
   }
 
-  const handleComment = () => {
-    navigate(`/Comment`);
-  }
-
   return (
     <div className="requirement-container">
       <div className="req-top-section">
@@ -240,10 +236,6 @@ const RequirementPage = () => {
 
           <button className="verhistory-button" onClick={handleVerificationHis}>
             <img src={history} alt="history" className="history" /> Version Control
-          </button>
-
-          <button className="verhistory-button" onClick={handleComment}>
-            <img src={history} alt="history" className="history" />Comment
           </button>
 
         </div>
