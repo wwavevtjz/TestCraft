@@ -580,77 +580,35 @@ app.post('/reqverified', (req, res) => {
 // Create Verification
 app.post('/createveri', (req, res) => {
     const { requirements, reviewers, project_id, create_by } = req.body;
-
-    if (!requirements || !reviewers || !project_id) {
+  
+    console.log("create_by in backend:", create_by);  // ดูค่าที่ได้รับมาจาก frontend
+  
+    if (!requirements || !reviewers || !project_id || !create_by) {
         return res.status(400).json({ message: "Missing required fields." });
     }
-
-    // สร้างรายการ verification
-    const createVerificationQuery = `
-        INSERT INTO verification (project_id, create_by, requirement_id, verification_status, verification_at)
-        VALUES ?
-    `;
-
+  
+    // คำสั่ง SQL
+    const createVerificationQuery = 
+        "INSERT INTO verification (project_id, create_by, requirement_id, verification_status, verification_at) VALUES ?";
+    
     const verificationValues = requirements.map(requirement_id => [
         project_id,
-        create_by,
+        create_by,  // เช็คว่า create_by ถูกส่งไปอย่างถูกต้อง
         requirement_id,
         "WAITING FOR VERIFICATION",
         new Date() // เวลาปัจจุบัน
     ]);
-
+  
     db.query(createVerificationQuery, [verificationValues], (err, verificationResult) => {
         if (err) {
             console.error("Database Error (Inserting verifications):", err);
             return res.status(500).json({ message: "Error creating verification records." });
         }
-
-        // การคำนวณ verification_id
-        // เนื่องจากการ insert หลายแถวในครั้งเดียว, เราจะใช้ verificationResult.insertId แค่ตัวแรก
-        // ดังนั้นต้องจัดการการเชื่อมโยงให้เหมาะสม
-        const verificationIds = Array.isArray(verificationResult.insertId)
-            ? verificationResult.insertId
-            : [verificationResult.insertId];  // หลีกเลี่ยงการใช้งานผิดพลาด
-
-        // จัดการ reviewers เชื่อมโยงกับ verification
-        const reviewerValues = reviewers.flatMap((reviewer, index) =>
-            requirements.map((requirement, reqIndex) => [
-                reviewer,
-                requirement,
-                verificationIds[reqIndex] // เชื่อมโยงกับแต่ละ verification_id
-            ])
-        );
-
-        const insertReviewerQuery = `
-            INSERT INTO reviewer (reviewer_name, requirement_id, verification_id)
-            VALUES ?
-        `;
-
-        db.query(insertReviewerQuery, [reviewerValues], (err) => {
-            if (err) {
-                console.error("Database Error (Inserting reviewers):", err);
-                return res.status(500).json({ message: "Error adding reviewers.", error: err });
-            }
-
-            // สร้างข้อมูลสำหรับ Log
-            const responseLog = {
-                verification_id: verificationIds,
-                create_by: create_by,
-                requirement_id: requirements,
-                created_at: new Date().toISOString(),
-                verification_status: 'WAITING FOR VERIFICATION',
-                reviewers: reviewers,
-            };
-
-            console.log("Verification and reviewers created successfully:", responseLog);
-
-            res.status(201).json({
-                message: "Verification created successfully!",
-                verification: responseLog
-            });
-        });
+  
+        res.status(201).json({ message: "Verification created successfully!" });
     });
-});
+  });
+  
 
 
 app.get('/verifications', (req, res) => {
