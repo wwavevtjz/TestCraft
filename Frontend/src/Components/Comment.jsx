@@ -1,33 +1,34 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "./CSS/Comment.css";
-import trash_comment from "../image/trash_comment.png";
+import "./CSS/Comment.css";  // ปรับแต่ง CSS สำหรับ Comment
+import trash_comment from "../image/trash_comment.png";  // ไอคอนลบคอมเมนต์
 
-const Comment = () => {
+const Comment = ({ verificationId }) => {
   const [comments, setComments] = useState([]); // เก็บข้อมูลคอมเมนต์
-  const [newComment, setNewComment] = useState(""); // เก็บคอมเมนต์ใหม่
-  const [loading, setLoading] = useState(true); // สถานะการโหลด
-  const [loggedInUser, setLoggedInUser] = useState(""); // เก็บชื่อผู้ใช้งานที่ล็อกอิน
-  const [memberId, setMemberId] = useState(null); // เก็บ member_id ของผู้ใช้ที่ล็อกอิน
-  const [error, setError] = useState(""); // เก็บข้อความแสดงข้อผิดพลาด
+  const [newComment, setNewComment] = useState(""); // เก็บคอมเมนต์ใหม่ที่ต้องการโพสต์
+  const [loading, setLoading] = useState(true); // สถานะการโหลดคอมเมนต์
+  const [loggedInUser, setLoggedInUser] = useState(""); // ชื่อผู้ใช้งานที่ล็อกอิน
+  const [error, setError] = useState(""); // ข้อความข้อผิดพลาด
 
   // ดึงข้อมูลผู้ใช้งานจาก localStorage
   useEffect(() => {
     const fetchLoggedInUser = () => {
-      const userId = localStorage.getItem("user_id"); // ดึง member_id จาก localStorage
-      const username = localStorage.getItem("username"); // ดึง username จาก localStorage
+      const username = localStorage.getItem("username"); // ชื่อผู้ใช้งาน
       setLoggedInUser(username || "Guest");
-      setMemberId(userId || null);
     };
 
     fetchLoggedInUser();
-  }, []); // ดึงข้อมูลผู้ใช้งานแค่ครั้งเดียวตอนที่ component โหลด
+  }, []);
 
-  // ฟังก์ชันสำหรับดึงข้อมูลคอมเมนต์เมื่อโหลดหน้าครั้งแรก
+  // ดึงคอมเมนต์ที่เชื่อมโยงกับ verification_id
   const fetchComments = async () => {
     try {
-      const response = await axios.get("http://localhost:3001/allcomment"); // ดึงข้อมูลคอมเมนต์จาก Backend
-      setComments(response.data); // ตั้งค่าคอมเมนต์ใน state
+      setLoading(true);
+      console.log("Fetching comments with verification_id:", verificationId); // เช็คค่าของ verificationId
+      const response = await axios.get("http://localhost:3001/allcomment", {
+        params: { verification_id: verificationId }, // ส่ง verification_id ไปใน query string
+      });
+      setComments(response.data); // ตั้งค่าคอมเมนต์ที่ได้จาก Backend
     } catch (error) {
       console.error("Error fetching comments:", error);
       setError("Failed to load comments. Please try again later.");
@@ -36,12 +37,14 @@ const Comment = () => {
     }
   };
 
-  // เรียกใช้ฟังก์ชัน fetchComments เมื่อ component โหลด
-  useEffect(() => {
-    fetchComments();
-  }, []); // Empty dependency array means this will run only once when the component mounts.
 
-  // ฟังก์ชันสำหรับโพสต์คอมเมนต์ใหม่
+  useEffect(() => {
+    if (verificationId) {
+      fetchComments(); // รีเฟรชคอมเมนต์เมื่อมีการเปลี่ยนแปลง verificationId
+    }
+  }, [verificationId]);
+
+  // ฟังก์ชันโพสต์คอมเมนต์ใหม่
   const handleSubmit = async () => {
     if (!newComment.trim()) {
       alert("Please enter a comment!");
@@ -50,34 +53,29 @@ const Comment = () => {
 
     try {
       const payload = {
-        member_id: 1, // ID ผู้ใช้งาน (ปรับให้เหมาะสม)
+        member_id: 1, // ไอดีของผู้ใช้งาน (ต้องปรับให้เหมาะสม)
         member_name: loggedInUser, // ชื่อผู้ใช้งาน
         comment_text: newComment, // ข้อความคอมเมนต์
+        verification_id: verificationId, // ส่ง verification_id เพื่อเชื่อมโยงกับคอมเมนต์
       };
 
-      console.log("Sending payload:", payload); // ตรวจสอบข้อมูลที่ส่งไป
-
       const response = await axios.post("http://localhost:3001/comments", payload);
-
       if (response.status === 201) {
-        console.log("Response from server:", response.data); // ดูข้อมูลตอบกลับ
-        setNewComment(""); // เคลียร์ข้อความใน textarea
-
-        // เรียกใช้ฟังก์ชัน fetchComments เพื่อดึงข้อมูลคอมเมนต์ล่าสุด
-        fetchComments();
+        setNewComment(""); // เคลียร์ข้อความคอมเมนต์
+        fetchComments(); // รีเฟรชคอมเมนต์หลังจากเพิ่มคอมเมนต์ใหม่
       }
     } catch (error) {
-      console.error("Error adding comment:", error); // แสดงข้อผิดพลาด
+      console.error("Error adding comment:", error);
       alert("Failed to post comment.");
     }
   };
 
+  // ฟังก์ชันลบคอมเมนต์
   const handleDelete = async (commentId) => {
     if (window.confirm("Are you sure you want to delete this comment?")) {
       try {
         const response = await axios.delete(`http://localhost:3001/deletecomment/${commentId}`);
         if (response.status === 200) {
-          console.log("Comment deleted successfully");
           fetchComments(); // รีเฟรชคอมเมนต์หลังจากลบ
         }
       } catch (error) {
@@ -87,27 +85,27 @@ const Comment = () => {
     }
   };
 
-
-
-
+  // ฟังก์ชันสำหรับการจัดรูปแบบวันที่
   const formatDate = (dateString) => {
-    const date = new Date(dateString); // แปลงวันที่จาก string เป็น Date object
+    const date = new Date(dateString);
     return date.toLocaleString("en-US", {
-      year: "numeric", // ปี (เช่น 2025)
-      month: "long", // เดือน (เช่น "January")
-      day: "numeric", // วันที่ (เช่น 19)
-      hour: "numeric", // ชั่วโมง (เช่น 5)
-      minute: "numeric", // นาที (เช่น 38)
-      hour12: true, // ใช้เวลาแบบ 12 ชั่วโมง (AM/PM)
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
     });
   };
 
   return (
     <div className="comment-section">
       <h2 className="comment-title">Comments ({comments.length})</h2>
+
+      {/* พื้นที่สำหรับโพสต์คอมเมนต์ใหม่ */}
       <div className="comment-input">
         <textarea
-          placeholder={`Add comment as ${loggedInUser}...`} // แสดงชื่อผู้ใช้ใน placeholder
+          placeholder={`Add comment as ${loggedInUser}...`}
           className="comment-textarea"
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
@@ -116,31 +114,31 @@ const Comment = () => {
           Submit
         </button>
       </div>
+
+      {/* ข้อความแสดงข้อผิดพลาดถ้ามี */}
       {error && <p className="error-message">{error}</p>}
+
+      {/* การแสดงคอมเมนต์ */}
       {loading ? (
         <p>Loading comments...</p>
       ) : (
-        comments.map((comment) => { // แก้ไขตรงนี้ให้ไม่ต้องใช้ {} ครอบ map
-          console.log(comment); // ตรวจสอบข้อมูลของ comment
-          return (
-            <div key={comment.member_id} className="comment">
-              <div className="comment-header">
-                <span className="comment-name">{comment.member_name}</span>
-                <span className="comment-time">{formatDate(comment.comment_at)}</span> {/* แสดงวันที่ในรูปแบบที่เข้าใจง่าย */}
-              </div>
-              <p className="comment-text">{comment.comment_text}</p>
-              <div className="comment-footer">
-                <button className="like-button">👍 {comment.likes}</button>
-                <button className="reply-button">💬 {comment.replies} </button>
-                <button className="delete-comment-button" onClick={() => handleDelete(comment.comment_id)}>
-                  <img src={trash_comment} alt="trash_comment" className="trash_comment" />
-                </button>
-              </div>
+        comments.map((comment) => (
+          <div key={comment.comment_id} className="comment">
+            <div className="comment-header">
+              <span className="comment-name">{comment.member_name}</span>
+              <span className="comment-time">{formatDate(comment.comment_at)}</span>
             </div>
-          );
-        })
+            <p className="comment-text">{comment.comment_text}</p>
+            <div className="comment-footer">
+              <button className="like-button">👍 {comment.likes}</button>
+              <button className="reply-button">💬 {comment.replies}</button>
+              <button className="delete-comment-button" onClick={() => handleDelete(comment.comment_id)}>
+                <img src={trash_comment} alt="trash_comment" className="trash_comment" />
+              </button>
+            </div>
+          </div>
+        ))
       )}
-
     </div>
   );
 };

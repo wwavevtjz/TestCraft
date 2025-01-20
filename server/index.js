@@ -1135,8 +1135,11 @@ app.post("/reqcriteria/log", (req, res) => {
 //-------------------------- MENT ------------------------------------
 // Get all comments
 app.get('/allcomment', (req, res) => {
-    const sql = 'SELECT * FROM comme_member';
-    db.query(sql, (err, results) => {
+    const verificationId = req.query.verification_id; // ดึง verification_id จาก query string
+    console.log('Received verification_id:', verificationId); // เช็คค่าของ verificationId
+    const sql = 'SELECT * FROM comme_member WHERE verification_id = ?';
+
+    db.query(sql, [verificationId], (err, results) => {
         if (err) {
             console.error('Error fetching comments:', err);
             return res.status(500).send('Error fetching comments');
@@ -1146,27 +1149,12 @@ app.get('/allcomment', (req, res) => {
     });
 });
 
-
-
-// Get comments by member_id
-app.get('/comments/:member_id', (req, res) => {
-    const { member_id } = req.params;
-    const sql = 'SELECT * FROM comme_member WHERE member_id = ?';
-    db.query(sql, [member_id], (err, results) => {
-        if (err) {
-            console.error(err);
-            res.status(500).send('Error fetching comments by member_id');
-        } else {
-            res.json(results);
-        }
-    });
-});
-
-// Add new comment
 app.post('/comments', (req, res) => {
-    const { member_id, member_name, comment_text } = req.body;
-    const sql = 'INSERT INTO comme_member (member_id, member_name, comment_text) VALUES (?, ?, ?)';
-    db.query(sql, [member_id, member_name, comment_text], (err, result) => {
+    const { member_id, member_name, comment_text, verification_id } = req.body;
+    console.log('Received data:', req.body); // ตรวจสอบข้อมูลที่รับมา
+    const sql = 'INSERT INTO comme_member (member_id, member_name, comment_text, verification_id) VALUES (?, ?, ?, ?)';
+    
+    db.query(sql, [member_id, member_name, comment_text, verification_id], (err, result) => {
         if (err) {
             console.error(err);
             res.status(500).send('Error adding comment');
@@ -1175,6 +1163,7 @@ app.post('/comments', (req, res) => {
         }
     });
 });
+
 
 // Update comment
 app.put('/comments/:comme_member_id', (req, res) => {

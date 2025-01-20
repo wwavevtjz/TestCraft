@@ -7,16 +7,22 @@ import "./CSS/ReqVerification.css";
 const ReqVerification = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { selectedRequirements, project_id } = location.state || {};
+
+  // ดึง project_id และ verification_id จาก URL
+  const queryParams = new URLSearchParams(location.search);
+  const projectId = queryParams.get("project_id");
+  const verificationId = queryParams.get("verification_id");
+
+  const { selectedRequirements } = location.state || {};
   const [reqcriList, setReqcriList] = useState([]);
   const [requirementsDetails, setRequirementsDetails] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [checkboxState, setCheckboxState] = useState({}); // Store checkbox states
-  const [allChecked, setAllChecked] = useState(false); // Check if all checkboxes are selected
+  const [checkboxState, setCheckboxState] = useState({});
+  const [allChecked, setAllChecked] = useState(false);
 
   useEffect(() => {
-    if (!project_id) {
-      console.error("Project ID is missing or undefined");
+    if (!projectId || !verificationId) {
+      console.error("Project ID or Verification ID is missing");
       navigate("/VerificationList");
       return;
     }
@@ -26,14 +32,14 @@ const ReqVerification = () => {
     }
 
     fetchCriteria();
-  }, [project_id, selectedRequirements, navigate]);
+  }, [projectId, verificationId, selectedRequirements, navigate]);
 
   const fetchCriteria = async () => {
     try {
       setLoading(true);
       const response = await axios.get("http://localhost:3001/reqcriteria");
       const initialCheckboxState = response.data.reduce((acc, criteria) => {
-        acc[criteria.reqcri_id] = false; // Initialize all checkboxes to false
+        acc[criteria.reqcri_id] = false;
         return acc;
       }, {});
       setCheckboxState(initialCheckboxState);
@@ -56,6 +62,7 @@ const ReqVerification = () => {
     }
   };
 
+
   const handleCheckboxChange = (id) => {
     const updatedState = {
       ...checkboxState,
@@ -63,7 +70,6 @@ const ReqVerification = () => {
     };
     setCheckboxState(updatedState);
 
-    // Check if all checkboxes are selected
     const isAllChecked = Object.values(updatedState).every((isChecked) => isChecked);
     setAllChecked(isAllChecked);
   };
@@ -74,7 +80,7 @@ const ReqVerification = () => {
       return;
     }
 
-    if (!project_id || requirementsDetails.length === 0) {
+    if (!projectId || requirementsDetails.length === 0) {
       alert("Project ID or requirements details are missing. Cannot update status.");
       return;
     }
@@ -83,20 +89,18 @@ const ReqVerification = () => {
       const verificationIds = requirementsDetails.map((req) => req.verification_id);
       const requirementIds = requirementsDetails.map((req) => req.requirement_id);
 
-      // Update verification status
       await axios.put("http://localhost:3001/update-status-verifications", {
         verification_ids: verificationIds,
         verification_status: "VERIFIED",
       });
 
-      // Update requirement status
       await axios.put("http://localhost:3001/update-requirements-status-verified", {
         requirement_ids: requirementIds,
         requirement_status: "VERIFIED",
       });
 
       alert("Status updated to VERIFIED successfully.");
-      navigate(`/Dashboard?project_id=${project_id}`);
+      navigate(`/Dashboard?project_id=${projectId}`);
     } catch (error) {
       console.error("Error updating status:", error.response || error.message);
       alert("Failed to update status.");
@@ -130,10 +134,10 @@ const ReqVerification = () => {
             </ul>
           )}
         </div>
-
         <div className="box">
-          <Comment />
+          <Comment verificationId={verificationId} />  {/* ส่ง verificationId ไปยัง Comment */}
         </div>
+
       </div>
 
       <div className="box requirements">

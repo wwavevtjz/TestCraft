@@ -80,17 +80,17 @@ const VerificationList = () => {
   };
 
   // Handle Verify button
-  const handleVerifyClick = (selectedRequirements) => {
+  const handleVerifyClick = (verificationId, selectedRequirements) => {
     if (!projectId || selectedRequirements.length === 0) {
       toast.error("Invalid project ID or no requirements selected.");
       return;
     }
 
-    navigate(`/ReqVerification?project_id=${projectId}`, {
-      state: { selectedRequirements, project_id: projectId },
+    // ส่งทั้ง project_id และ verification_id ผ่าน query string
+    navigate(`/ReqVerification?project_id=${projectId}&verification_id=${verificationId}`, {
+      state: { selectedRequirements, project_id: projectId, verification_id: verificationId },
     });
   };
-
 
   const closeModal = () => setShowModal(false);
 
@@ -137,7 +137,7 @@ const VerificationList = () => {
                   <button
                     className="verify-button"
                     onClick={() =>
-                      handleVerifyClick(verification.requirements)
+                      handleVerifyClick(verification.id, verification.requirements)
                     }
                   >
                     Verify
