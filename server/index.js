@@ -592,13 +592,12 @@ app.post('/createveri', (req, res) => {
 
     // SQL สำหรับเพิ่ม verification
     const createVerificationQuery =
-        "INSERT INTO verification (project_id, create_by, requirement_id, requirement_status, verification_at, verification_by) VALUES ?";
+        "INSERT INTO verification (project_id, create_by, requirement_id, verification_at, verification_by) VALUES ?";
 
     const verificationValues = requirements.map(requirement_id => [
         project_id,
         create_by,
         requirement_id,
-        "WAITING FOR VERIFICATION",
         new Date(), // เวลาปัจจุบัน
         reviewersString // เก็บ reviewers ในคอลัมน์ verification_by
     ]);
@@ -624,13 +623,10 @@ app.get('/verifications', (req, res) => {
         v.verification_id AS id,
         v.create_by,
         v.verification_at AS created_at,
-        v.requirement_status AS verification_status,
-        v.verification_by,  -- ดึง column verification_by
-        r.reviewer_name,
+        v.verification_by, -- ดึง column verification_by
         v.requirement_id,
         req.requirement_status AS requirement_status -- เพิ่มการดึง requirement_status จากตาราง requirement
       FROM verification v
-      LEFT JOIN reviewer r ON v.verification_id = r.verification_id
       LEFT JOIN requirement req ON v.requirement_id = req.requirement_id -- JOIN requirement
       WHERE v.project_id = ?
     `;
@@ -638,7 +634,7 @@ app.get('/verifications', (req, res) => {
     const params = [project_id];
   
     if (status) {
-      sql += ` AND v.verification_status = ?`;
+      sql += ` AND req.requirement_status = ?`; // ตรวจสอบสถานะ requirement
       params.push(status);
     }
   
@@ -648,35 +644,19 @@ app.get('/verifications', (req, res) => {
         return res.status(500).json({ message: "Error fetching verifications.", error: err });
       }
   
-      const verifications = result.reduce((acc, row) => {
-        const existing = acc.find(v => v.id === row.id);
-        if (existing) {
-          // Handle adding reviewers and requirements
-          if (row.reviewer_name && !existing.reviewers.includes(row.reviewer_name)) {
-            existing.reviewers.push(row.reviewer_name);
-          }
-          if (row.requirement_id && !existing.requirements.includes(row.requirement_id)) {
-            existing.requirements.push(row.requirement_id);
-          }
-        } else {
-          acc.push({
-            id: row.id,
-            create_by: row.create_by,
-            created_at: row.created_at,
-            requirement_status: row.requirement_status,  // requirement_status จาก verification
-            verification_by: row.verification_by ? JSON.parse(row.verification_by) : [], // แปลง verification_by จาก string เป็น array
-            reviewers: row.reviewer_name ? [row.reviewer_name] : [],
-            requirements: row.requirement_id ? [row.requirement_id] : [],
-            requirement_status_from_req: row.requirement_status, // เพิ่ม requirement_status ที่มาจาก requirement
-          });
-        }
-        return acc;
-      }, []);
+      const verifications = result.map((row) => ({
+        id: row.id,
+        create_by: row.create_by,
+        created_at: row.created_at,
+        requirement_status: row.requirement_status, // requirement_status ที่มาจาก requirement
+        verification_by: row.verification_by ? JSON.parse(row.verification_by) : [], // แปลง verification_by จาก string เป็น array
+        requirements: row.requirement_id ? [row.requirement_id] : [],
+      }));
   
       return res.status(200).json(verifications);
     });
-});
-
+  });
+  
   
 
 
