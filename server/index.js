@@ -612,9 +612,6 @@ app.post('/createveri', (req, res) => {
     });
 });
 
-
-
-
 app.get('/verifications', (req, res) => {
     const { project_id, status } = req.query;
   
@@ -657,13 +654,6 @@ app.get('/verifications', (req, res) => {
     });
   });
   
-  
-
-
-
-
-
-
 // Update verification status and requirements status
 app.put('/update-status-verifications', (req, res) => {
     const { verification_ids, requirement_status } = req.body;
@@ -713,6 +703,130 @@ app.put('/update-requirements-status-waitingfor-ver/:id', (req, res) => {
 
 // Update multiple requirements status
 app.put('/update-requirements-status-verified', (req, res) => {
+    const { requirement_ids, requirement_status } = req.body;
+
+    if (!requirement_ids || requirement_ids.length === 0) {
+        return res.status(400).json({ message: "No requirement IDs provided." });
+    }
+    if (!requirement_status) {
+        return res.status(400).json({ message: "Missing requirement_status field." });
+    }
+
+    const sql = `
+        UPDATE requirement
+        SET requirement_status = ?
+        WHERE requirement_id IN (?)
+    `;
+
+    db.query(sql, [requirement_status, requirement_ids], (err, result) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Database error." });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "No requirements found to update." });
+        }
+
+        res.status(200).json({ message: "Requirement statuses updated successfully." });
+    });
+});
+
+//-------------------------- VALIDATION ------------------
+// Create Validation
+app.post('/createvalidation', async (req, res) => {
+    const { requirements, create_by } = req.body;
+
+    console.log("Payload received:", { requirements, create_by });
+
+    if (!requirements || !create_by) {
+        return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    const createValidationQuery =
+        "INSERT INTO validation (requirement_id, create_by, validation_at, requirement_status) VALUES ?";
+    const validationValues = requirements.map(requirement_id => [
+        requirement_id,
+        create_by,
+        new Date(), // Current timestamp
+        "WAITING FOR VALIDATION" // Default status
+    ]);
+
+    const updateRequirementStatusQuery = 
+        "UPDATE requirement SET requirement_status = ? WHERE requirement_id = ?"; // แก้ไขคำสั่ง SQL
+
+    try {
+        // Begin a transaction
+        await db.beginTransaction();
+
+        // Insert validation records
+        await db.query(createValidationQuery, [validationValues]);
+
+        // Update requirement statuses
+        for (const requirementId of requirements) {
+            await db.query(updateRequirementStatusQuery, ["WAITING FOR VALIDATION", requirementId]);
+        }
+
+        // Commit transaction
+        await db.commit();
+
+        res.status(201).json({ message: "Validation created and statuses updated successfully!" });
+    } catch (err) {
+        console.error("Error during validation creation:", err);
+
+        // Rollback transaction if any error occurs
+        await db.rollback();
+
+        res.status(500).json({ message: "Error creating validation or updating statuses." });
+    }
+});
+
+app.get('/validations', (req, res) => {
+    const { project_id, status } = req.query;
+
+    let sql = `
+      SELECT 
+        v.validation_id AS id,
+        v.create_by,
+        v.validation_at AS created_at,
+        v.requirement_id,
+        req.requirement_status AS requirement_status -- ดึง requirement_status จากตาราง requirement
+      FROM validation v
+      LEFT JOIN requirement req ON v.requirement_id = req.requirement_id -- JOIN requirement
+      WHERE 1 = 1
+    `;
+
+    const params = [];
+
+    // ตรวจสอบ status
+    if (status) {
+      sql += ` AND req.requirement_status = ?`; // กรองตาม status
+      params.push(status);
+    }
+
+    db.query(sql, params, (err, result) => {
+      if (err) {
+        console.error("Database Error:", err);
+        return res.status(500).json({ message: "Error fetching validations.", error: err });
+      }
+
+      // แปลงข้อมูลจากฐานข้อมูลเป็นโครงสร้าง JSON ที่ต้องการ
+      const validations = result.map((row) => ({
+        id: row.id,
+        create_by: row.create_by,
+        created_at: row.created_at,
+        requirement_status: row.requirement_status,
+        requirements: row.requirement_id ? [row.requirement_id] : [],
+      }));      
+      console.log("Result from database:", result);
+      return res.status(200).json(validations);
+    });
+});
+
+
+
+// Update multiple requirements status
+app.put('/update-requirements-status-validated', (req, res) => {
     const { requirement_ids, requirement_status } = req.body;
 
     if (!requirement_ids || requirement_ids.length === 0) {
@@ -1171,142 +1285,88 @@ app.post('/comments', (req, res) => {
     });
 });
 
-//-------------------------- VALIDATION --------------------
-//Create Validation
-app.post("/createvar", (req, res) => {
-    const { validations } = req.body; // รับข้อมูล payload จาก Frontend
+//-------------------------- VALIDATION COMMENT ----------------------
+// Get all comments
+app.get('/allcomment', (req, res) => {
+    const validationId = req.query.validation_id; // ดึง verification_id จาก query string
+    console.log('Received validation_id:', validationId); // เช็คค่าของ verificationId
+    const sql = 'SELECT * FROM comme_member WHERE verification_id = ?';
 
-    // ตรวจสอบ payload
-    if (!validations || !Array.isArray(validations)) {
-        return res.status(400).json({ message: "Invalid payload format." });
-    }
-
-    // สร้าง SQL Query สำหรับ Batch Insert
-    const query = `
-      INSERT INTO validation (validation_id, create_by, requirement_id, validation_at, validation_status) 
-      VALUES ?
-    `;
-
-    // จัดรูปแบบข้อมูลให้เป็น Array ของ Array
-    const values = validations.map((item) => [
-        item.validation_id || null, // ใช้ค่า null หากไม่มี validation_id
-        item.create_by,
-        item.requirement_id,
-        item.validation_at,
-        item.validation_status,
-    ]);
-
-    // รัน Query
-    db.query(query, [values], (err, result) => {
+    db.query(sql, [validationId], (err, results) => {
         if (err) {
-            console.error("Error inserting data into validation table:", err);
-            return res.status(500).json({ message: "Failed to create validation." });
+            console.error('Error fetching comment:', err);
+            return res.status(500).send('Error fetching comment');
         }
+        console.log('Fetched comment:', results); // ตรวจสอบข้อมูลที่ได้จาก SQL
+        res.json(results);
+    });
+});
 
-        // ตอบกลับเมื่อสำเร็จ
-        return res.status(201).json({
-            message: "Validation created successfully.",
-            affectedRows: result.affectedRows,
-        });
+app.post('/var_comment', (req, res) => {
+    const {member_name, comment_var_text, validation_id } = req.body;
+    console.log('Received data:', req.body); // ตรวจสอบข้อมูลที่รับมา
+    const sql = 'INSERT INTO comme_member (member_name, comment_text, verification_id) VALUES (?, ?, ?, ?)';
+
+    db.query(sql, [member_id, member_name, comment_var_text, validation_id], (err, result) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Error adding comment');
+        } else {
+            res.status(201).send('Comment added successfully');
+        }
+    });
+});
+
+
+// Update comment
+app.put('/var_comment', (req, res) => {
+    const { comment_var_id } = req.params;
+    const { comment_var_text } = req.body;
+    const sql = 'UPDATE comme_member SET comment_text = ? WHERE comme_member_id = ?';
+    db.query(sql, [comment_var_text, comment_var_id], (err, result) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Error updating comment');
+        } else {
+            res.send('Comment updated successfully');
+        }
+    });
+});
+
+app.delete('/deletecomment/:commentId', (req, res) => {
+    const { commentId } = req.params;  // ดึง commentId จาก params
+
+    const sql = 'DELETE FROM comme_member WHERE comment_id = ?';  // ใช้ comment_id ในการลบ
+    db.query(sql, [commentId], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Error deleting comment');
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).send('Comment not found');
+        }
+        res.send('Comment deleted successfully');
     });
 });
 
 
 
-//-------------------------- VALIDATION ------------------
-// Create Validation
-// Create Validation
-app.post('/createvalidation', async (req, res) => {
-    const { requirements, create_by } = req.body;
+app.post('/comments', (req, res) => {
+    const {  member_name, comment_var_text } = req.body;
 
-    console.log("Payload received:", { requirements, create_by });
+    // ตรวจสอบข้อมูลก่อนทำการ INSERT
+    console.log("Received data:", { member_name, comment_var_text });
 
-    if (!requirements || !create_by) {
-        return res.status(400).json({ message: "Missing required fields." });
-    }
-
-    const createValidationQuery =
-        "INSERT INTO validation (requirement_id, create_by, validation_at, requirement_status) VALUES ?";
-    const validationValues = requirements.map(requirement_id => [
-        requirement_id,
-        create_by,
-        new Date(), // Current timestamp
-        "VALIDATED" // Default status
-    ]);
-
-    const updateRequirementStatusQuery = 
-        "UPDATE requirement SET requirement_status = ? WHERE requirement_id = ?"; // แก้ไขคำสั่ง SQL
-
-    try {
-        // Begin a transaction
-        await db.beginTransaction();
-
-        // Insert validation records
-        await db.query(createValidationQuery, [validationValues]);
-
-        // Update requirement statuses
-        for (const requirementId of requirements) {
-            await db.query(updateRequirementStatusQuery, ["WAITING FOR VALIDATION", requirementId]);
-        }
-
-        // Commit transaction
-        await db.commit();
-
-        res.status(201).json({ message: "Validation created and statuses updated successfully!" });
-    } catch (err) {
-        console.error("Error during validation creation:", err);
-
-        // Rollback transaction if any error occurs
-        await db.rollback();
-
-        res.status(500).json({ message: "Error creating validation or updating statuses." });
-    }
-});
-
-
-
-
-
-//ดึงข้อมูล validation มาแสดงที่ ValidationList
-app.get('/validations', (req, res) => {
-    const { project_id, status } = req.query; // รับ project_id และ status จาก query
-
-    let sql = `
-        SELECT 
-            validation_id AS id,
-            create_by,
-            validation_at AS created_at,
-            requirement_status,
-            requirement_id
-        FROM validation
-        WHERE project_id = ?`; // กำหนด filter project_id
-
-    const params = [project_id];
-
-    if (status) {
-        sql += ` AND requirement_status = ?`; // เพิ่ม filter status ถ้ามี
-        params.push(status);
-    }
-
-    db.query(sql, params, (err, result) => {
+    const sql = 'INSERT INTO comme_member (member_name, comment_text) VALUES (?, ?, ?)';
+    db.query(sql, [member_name, comment_var_text], (err, results) => {
         if (err) {
-            console.error("Database Error:", err);
-            return res.status(500).json({ message: "Error fetching validations.", error: err });
+            console.error("Error inserting comment:", err);
+            res.status(500).send('Failed to insert comment.');
+        } else {
+            res.status(201).json({ comment_var_id: results.insertId });
         }
-
-        // จัดการ mapping ข้อมูล
-        const validations = result.map(row => ({
-            id: row.id,
-            create_by: row.create_by,
-            created_at: row.created_at,
-            requirement_status: row.requirement_status,
-            requirements: [row.requirement_id] // ออกแบบในรูป array
-        }));
-
-        return res.status(200).json(validations);
     });
 });
-
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;
 app.listen(PORT, () => {

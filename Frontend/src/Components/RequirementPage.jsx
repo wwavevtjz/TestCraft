@@ -208,6 +208,10 @@ const RequirementPage = () => {
     navigate(`/CreateVar?project_id=${projectId}`);
   }
 
+  const handleVarilist = () => {
+    navigate(`/ValidationList?project_id=${projectId}`);
+  }
+
   return (
     <div className="requirement-container">
       <div className="req-top-section">
@@ -226,8 +230,8 @@ const RequirementPage = () => {
             <img src={history} alt="history" className="history" /> Create Validation
           </button>
 
-          <button className="verhistory-button" onClick={handleVerificationHis}>
-            <img src={history} alt="history" className="history" /> Validation
+          <button className="verhistory-button" onClick={handleVarilist}>
+            <img src={history} alt="history" className="history" /> Validation List
           </button>
 
           <button className="review-button" onClick={handleVerificationHis}>

@@ -6,9 +6,11 @@ import RequirementPage from './Components/RequirementPage';
 import ViewEditReq from './Components/ViewEditReq';
 import UpdateRequirement from './Components/UpdateRequirement';
 import ReqVerification from './Components/ReqVerification';
+import ReqValidation from './Components/ReqValidation';
 import CreateVeri from './Components/CreateVeri';
 import CreateVar from './Components/CreateVar';
 import VerificationList from './Components/VerificationList';
+import ValidationList from './Components/ValidationList';
 import VerificationHis from './Components/VerificationHis';
 import Project from './Components/Project';
 import Navbar from './Components/Navbar';
@@ -63,6 +65,8 @@ const App = () => {
         {/* Routes สำหรับ Verification and Validation */}
         <Route path="/CreateVeri" element={<CreateVeri />} />
         <Route path="/CreateVar" element={<CreateVar />} />
+        <Route path="/VerificationList" element={<VerificationList />} />
+        <Route path="/ValidationList" element={<ValidationList />} />
 
         {/* Routes สำหรับ Requirements */}
         <Route path="/requirementPage" element={<RequirementPage />} />
@@ -72,9 +76,9 @@ const App = () => {
         <Route path="/CreateRequirement" element={<CreateRequirement />} />
         <Route path="/UpdateRequirement" element={<UpdateRequirement />} />
         <Route path="/ReqVerification" element={<ReqVerification />} />
+        <Route path="/ReqValidation" element={<ReqValidation />} />
         <Route path="/ViewFile" element={<ViewFile />} />
         <Route path="/VerificationHis" element={<VerificationHis />} />
-        <Route path="/VerificationList" element={<VerificationList />} />
 
         {/* Routes สำหรับ Login */}
         <Route path="/" element={<Login setUsername={setUsername} />} />
