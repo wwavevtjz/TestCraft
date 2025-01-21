@@ -5,6 +5,7 @@ import axios from "axios";
 import "./CSS/VerificationList.css";
 import closemodalreview from "../image/close.png";
 import notverify from "../image/notverify.png";
+import verifydone from "../image/verifydone.png";
 
 const Modal = ({ show, onClose, requirements = [], verificationBy = "" }) => {
   if (!show) return null;
