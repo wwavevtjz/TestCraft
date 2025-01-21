@@ -360,9 +360,12 @@ const RequirementPage = () => {
                   <td>
                     <button
                       className={`status-button 
-            ${data.requirement_status === 'VERIFIED' ? 'status-verified' : ''} 
+            ${data.requirement_status === 'VERIFIED' ? 'status-verified' : ''}
+            ${data.requirement_status === 'VALIDATED' ? 'status-verified' : ''} 
             ${data.requirement_status === 'WORKING' ? 'status-working' : ''} 
-            ${data.requirement_status === 'WAITING FOR VERIFICATION' ? 'status-not-complete' : ''}`}
+            ${data.requirement_status === 'WAITING FOR VERIFICATION' ? 'status-not-complete' : ''}
+            ${data.requirement_status === 'VALIDATION INPROGRESS' ? 'status-not-complete' : ''}
+            `}
                     >
                       {data.requirement_status}
                     </button>

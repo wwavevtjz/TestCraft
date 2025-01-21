@@ -2,18 +2,16 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import "./CSS/ValidationList.css";
-import closemodalreview from "../image/close.png"; // ตรวจสอบว่าไฟล์นี้มีอยู่
-// หากไฟล์ notvalidate.png ไม่พบ ให้แทนด้วย URL
+import closemodalreview from "../image/close.png";
 
-
-const Modal = ({ show, onClose, requirements = [], validationBy = [] }) => {
+const Modal = ({ show, onClose, requirements = [] }) => {
   if (!show) return null;
   return (
     <div className="modal-overlay-review">
       <div className="modal-content-review">
         <div>
           <h3>Requirements</h3>
-          {requirements.length > 0 ? (
+          {Array.isArray(requirements) && requirements.length > 0 ? (
             requirements.map((req, index) => (
               <div key={index} className="req-review">
                 Requirement ID: {req}
@@ -39,19 +37,18 @@ const ValidationList = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get("project_id");
-  const [selectedValidationBy, setSelectedValidationBy] = useState([]);
 
   const fetchValidations = useCallback(() => {
     axios
-    .get(`http://localhost:3001/validations?project_id=${projectId}`)
+      .get(`http://localhost:3001/validations?project_id=${projectId}`)
       .then((response) => {
-        console.log("API Response:", response.data);
+        console.log("API Response:", response.data); // ตรวจสอบข้อมูลจาก API
         const filteredValidations = response.data
-        .filter((validation) => validation.requirement_status === "WAITING FOR VALIDATION")
-        .map((validation) => ({
-          ...validation,
-          validation_by: validation.validation_by || [],
-        }));      
+          .filter((validation) => validation.requirement_status === "VALIDATION INPROGRESS")
+          .map((validation) => ({
+            ...validation,
+            validation_by: validation.validation_by || [],
+          }));
         setValidations(filteredValidations);
       })
       .catch((err) => {
@@ -63,9 +60,9 @@ const ValidationList = () => {
     fetchValidations();
   }, [fetchValidations]);
 
-  const handleSearchClick = (requirements, validationBy) => {
+  const handleSearchClick = (requirements) => {
+    console.log("Requirements to display in modal:", requirements); // Debug data
     setSelectedRequirements(requirements || []);
-    setSelectedValidationBy(validationBy || []);
     setShowModal(true);
   };
 
@@ -82,11 +79,9 @@ const ValidationList = () => {
       return;
     }
 
-
     navigate(`/ReqValidation?project_id=${projectId}&validation_id=${validationId}`, {
-        state: { selectedRequirements, project_id: projectId, validation_id: validationId },
-      });
-      
+      state: { selectedRequirements, project_id: projectId, validation_id: validationId },
+    });
   };
 
   const closeModal = () => setShowModal(false);
@@ -119,11 +114,7 @@ const ValidationList = () => {
                   <button
                     className="search-icon-button"
                     title="Search Validators and Requirements"
-                    onClick={() =>
-                      handleSearchClick(
-                        validation.requirements || []
-                      )
-                    }
+                    onClick={() => handleSearchClick(validation.requirements || [])}
                   >
                     🔍
                   </button>
@@ -143,12 +134,7 @@ const ValidationList = () => {
           </tbody>
         </table>
       )}
-      <Modal
-        show={showModal}
-        onClose={closeModal}
-        requirements={selectedRequirements}
-        validationBy={selectedValidationBy}
-      />
+      <Modal show={showModal} onClose={closeModal} requirements={selectedRequirements} />
     </div>
   );
 };

@@ -746,15 +746,16 @@ app.post('/createvalidation', async (req, res) => {
 
     const createValidationQuery =
         "INSERT INTO validation (requirement_id, create_by, validation_at, requirement_status) VALUES ?";
-    const validationValues = requirements.map(requirement_id => [
-        requirement_id,
+
+    const validationValues = requirements.map(() => [
+        JSON.stringify(requirements), // Convert the entire array to JSON
         create_by,
-        new Date(), // Current timestamp
-        "WAITING FOR VALIDATION" // Default status
+        new Date(),
+        "VALIDATION INPROGRESS"
     ]);
 
     const updateRequirementStatusQuery =
-        "UPDATE requirement SET requirement_status = ? WHERE requirement_id = ?"; // แก้ไขคำสั่ง SQL
+        "UPDATE requirement SET requirement_status = ? WHERE requirement_id = ?";
 
     try {
         // Begin a transaction
@@ -765,7 +766,7 @@ app.post('/createvalidation', async (req, res) => {
 
         // Update requirement statuses
         for (const requirementId of requirements) {
-            await db.query(updateRequirementStatusQuery, ["WAITING FOR VALIDATION", requirementId]);
+            await db.query(updateRequirementStatusQuery, ["VALIDATION INPROGRESS", requirementId]);
         }
 
         // Commit transaction
@@ -782,6 +783,7 @@ app.post('/createvalidation', async (req, res) => {
     }
 });
 
+
 app.get('/validations', (req, res) => {
     const { project_id, status } = req.query;
 
@@ -791,19 +793,21 @@ app.get('/validations', (req, res) => {
         v.create_by,
         v.validation_at AS created_at,
         v.requirement_id,
-        req.requirement_status AS requirement_status -- ดึง requirement_status จากตาราง requirement
+        GROUP_CONCAT(DISTINCT req.requirement_status) AS requirement_status -- รวม requirement_status เป็นหนึ่งเดียว
       FROM validation v
-      LEFT JOIN requirement req ON v.requirement_id = req.requirement_id -- JOIN requirement
+      LEFT JOIN requirement req ON JSON_CONTAINS(v.requirement_id, CAST(req.requirement_id AS JSON), '$')
       WHERE 1 = 1
     `;
 
     const params = [];
 
-    // ตรวจสอบ status
+    // Filter by status if provided
     if (status) {
-        sql += ` AND req.requirement_status = ?`; // กรองตาม status
+        sql += ` AND req.requirement_status = ?`;
         params.push(status);
     }
+
+    sql += ` GROUP BY v.validation_id`; // รวมผลลัพธ์ตาม validation_id
 
     db.query(sql, params, (err, result) => {
         if (err) {
@@ -811,19 +815,17 @@ app.get('/validations', (req, res) => {
             return res.status(500).json({ message: "Error fetching validations.", error: err });
         }
 
-        // แปลงข้อมูลจากฐานข้อมูลเป็นโครงสร้าง JSON ที่ต้องการ
         const validations = result.map((row) => ({
             id: row.id,
             create_by: row.create_by,
             created_at: row.created_at,
             requirement_status: row.requirement_status,
-            requirements: row.requirement_id ? [row.requirement_id] : [],
+            requirements: row.requirement_id ? JSON.parse(row.requirement_id) : [],
         }));
-        console.log("Result from database:", result);
+        console.log("Result from database:", validations); // ตรวจสอบข้อมูลก่อนส่ง
         return res.status(200).json(validations);
     });
 });
-
 
 
 // Update multiple requirements status

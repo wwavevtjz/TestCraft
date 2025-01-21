@@ -100,7 +100,7 @@ const CreateVar = () => {
             axios.put(
               `http://localhost:3001/update-requirements-status-waitingfor-var/${requirementId}`,
               {
-                requirement_status: "WAITING FOR VALIDATION",
+                requirement_status: "VALIDATION INPROGRESS",
               }
             )
           )
