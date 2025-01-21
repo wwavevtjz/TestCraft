@@ -8,7 +8,6 @@ const ReqVerification = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ดึง project_id และ verification_id จาก URL
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get("project_id");
   const verificationId = queryParams.get("verification_id");
@@ -19,6 +18,7 @@ const ReqVerification = () => {
   const [loading, setLoading] = useState(true);
   const [checkboxState, setCheckboxState] = useState({});
   const [allChecked, setAllChecked] = useState(false);
+  const [isReviewer, setIsReviewer] = useState(false); // เก็บสถานะว่าเป็น reviewer หรือไม่
 
   useEffect(() => {
     if (!projectId || !verificationId) {
@@ -32,6 +32,7 @@ const ReqVerification = () => {
     }
 
     fetchCriteria();
+    checkReviewerStatus(); // ตรวจสอบว่า user เป็น reviewer หรือไม่
   }, [projectId, verificationId, selectedRequirements, navigate]);
 
   const fetchCriteria = async () => {
@@ -62,6 +63,28 @@ const ReqVerification = () => {
     }
   };
 
+  const checkReviewerStatus = async () => {
+    const storedUsername = localStorage.getItem("username"); // ดึงชื่อผู้ใช้ที่ล็อกอิน
+    if (!storedUsername) {
+      alert("Please log in first.");
+      return;
+    }
+
+    try {
+      const response = await axios.get("http://localhost:3001/verifications", {
+        params: { project_id: projectId, verification_id: verificationId },
+      });
+
+      const verification = response.data.find(v => v.id === parseInt(verificationId));
+      if (verification && verification.verification_by.includes(storedUsername)) {
+        setIsReviewer(true); // ถ้าเป็น reviewer
+      } else {
+        setIsReviewer(false); // ถ้าไม่ใช่ reviewer
+      }
+    } catch (error) {
+      console.error("Error checking reviewer status:", error);
+    }
+  };
 
   const handleCheckboxChange = (id) => {
     const updatedState = {
@@ -75,6 +98,11 @@ const ReqVerification = () => {
   };
 
   const handleSave = async () => {
+    if (!isReviewer) {
+      alert("You are not authorized to verify this requirement.");
+      return;
+    }
+
     if (!allChecked) {
       alert("Please select all checkboxes before saving.");
       return;
@@ -131,7 +159,6 @@ const ReqVerification = () => {
         <div className="box">
           <Comment verificationId={verificationId} />  {/* ส่ง verificationId ไปยัง Comment */}
         </div>
-
       </div>
 
       <div className="box requirements">

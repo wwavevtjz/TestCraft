@@ -52,148 +52,140 @@ const Modal = ({ show, onClose, requirements = [], verificationBy = "" }) => {
 
 
 const VerificationList = () => {
-  const [verifications, setVerifications] = useState([]);
-  const [selectedRequirements, setSelectedRequirements] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const projectId = queryParams.get("project_id");
-  const [selectedVerificationBy, setSelectedVerificationBy] = useState([]);
+    const [verifications, setVerifications] = useState([]);
+    const [selectedRequirements, setSelectedRequirements] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const projectId = queryParams.get("project_id");
+    const [selectedVerificationBy, setSelectedVerificationBy] = useState([]);
 
-  // Fetch verifications
-  const fetchVerifications = useCallback(() => {
-    axios
-      .get(`http://localhost:3001/verifications?project_id=${projectId}`)
-      .then((response) => {
-        const filteredVerifications = response.data
-          .filter((verification) => verification.requirement_status === "WAITING FOR VERIFICATION") // กรองเฉพาะสถานะนี้
-          .map((verification) => ({
-            ...verification,
-            verification_by: verification.verification_by || [], // ตรวจสอบค่าก่อนใส่ใน state
-          }));
-        setVerifications(filteredVerifications);
-      })
-      .catch((err) => {
-        console.error("Error fetching verifications:", err);
-        toast.error("Error fetching verifications.");
-      });
-  }, [projectId]);
+    // Fetch verifications
+    const fetchVerifications = useCallback(() => {
+        axios
+            .get(`http://localhost:3001/verifications?project_id=${projectId}`)
+            .then((response) => {
+                const filteredVerifications = response.data
+                    .filter((verification) => verification.requirement_status === "WAITING FOR VERIFICATION") // กรองเฉพาะสถานะนี้
+                    .map((verification) => ({
+                        ...verification,
+                        verification_by: verification.verification_by || [], // ตรวจสอบค่าก่อนใส่ใน state
+                    }))
+                    .filter((value, index, self) => // กรองข้อมูลที่ซ้ำกัน
+                        index === self.findIndex((v) => v.id === value.id)
+                    );
+                setVerifications(filteredVerifications);
+            })
+            .catch((err) => {
+                console.error("Error fetching verifications:", err);
+                toast.error("Error fetching verifications.");
+            });
+    }, [projectId]);
 
+    useEffect(() => {
+        fetchVerifications();
+    }, [fetchVerifications]);
 
+    const handleSearchClick = (requirements, verificationBy) => {
+        setSelectedRequirements(requirements || []);
+        setSelectedVerificationBy(verificationBy || []); // เก็บค่า verificationBy
+        setShowModal(true);
+    };
 
+    const handleVerifyClick = (verificationId, selectedRequirements) => {
+        if (!projectId || selectedRequirements.length === 0) {
+            toast.error("Invalid project ID or no requirements selected.");
+            return;
+        }
 
-  useEffect(() => {
-    fetchVerifications();
-  }, [fetchVerifications]);
+        const storedUsername = localStorage.getItem("username"); // ดึงชื่อผู้ใช้ที่ล็อกอิน
 
-  // Handle Search Reviewer button
-  const handleSearchClick = (requirements, verificationBy) => {
-    setSelectedRequirements(requirements || []);
-    setSelectedVerificationBy(verificationBy || []); // เก็บค่า verificationBy
-    setShowModal(true);
-  };
+        if (!storedUsername) {
+            toast.error("No user found. Please log in.");
+            return;
+        }
 
+        const selectedVerification = verifications.find(
+            (verification) => verification.id === verificationId
+        );
 
+        if (selectedVerification && !selectedVerification.verification_by.includes(storedUsername)) {
+            toast.error("You are not a reviewer for this verification.");
+            return;
+        }
 
-  const handleVerifyClick = (verificationId, selectedRequirements) => {
-    if (!projectId || selectedRequirements.length === 0) {
-      toast.error("Invalid project ID or no requirements selected.");
-      return;
-    }
+        // ส่งทั้ง project_id และ verification_id ผ่าน query string
+        navigate(`/ReqVerification?project_id=${projectId}&verification_id=${verificationId}`, {
+            state: { selectedRequirements, project_id: projectId, verification_id: verificationId },
+        });
+    };
 
-    const storedUsername = localStorage.getItem("username"); // ดึงชื่อผู้ใช้ที่ล็อกอิน
+    const closeModal = () => setShowModal(false);
 
-    if (!storedUsername) {
-      toast.error("No user found. Please log in.");
-      return;
-    }
+    return (
+        <div className="verification-list-container">
+            <h1>Verification List</h1>
 
-    // ตรวจสอบว่า storedUsername เป็นหนึ่งในผู้ตรวจสอบ (reviewers)
-    const selectedVerification = verifications.find(
-      (verification) => verification.id === verificationId
+            {verifications.length === 0 ? (
+                <p>No verifications available.</p>
+            ) : (
+                <table className="verification-table">
+                    <thead>
+                        <tr>
+                            <th>Verification</th>
+                            <th>Create By</th>
+                            <th>Date Assigned</th>
+                            <th>Status</th>
+                            <th>Reviewer</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {verifications.map((verification) => (
+                            <tr key={verification.id}>
+                                <td>{verification.id}</td>
+                                <td>{verification.create_by}</td>
+                                <td>{new Date(verification.created_at).toLocaleDateString()}</td>
+                                <td>{verification.requirement_status || " "}</td>
+                                <td>
+                                    <button
+                                        className="search-icon-button"
+                                        title="Search Reviewers and Requirements"
+                                        onClick={() =>
+                                            handleSearchClick(
+                                                verification.requirements || [],
+                                                verification.verification_by || []
+                                            )
+                                        }
+                                    >
+                                        🔍
+                                    </button>
+                                </td>
+                                <td>
+                                    <button
+                                        className="verify-button"
+                                        onClick={() =>
+                                            handleVerifyClick(verification.id, verification.requirements)
+                                        }
+                                    >
+                                        Verify
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
+
+            <Modal
+                show={showModal}
+                onClose={closeModal}
+                requirements={selectedRequirements}
+                verificationBy={selectedVerificationBy}
+            />
+        </div>
     );
-
-    if (selectedVerification && !selectedVerification.verification_by.includes(storedUsername)) {
-      toast.error("You are not a reviewer for this verification.");
-      return;
-    }
-
-    // ส่งทั้ง project_id และ verification_id ผ่าน query string
-    navigate(`/ReqVerification?project_id=${projectId}&verification_id=${verificationId}`, {
-      state: { selectedRequirements, project_id: projectId, verification_id: verificationId },
-    });
-  };
-
-
-  const closeModal = () => setShowModal(false);
-
-  return (
-    <div className="verification-list-container">
-      <h1>Verification List</h1>
-
-      {verifications.length === 0 ? (
-        <p>No verifications available.</p>
-      ) : (
-        <table className="verification-table">
-          <thead>
-            <tr>
-              <th>Verification</th>
-              <th>Create By</th>
-              <th>Date Assigned</th>
-              <th>Status</th>
-              <th>Reviewer</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {verifications
-              .filter((verification) => verification.requirement_status === "WAITING FOR VERIFICATION") // กรองใน JSX
-              .map((verification) => (
-                <tr key={verification.id}>
-                  <td>{verification.id}</td>
-                  <td>{verification.create_by}</td>
-                  <td>{new Date(verification.created_at).toLocaleDateString()}</td>
-                  <td>{verification.requirement_status || " "}</td>
-                  <td>
-                    <button
-                      className="search-icon-button"
-                      title="Search Reviewers and Requirements"
-                      onClick={() =>
-                        handleSearchClick(
-                          verification.requirements || [],
-                          verification.verification_by || []
-                        )
-                      }
-                    >
-                      🔍
-                    </button>
-                  </td>
-                  <td>
-                    <button
-                      className="verify-button"
-                      onClick={() =>
-                        handleVerifyClick(verification.id, verification.requirements)
-                      }
-                    >
-                      Verify
-                    </button>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-
-        </table>
-      )}
-
-      <Modal
-        show={showModal}
-        onClose={closeModal}
-        requirements={selectedRequirements}
-        verificationBy={selectedVerificationBy} // ส่งเฉพาะ verificationBy ไปยัง modal
-      />
-    </div>
-  );
 };
 
 export default VerificationList;

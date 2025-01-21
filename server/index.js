@@ -581,30 +581,27 @@ app.post('/reqverified', (req, res) => {
 app.post('/createveri', (req, res) => {
     const { requirements, reviewers, project_id, create_by } = req.body;
 
-    console.log("create_by in backend:", create_by); // ตรวจสอบค่าที่ส่งมาจาก frontend
-
     if (!requirements || !reviewers || !project_id || !create_by) {
         return res.status(400).json({ message: "Missing required fields." });
     }
 
-    // เตรียมค่าของ reviewers เป็น string ที่จะเก็บใน verification_by
     const reviewersString = JSON.stringify(reviewers);
+    const requirementsString = JSON.stringify(requirements); // รวม requirements เป็น JSON
 
-    // SQL สำหรับเพิ่ม verification
     const createVerificationQuery =
-        "INSERT INTO verification (project_id, create_by, requirement_id, verification_at, verification_by) VALUES ?";
+        "INSERT INTO verification (project_id, create_by, requirement_id, verification_at, verification_by) VALUES (?, ?, ?, ?, ?)";
 
-    const verificationValues = requirements.map(requirement_id => [
+    const verificationValues = [
         project_id,
         create_by,
-        requirement_id,
+        requirementsString, // เก็บ requirements เป็น JSON
         new Date(), // เวลาปัจจุบัน
-        reviewersString // เก็บ reviewers ในคอลัมน์ verification_by
-    ]);
+        reviewersString, // เก็บ reviewers เป็น JSON
+    ];
 
-    db.query(createVerificationQuery, [verificationValues], (err, verificationResult) => {
+    db.query(createVerificationQuery, verificationValues, (err, result) => {
         if (err) {
-            console.error("Database Error (Inserting verifications):", err);
+            console.error("Database Error:", err);
             return res.status(500).json({ message: "Error creating verification records." });
         }
 
@@ -612,11 +609,13 @@ app.post('/createveri', (req, res) => {
     });
 });
 
+
+
 app.get('/verifications', (req, res) => {
     const { project_id, status } = req.query;
-  
+
     let sql = `
-      SELECT 
+      SELECT DISTINCT
         v.verification_id AS id,
         v.create_by,
         v.verification_at AS created_at,
@@ -624,36 +623,38 @@ app.get('/verifications', (req, res) => {
         v.requirement_id,
         req.requirement_status AS requirement_status -- เพิ่มการดึง requirement_status จากตาราง requirement
       FROM verification v
-      LEFT JOIN requirement req ON v.requirement_id = req.requirement_id -- JOIN requirement
+      LEFT JOIN requirement req 
+        ON JSON_CONTAINS(v.requirement_id, CAST(req.requirement_id AS JSON)) -- เชื่อมโยง requirement_id
       WHERE v.project_id = ?
     `;
-  
+
     const params = [project_id];
-  
+
     if (status) {
-      sql += ` AND req.requirement_status = ?`; // ตรวจสอบสถานะ requirement
-      params.push(status);
+        sql += ` AND req.requirement_status = ?`; // ตรวจสอบสถานะ requirement
+        params.push(status);
     }
-  
+
     db.query(sql, params, (err, result) => {
-      if (err) {
-        console.error("Database Error:", err);
-        return res.status(500).json({ message: "Error fetching verifications.", error: err });
-      }
-  
-      const verifications = result.map((row) => ({
-        id: row.id,
-        create_by: row.create_by,
-        created_at: row.created_at,
-        requirement_status: row.requirement_status, // requirement_status ที่มาจาก requirement
-        verification_by: row.verification_by ? JSON.parse(row.verification_by) : [], // แปลง verification_by จาก string เป็น array
-        requirements: row.requirement_id ? [row.requirement_id] : [],
-      }));
-  
-      return res.status(200).json(verifications);
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Error fetching verifications.", error: err });
+        }
+
+        const verifications = result.map((row) => ({
+            id: row.id,
+            create_by: row.create_by,
+            created_at: row.created_at,
+            requirement_status: row.requirement_status || "UNKNOWN", // กำหนดค่าเริ่มต้น
+            verification_by: row.verification_by ? JSON.parse(row.verification_by) : [], // แปลง verification_by จาก string เป็น array
+            requirements: row.requirement_id ? JSON.parse(row.requirement_id) : [], // แปลง requirement_id จาก JSON string เป็น array
+        }));
+
+        return res.status(200).json(verifications);
     });
-  });
-  
+});
+
+
 // Update verification status and requirements status
 app.put('/update-status-verifications', (req, res) => {
     const { verification_ids, requirement_status } = req.body;
@@ -752,7 +753,7 @@ app.post('/createvalidation', async (req, res) => {
         "WAITING FOR VALIDATION" // Default status
     ]);
 
-    const updateRequirementStatusQuery = 
+    const updateRequirementStatusQuery =
         "UPDATE requirement SET requirement_status = ? WHERE requirement_id = ?"; // แก้ไขคำสั่ง SQL
 
     try {
@@ -800,26 +801,26 @@ app.get('/validations', (req, res) => {
 
     // ตรวจสอบ status
     if (status) {
-      sql += ` AND req.requirement_status = ?`; // กรองตาม status
-      params.push(status);
+        sql += ` AND req.requirement_status = ?`; // กรองตาม status
+        params.push(status);
     }
 
     db.query(sql, params, (err, result) => {
-      if (err) {
-        console.error("Database Error:", err);
-        return res.status(500).json({ message: "Error fetching validations.", error: err });
-      }
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Error fetching validations.", error: err });
+        }
 
-      // แปลงข้อมูลจากฐานข้อมูลเป็นโครงสร้าง JSON ที่ต้องการ
-      const validations = result.map((row) => ({
-        id: row.id,
-        create_by: row.create_by,
-        created_at: row.created_at,
-        requirement_status: row.requirement_status,
-        requirements: row.requirement_id ? [row.requirement_id] : [],
-      }));      
-      console.log("Result from database:", result);
-      return res.status(200).json(validations);
+        // แปลงข้อมูลจากฐานข้อมูลเป็นโครงสร้าง JSON ที่ต้องการ
+        const validations = result.map((row) => ({
+            id: row.id,
+            create_by: row.create_by,
+            created_at: row.created_at,
+            requirement_status: row.requirement_status,
+            requirements: row.requirement_id ? [row.requirement_id] : [],
+        }));
+        console.log("Result from database:", result);
+        return res.status(200).json(validations);
     });
 });
 
@@ -1303,7 +1304,7 @@ app.get('/allcomment', (req, res) => {
 });
 
 app.post('/var_comment', (req, res) => {
-    const {member_name, comment_var_text, validation_id } = req.body;
+    const { member_name, comment_var_text, validation_id } = req.body;
     console.log('Received data:', req.body); // ตรวจสอบข้อมูลที่รับมา
     const sql = 'INSERT INTO comme_member (member_name, comment_text, verification_id) VALUES (?, ?, ?, ?)';
 
@@ -1352,7 +1353,7 @@ app.delete('/deletecomment/:commentId', (req, res) => {
 
 
 app.post('/comments', (req, res) => {
-    const {  member_name, comment_var_text } = req.body;
+    const { member_name, comment_var_text } = req.body;
 
     // ตรวจสอบข้อมูลก่อนทำการ INSERT
     console.log("Received data:", { member_name, comment_var_text });
