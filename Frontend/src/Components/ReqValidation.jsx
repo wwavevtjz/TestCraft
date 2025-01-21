@@ -15,7 +15,6 @@ const ReqValidation = () => {
 
   const { selectedRequirements } = location.state || {};  
   const [requirementsDetails, setRequirementsDetails] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!projectId || !validationId) {
