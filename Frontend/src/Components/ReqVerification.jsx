@@ -122,35 +122,63 @@ const ReqVerification = () => {
       alert("You are not authorized to verify this requirement.");
       return;
     }
-  
+
     const allChecked = Object.values(checkboxState).every((value) => value);
+
     if (!allChecked) {
-      // Dismiss any existing toast before showing new one
-      toast.dismiss();
-  
-      if (!toastShown) {
-        toast.success("Criteria Checklist Save", {
+      const toastId = "save-toast";
+      if (!toast.isActive(toastId)) {
+        toast.success("Criteria Checklist Saved", {
+          toastId,
           position: "top-right",
           autoClose: 2000,
           hideProgressBar: false,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
+          onClose: () => navigate(`/Dashboard?project_id=${projectId}`), // Navigate เมื่อ toast ปิด
         });
-  
-        setToastShown(true); 
-        
-        setTimeout(() => {
-          toast.dismiss(); 
-          navigate(`/Dashboard?project_id=${projectId}`);
-        }, 1500); // Wait for the toast autoClose to trigger before navigating
-        return;
       }
+      return;
     }
-  
-    // The rest of your code logic...
+
+    try {
+      const requirementIds = requirementsDetails.map((req) => req.requirement_id);
+
+      await axios.put("http://localhost:3001/update-requirements-status-verified", {
+        requirement_ids: requirementIds,
+        requirement_status: "VERIFIED",
+      });
+
+      const toastId = "verify-toast";
+      if (!toast.isActive(toastId)) {
+        toast.success("All criteria verified! Status updated to VERIFIED.", {
+          toastId,
+          position: "top-right",
+          autoClose: 1500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          onClose: () => navigate(`/Dashboard?project_id=${projectId}`),
+        });
+      }
+    } catch (error) {
+      console.error("Error updating verification status:", error);
+      toast.error("Failed to update verification status. Please try again.", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
   };
-  
+
+
+
+
 
   return (
     <div className="container">
