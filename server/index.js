@@ -1202,7 +1202,7 @@ app.post("/reqcriteria/log", (req, res) => {
 });
 
 
-//-------------------------- MENT ------------------------------------
+//-------------------------- VERIFICATION COMMENT ------------------------------------
 // Get all comments
 app.get('/allcomment', (req, res) => {
     const verificationId = req.query.verification_id; // ดึง verification_id จาก query string
@@ -1268,46 +1268,33 @@ app.delete('/deletecomment/:commentId', (req, res) => {
 
 
 
-app.post('/comments', (req, res) => {
-    const { member_id, member_name, comment_text } = req.body;
-
-    // ตรวจสอบข้อมูลก่อนทำการ INSERT
-    console.log("Received data:", { member_id, member_name, comment_text });
-
-    const sql = 'INSERT INTO comme_member (member_id, member_name, comment_text) VALUES (?, ?, ?)';
-    db.query(sql, [member_id, member_name, comment_text], (err, results) => {
-        if (err) {
-            console.error("Error inserting comment:", err);
-            res.status(500).send('Failed to insert comment.');
-        } else {
-            res.status(201).json({ comme_member_id: results.insertId });
-        }
-    });
-});
-
 //-------------------------- VALIDATION COMMENT ----------------------
 // Get all comments
-app.get('/allcomment', (req, res) => {
-    const validationId = req.query.validation_id; // ดึง verification_id จาก query string
-    console.log('Received validation_id:', validationId); // เช็คค่าของ verificationId
-    const sql = 'SELECT * FROM comme_member WHERE verification_id = ?';
+// ดึงคอมเมนต์จาก validation_id
+app.get('/showvalicomment', (req, res) => {
+    const validationId = req.query.validation_id; // ดึง validation_id จาก query string
+    console.log('Received validation_id:', validationId); // ตรวจสอบ validation_id
+    const sql = 'SELECT * FROM comment_var WHERE validation_id = ?';
 
     db.query(sql, [validationId], (err, results) => {
         if (err) {
             console.error('Error fetching comment:', err);
             return res.status(500).send('Error fetching comment');
         }
-        console.log('Fetched comment:', results); // ตรวจสอบข้อมูลที่ได้จาก SQL
+        console.log('Fetched comment:', results); // ตรวจสอบข้อมูลที่ได้
         res.json(results);
     });
 });
 
-app.post('/var_comment', (req, res) => {
+
+app.post('/createvarcomment', (req, res) => {
     const { member_name, comment_var_text, validation_id } = req.body;
     console.log('Received data:', req.body); // ตรวจสอบข้อมูลที่รับมา
-    const sql = 'INSERT INTO comme_member (member_name, comment_text, verification_id) VALUES (?, ?, ?, ?)';
 
-    db.query(sql, [member_id, member_name, comment_var_text, validation_id], (err, result) => {
+    // คำสั่ง SQL ที่ปรับใหม่
+    const sql = 'INSERT INTO comment_var (member_name, comment_var_text, validation_id) VALUES (?, ?, ?)';
+
+    db.query(sql, [member_name, comment_var_text, validation_id], (err, result) => {
         if (err) {
             console.error(err);
             res.status(500).send('Error adding comment');
@@ -1316,6 +1303,7 @@ app.post('/var_comment', (req, res) => {
         }
     });
 });
+
 
 
 // Update comment
