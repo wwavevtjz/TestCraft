@@ -1,3 +1,4 @@
+/* Comment Section */
 .comment-section {
   max-width: 600px;
   margin: 20px auto;
@@ -12,6 +13,7 @@
   color: #1e3a56;
 }
 
+/* Comment Input */
 .comment-input {
   display: flex;
   flex-direction: column;
@@ -43,11 +45,13 @@
   background-color: #163047;
 }
 
+/* Comment */
 .comment {
   border: 1px solid #ccc;
   border-radius: 5px;
   padding: 15px;
   margin-bottom: 15px;
+  background-color: #fff;
 }
 
 .comment-header {
@@ -55,11 +59,12 @@
   justify-content: space-between;
   font-size: 14px;
   margin-bottom: 10px;
-  color: #1e3a56;
 }
 
 .comment-name {
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: bolder;
+  color: #1e3a56;
 }
 
 .comment-time {
@@ -72,12 +77,13 @@
   color: #374151;
 }
 
+/* Comment Footer */
 .comment-footer {
   display: flex;
   gap: 10px;
 }
 
-.like-button,
+.edit-button,
 .reply-button,
 .delete-comment-button {
   background-color: #1e3a56;
@@ -89,8 +95,77 @@
   font-size: 14px;
 }
 
-.like-button:hover,
+.edit-button:hover,
 .reply-button:hover,
-.delete-comment-button {
+.delete-comment-button:hover {
   background-color: #163047;
+}
+
+/* Reply Section */
+.reply {
+  margin-top: 20px;
+  margin-left: 20px;
+  padding: 10px;
+  background-color: #f1f1f1;
+  border-radius: 5px;
+}
+
+.reply-name {
+  font-weight: bold;
+  font-size: 14px;
+  color: #4b5563;
+  display: inline;
+  margin-bottom: 5px;
+}
+
+.reply-time {
+  font-size: 12px;
+  color: #6b7280;
+  margin-left: 48%;
+  font-style: italic;
+  display: inline;
+}
+
+
+/* Reply Text */
+.reply-text {
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 10px;
+  margin-top: 15px;
+}
+
+/* Reply Input */
+.reply-input {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  margin-left: 20px;
+}
+
+.reply-input textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  resize: none;
+  margin-bottom: 10px;
+}
+
+.reply-input button {
+  align-self: flex-end;
+  background-color: #28a745;
+  color: #fff;
+  font-size: 14px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.reply-input button:hover {
+  background-color: #218838;
 }

@@ -6,6 +6,8 @@ import trash_comment from "../image/trash_comment.png";  // ไอคอนล�
 const Comment = ({ verificationId }) => {
   const [comments, setComments] = useState([]); // เก็บข้อมูลคอมเมนต์
   const [newComment, setNewComment] = useState(""); // เก็บคอมเมนต์ใหม่ที่ต้องการโพสต์
+  const [replyComment, setReplyComment] = useState(""); // เก็บข้อความที่ตอบกลับ
+  const [selectedCommentId, setSelectedCommentId] = useState(null); // เก็บ ID ของคอมเมนต์ที่เลือกตอบกลับ
   const [loading, setLoading] = useState(true); // สถานะการโหลดคอมเมนต์
   const [loggedInUser, setLoggedInUser] = useState(""); // ชื่อผู้ใช้งานที่ล็อกอิน
   const [error, setError] = useState(""); // ข้อความข้อผิดพลาด
@@ -24,7 +26,6 @@ const Comment = ({ verificationId }) => {
   const fetchComments = async () => {
     try {
       setLoading(true);
-      console.log("Fetching comments with verification_id:", verificationId); // เช็คค่าของ verificationId
       const response = await axios.get("http://localhost:3001/allcomment", {
         params: { verification_id: verificationId }, // ส่ง verification_id ไปใน query string
       });
@@ -36,7 +37,6 @@ const Comment = ({ verificationId }) => {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     if (verificationId) {
@@ -98,6 +98,40 @@ const Comment = ({ verificationId }) => {
     });
   };
 
+  // ฟังก์ชันส่งการตอบกลับ
+  const handleReplySubmit = async (commentId) => {
+    if (!replyComment.trim()) {
+      alert("Please enter a reply!");
+      return;
+    }
+
+    try {
+      const payload = {
+        member_name: loggedInUser, // ชื่อผู้ใช้งานที่ล็อกอิน
+        ver_replies_text: replyComment, // ข้อความตอบกลับ
+        verification_id: verificationId, // ID ที่เชื่อมกับการตรวจสอบ
+        comment_id: commentId, // ส่ง comment_id ไปด้วย
+      };
+
+      const response = await axios.post("http://localhost:3001/replyvercomment", payload);
+
+      if (response.status === 201) {
+        setReplyComment(""); // ล้างข้อความในฟอร์มตอบกลับ
+        fetchComments(); // รีเฟรชคอมเมนต์เพื่อแสดงการตอบกลับใหม่
+      }
+    } catch (error) {
+      console.error("Error adding reply:", error);
+      alert("Failed to post reply.");
+    }
+  };
+
+
+
+  // ฟังก์ชันที่ใช้สำหรับแสดงการตอบกลับ
+  const handleReplyClick = (commentId) => {
+    setSelectedCommentId(commentId); // เก็บ ID คอมเมนต์ที่เลือกเพื่อแสดงฟอร์มตอบกลับ
+  };
+
   return (
     <div className="comment-section">
       <h2 className="comment-title">Comments ({comments.length})</h2>
@@ -130,12 +164,38 @@ const Comment = ({ verificationId }) => {
             </div>
             <p className="comment-text">{comment.comment_text}</p>
             <div className="comment-footer">
-              <button className="like-button">👍 {comment.likes}</button>
-              <button className="reply-button">💬 {comment.replies}</button>
+              <button className="edit-button">👍</button>
+              <button className="reply-button" onClick={() => handleReplyClick(comment.comment_id)}>
+                💬 {comment.replies && comment.replies.length}
+              </button>
               <button className="delete-comment-button" onClick={() => handleDelete(comment.comment_id)}>
                 <img src={trash_comment} alt="trash_comment" className="trash_comment" />
               </button>
             </div>
+
+            {/* แสดงคอมเมนต์ที่ตอบกลับ */}
+            {comment.replies && comment.replies.length > 0 && comment.replies.map(reply => (
+              <div key={reply.ver_replies_id} className="reply">
+                <span className="reply-name">{reply.member_name}</span>
+                <span className="reply-time">{formatDate(reply.ver_replies_at)}</span>
+                <p className="reply-text">{reply.ver_replies_text}</p>
+              </div>
+
+
+            ))}
+
+            {/* ฟอร์มสำหรับตอบกลับ */}
+            {selectedCommentId === comment.comment_id && (
+              <div className="reply-input">
+                <textarea
+                  placeholder="Write a reply..."
+                  value={replyComment}
+                  onChange={(e) => setReplyComment(e.target.value)}
+                />
+                <button onClick={() => handleReplySubmit(comment.comment_id)}>Submit Reply</button>
+              </div>
+            )}
+
           </div>
         ))
       )}

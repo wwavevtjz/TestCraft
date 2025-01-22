@@ -1206,23 +1206,73 @@ app.post("/reqcriteria/log", (req, res) => {
 // Get all comments
 app.get('/allcomment', (req, res) => {
     const verificationId = req.query.verification_id; // ดึง verification_id จาก query string
-    console.log('Received verification_id:', verificationId); // เช็คค่าของ verificationId
-    const sql = 'SELECT * FROM comme_member WHERE verification_id = ?';
+    console.log('Received verification_id:', verificationId); // ตรวจสอบค่าที่รับมา
+
+    // SQL Query ดึงคอมเมนต์และการตอบกลับที่เกี่ยวข้อง
+    const sql = `
+        SELECT 
+            c.comment_id, 
+            c.member_name AS comment_member_name, 
+            c.comment_text, 
+            c.comment_at,
+            r.ver_replies_id, 
+            r.ver_replies_text, 
+            r.member_name AS reply_member_name, 
+            r.ver_replies_at
+        FROM 
+            comme_member c
+        LEFT JOIN 
+            ver_comment_replies r 
+        ON 
+            c.comment_id = r.comment_id
+        WHERE 
+            c.verification_id = ?
+    `;
 
     db.query(sql, [verificationId], (err, results) => {
         if (err) {
             console.error('Error fetching comments:', err);
             return res.status(500).send('Error fetching comments');
         }
-        console.log('Fetched comments:', results); // ตรวจสอบข้อมูลที่ได้จาก SQL
-        res.json(results);
+
+        // จัดกลุ่มข้อมูลคอมเมนต์และการตอบกลับ
+        const groupedResults = results.reduce((acc, row) => {
+            const commentId = row.comment_id;
+
+            if (!acc[commentId]) {
+                acc[commentId] = {
+                    comment_id: row.comment_id,
+                    member_name: row.comment_member_name,
+                    comment_text: row.comment_text,
+                    comment_at: row.comment_at,
+                    replies: []
+                };
+            }
+
+            if (row.ver_replies_id) {
+                acc[commentId].replies.push({
+                    ver_replies_id: row.ver_replies_id,
+                    ver_replies_text: row.ver_replies_text,
+                    member_name: row.reply_member_name,
+                    ver_replies_at: row.ver_replies_at
+                });
+            }
+
+            return acc;
+        }, {});
+
+        const comments = Object.values(groupedResults);
+        console.log('Fetched comments with replies:', comments); // ตรวจสอบข้อมูลที่ได้
+        res.json(comments);
     });
 });
 
 app.post('/comments', (req, res) => {
-    const { member_id, member_name, comment_text, verification_id } = req.body;
+    const { member_id, member_name, comment_text, verification_id } = req.body;  // รับค่า emoji จาก body
     console.log('Received data:', req.body); // ตรวจสอบข้อมูลที่รับมา
-    const sql = 'INSERT INTO comme_member (member_id, member_name, comment_text, verification_id) VALUES (?, ?, ?, ?)';
+
+    // เพิ่มข้อมูลอีโมจิในคำสั่ง SQL
+    const sql = 'INSERT INTO comme_member (member_id, member_name, comment_text, verification_id) VALUES ( ?, ?, ?, ?)';
 
     db.query(sql, [member_id, member_name, comment_text, verification_id], (err, result) => {
         if (err) {
@@ -1253,16 +1303,26 @@ app.put('/comments/:comme_member_id', (req, res) => {
 app.delete('/deletecomment/:commentId', (req, res) => {
     const { commentId } = req.params;  // ดึง commentId จาก params
 
-    const sql = 'DELETE FROM comme_member WHERE comment_id = ?';  // ใช้ comment_id ในการลบ
-    db.query(sql, [commentId], (err, result) => {
+    // ลบการตอบกลับที่เกี่ยวข้องจาก ver_comment_replies
+    const deleteRepliesSql = 'DELETE FROM ver_comment_replies WHERE comment_id = ?';
+    db.query(deleteRepliesSql, [commentId], (err, result) => {
         if (err) {
             console.error(err);
-            return res.status(500).send('Error deleting comment');
+            return res.status(500).send('Error deleting replies');
         }
-        if (result.affectedRows === 0) {
-            return res.status(404).send('Comment not found');
-        }
-        res.send('Comment deleted successfully');
+
+        // หลังจากลบการตอบกลับแล้ว ลบคอมเมนต์จาก comme_member
+        const deleteCommentSql = 'DELETE FROM comme_member WHERE comment_id = ?';
+        db.query(deleteCommentSql, [commentId], (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Error deleting comment');
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).send('Comment not found');
+            }
+            res.send('Comment deleted successfully');
+        });
     });
 });
 
@@ -1355,6 +1415,33 @@ app.post('/comments', (req, res) => {
         }
     });
 });
+
+// ------------------------- REPLY VERIFICATION COMMENT -------------------------
+app.post('/replyvercomment', (req, res) => {
+    const { member_name, ver_replies_text, verification_id, comment_id } = req.body;
+
+    // ตรวจสอบว่ามี comment_id หรือไม่
+    if (!comment_id) {
+        return res.status(400).send('comment_id is required');
+    }
+
+    // สร้าง SQL Query สำหรับเพิ่มการตอบกลับ
+    const sql = `
+        INSERT INTO ver_comment_replies (ver_replies_text, member_name, verification_id, comment_id) 
+        VALUES (?, ?, ?, ?)
+    `;
+
+    db.query(sql, [ver_replies_text, member_name, verification_id, comment_id], (err, result) => {
+        if (err) {
+            console.error('Error adding reply:', err);
+            return res.status(500).send('Error adding reply');
+        }
+        res.status(201).send('Reply added successfully');
+    });
+});
+
+
+
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;
 app.listen(PORT, () => {
