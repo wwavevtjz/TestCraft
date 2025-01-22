@@ -47,92 +47,68 @@ const CreateVar = () => {
 
   const handleCreateValidation = async () => {
     if (!projectId) {
-      if (toastId) toast.dismiss(toastId);
-      setToastId(toast.error("Invalid project ID."));
-      return;
+        if (toastId) toast.dismiss(toastId);
+        setToastId(toast.error("Invalid project ID."));
+        return;
     }
 
     if (selectedRequirements.length === 0) {
-      if (toastId) toast.dismiss(toastId);
-      setToastId(toast.warning("Please select at least one requirement."));
-      return;
+        if (toastId) toast.dismiss(toastId);
+        setToastId(toast.warning("Please select at least one requirement."));
+        return;
     }
 
     const storedUsername = localStorage.getItem("username");
     const createBy = storedUsername;
 
     if (!createBy) {
-      if (toastId) toast.dismiss(toastId);
-      setToastId(toast.error("No user found. Please login again."));
-      return;
+        if (toastId) toast.dismiss(toastId);
+        setToastId(toast.error("No user found. Please login again."));
+        return;
     }
 
     const payload = {
-      requirements: [...new Set(selectedRequirements)],
-      project_id: projectId,
-      create_by: createBy,
+        requirements: [...new Set(selectedRequirements)], // Unique requirements
+        project_id: projectId,
+        create_by: createBy,
     };
 
     if (isSubmitting) {
-      if (toastId) toast.dismiss(toastId);
-      setToastId(toast.warning("Submitting in progress. Please wait."));
-      return;
+        if (toastId) toast.dismiss(toastId);
+        setToastId(toast.warning("Submitting in progress. Please wait."));
+        return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Create validation in backend
-      const response = await axios.post("http://localhost:3001/createvalidation", payload);
+        const response = await axios.post("http://localhost:3001/createvalidation", payload);
 
-      if (response.status === 201) {
-        if (toastId) toast.dismiss(toastId);
-        setToastId(toast.success("Validation created successfully!"));
+        if (response.status === 201) {
+            if (toastId) toast.dismiss(toastId);
+            setToastId(toast.success("Validation created successfully!"));
 
-        // Update the verified requirements in the frontend
-        setVerifiedRequirements((prev) =>
-          prev.filter((req) => !selectedRequirements.includes(req.requirement_id))
-        );
-
-        // Update the status of requirements in the backend
-        const updateResults = await Promise.allSettled(
-          selectedRequirements.map((requirementId) =>
-            axios.put(
-              `http://localhost:3001/update-requirements-status-waitingfor-var/${requirementId}`,
-              {
-                requirement_status: "VALIDATION INPROGRESS",
-              }
-            )
-          )
-        );
-
-        // Log errors from failed updates
-        updateResults.forEach((result, index) => {
-          if (result.status === "rejected") {
-            console.error(
-              `Failed to update status for requirement ID ${selectedRequirements[index]}:`,
-              result.reason
+            // Update frontend state
+            setVerifiedRequirements((prev) =>
+                prev.filter((req) => !selectedRequirements.includes(req.requirement_id))
             );
-          }
-        });
-
-        // Reset the state for selected requirements
-        setSelectedRequirements([]);
-      } else {
-        if (toastId) toast.dismiss(toastId);
-        setToastId(toast.error(response.data.message || "Failed to create validation."));
-      }
+            setSelectedRequirements([]);
+        } else {
+            if (toastId) toast.dismiss(toastId);
+            setToastId(toast.error(response.data.message || "Failed to create validation."));
+        }
     } catch (error) {
-      console.error("Error creating validation:", error);
+        console.error("Error creating validation:", error);
 
-      const errorMessage =
-        error.response?.data?.message || "An error occurred. Please try again.";
-      if (toastId) toast.dismiss(toastId);
-      setToastId(toast.error(errorMessage));
+        const errorMessage =
+            error.response?.data?.message || "An error occurred. Please try again.";
+        if (toastId) toast.dismiss(toastId);
+        setToastId(toast.error(errorMessage));
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
-  };
+};
+
 
   const handleCancel = () => {
     if (toastId) {

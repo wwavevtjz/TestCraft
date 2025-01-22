@@ -738,36 +738,32 @@ app.put('/update-requirements-status-verified', (req, res) => {
 app.post('/createvalidation', async (req, res) => {
     const { requirements, create_by } = req.body;
 
-    console.log("Payload received:", { requirements, create_by });
-
     if (!requirements || !create_by) {
         return res.status(400).json({ message: "Missing required fields." });
     }
 
     const createValidationQuery =
-        "INSERT INTO validation (requirement_id, create_by, validation_at, requirement_status) VALUES ?";
-
-    const validationValues = requirements.map(() => [
-        JSON.stringify(requirements), // Convert the entire array to JSON
-        create_by,
-        new Date(),
-        "VALIDATION INPROGRESS"
-    ]);
-
+        "INSERT INTO validation (requirement_id, create_by, validation_at, requirement_status) VALUES (?, ?, ?, ?)";
     const updateRequirementStatusQuery =
-        "UPDATE requirement SET requirement_status = ? WHERE requirement_id = ?";
+        "UPDATE requirement SET requirement_status = ? WHERE requirement_id IN (?)";
 
     try {
         // Begin a transaction
         await db.beginTransaction();
 
-        // Insert validation records
-        await db.query(createValidationQuery, [validationValues]);
+        // Insert validation record with JSON array of requirements
+        await db.query(createValidationQuery, [
+            JSON.stringify(requirements), // Convert requirements array to JSON
+            create_by,
+            new Date(),
+            "VALIDATION INPROGRESS",
+        ]);
 
-        // Update requirement statuses
-        for (const requirementId of requirements) {
-            await db.query(updateRequirementStatusQuery, ["VALIDATION INPROGRESS", requirementId]);
-        }
+        // Update requirement statuses for all selected requirements
+        await db.query(updateRequirementStatusQuery, [
+            "VALIDATION INPROGRESS",
+            requirements,
+        ]);
 
         // Commit transaction
         await db.commit();
@@ -782,6 +778,7 @@ app.post('/createvalidation', async (req, res) => {
         res.status(500).json({ message: "Error creating validation or updating statuses." });
     }
 });
+
 
 
 app.get('/validations', (req, res) => {
