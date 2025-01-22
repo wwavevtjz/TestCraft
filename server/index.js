@@ -1059,6 +1059,131 @@ app.delete('/files/:fileId', (req, res) => {
     });
 });
 
+// ----------------------- File Validation ----------------------- 
+
+// อัปโหลดไฟล์
+app.post("/uploadfile-var", upload.single("file"), (req, res) => {
+    try {
+        const { project_id, requirement_id } = req.body;
+        const file = req.file;
+
+        // ตรวจสอบข้อมูลที่จำเป็น
+        if (!project_id || !requirement_id) {
+            throw new Error("Missing required fields: project_id or requirement_id.");
+        }
+
+        if (!file) {
+            throw new Error("No file uploaded.");
+        }
+
+        // ตรวจสอบประเภทไฟล์
+        if (file.mimetype !== "application/pdf") {
+            throw new Error("Invalid file type. Only PDF files are allowed.");
+        }
+
+        // ตรวจสอบขนาดไฟล์
+        if (file.size > 10 * 1024 * 1024) {
+            throw new Error("File too large. Maximum size is 10MB.");
+        }
+
+        // แปลง requirement_id ให้รองรับ JSON array
+        let formattedRequirementId;
+        try {
+            if (typeof requirement_id === "string" && requirement_id.startsWith("[")) {
+                const parsedArray = JSON.parse(requirement_id);
+                if (Array.isArray(parsedArray)) {
+                    formattedRequirementId = JSON.stringify(parsedArray); // เก็บเป็น JSON array
+                } else {
+                    throw new Error("Invalid requirement_id format. Expected an array.");
+                }
+            } else {
+                formattedRequirementId = JSON.stringify([requirement_id]); // เปลี่ยนเป็น array ก่อน
+            }
+        } catch (err) {
+            throw new Error("Failed to parse requirement_id.");
+        }
+
+        // แปลงข้อมูลสำหรับ `filereq_data`
+        const fileData = {
+            filename: file.originalname,
+        };
+
+        // SQL query to insert data
+        const sql = `
+            INSERT INTO file_validation (
+                requirement_id,
+                filereq_data,
+                upload_at
+            ) VALUES (?, ?, NOW())
+        `;
+        const values = [
+            formattedRequirementId, // requirement_id ในรูป JSON array
+            JSON.stringify(fileData), // filereq_data ในรูป JSON object
+        ];
+
+        // Execute query to insert file data into the database
+        db.query(sql, values, (err, result) => {
+            if (err) {
+                console.error("SQL Error:", err.message);
+                return res.status(500).json({ message: "Database error: " + err.message });
+            }
+
+            console.log("File uploaded and saved successfully. File Validation ID:", result.insertId);
+            res.status(200).json({
+                message: "File uploaded successfully.",
+                file_validation_id: result.insertId,
+            });
+        });
+    } catch (err) {
+        console.error("Upload error:", err.message);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// ดาวน์โหลดไฟล์
+app.get("/download-file-var/:id", (req, res) => {
+    const fileId = req.params.id;
+
+    const sql = "SELECT requirement_name, filereq_data FROM file_validation WHERE file_validation_id = ?";
+    db.query(sql, [fileId], (err, results) => {
+        if (err) {
+            console.error("Error fetching file:", err);
+            return res.status(500).json({ message: "Internal Server Error" });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: "File not found." });
+        }
+
+        const file = results[0];
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${file.requirement_name}"`
+        );
+        res.send(Buffer.from(file.filereq_data, "base64"));
+    });
+});
+
+// ลบไฟล์
+app.delete("/delete-files-var/:fileId", (req, res) => {
+    const fileId = req.params.fileId;
+
+    const sql = "DELETE FROM file_validation WHERE file_validation_id = ?";
+    db.query(sql, [fileId], (err, result) => {
+        if (err) {
+            console.error("Error deleting file:", err);
+            return res.status(500).json({ message: "Error deleting file." });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "File not found." });
+        }
+
+        res.status(200).json({ message: "File deleted successfully." });
+    });
+});
+
 // ------------------------- COMMENT -------------------------
 
 // ดึง Comment ทั้งหมดตาม Verification ID และ Requirement ID
