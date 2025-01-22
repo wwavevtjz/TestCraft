@@ -25,8 +25,99 @@
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-around;
+  padding: 1rem;
 
 }
+.req-action-buttons {
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-around;
+  padding: 1rem;
+}
+
+.req-action-buttons button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.req-action-buttons button img {
+  width: 20px;
+  height: 20px;
+}
+
+/* สีของปุ่มตามความหมาย */
+.create-verification-button {
+  background-color: #4CAF50; 
+  color: white;
+}
+
+.create-verification-button:hover {
+  background-color: #45A049;
+}
+
+.verifylist-button {
+  background-color: #2196F3; 
+  color: white;
+}
+
+.verifylist-button:hover {
+  background-color: #1976D2;
+}
+
+.CreateVar-button {
+  background-color: #FF9800; 
+  color: white;
+}
+
+.CreateVar-button:hover {
+  background-color: #FB8C00;
+}
+
+.validation-button {
+  background-color: #3F51B5;
+  color: white;
+}
+
+.validation-button:hover {
+  background-color: #303F9F;
+}
+
+.viewvervar-button {
+  background-color: #8BC34A; 
+  color: white;
+}
+
+.viewvervar-button:hover {
+  background-color: #7CB342;
+}
+
+.version-control-button {
+  background-color: #9E9E9E; 
+  color: white;
+}
+
+.version-control-button:hover {
+  background-color: #757575;
+}
+
+/* ปรับแต่งเมื่อ hover */
+.req-action-buttons button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
 
 
 /* กล่องตาราง */
@@ -150,43 +241,7 @@
   /* สีของไอคอนค้นหา */
 }
 
-.review-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border: none;
-  cursor: pointer;
-  border-radius: 5px;
-  background-color: #007acc;
-  color: white;
-  transition: background-color 0.3s ease, transform 0.3s ease;
 
-}
-
-.review-button:hover {
-  background-color: #005f99;
-  transform: scale(1.05);
-}
-
-.verhistory-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border: none;
-  cursor: pointer;
-  border-radius: 5px;
-  background-color: #9b59b6;
-  /* สีเขียวสดใส */
-  color: white;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.verhistory-button:hover {
-  background-color: #884aa8;
-  transform: scale(1.05);
-}
 
 
 .history {
@@ -631,34 +686,53 @@ p {
   transform: scale(1.05);
 }
 
-/* ปุ่ม Status */
+/* สีพื้นฐานสำหรับปุ่ม */
 .status-button {
   padding: 10px 20px;
-  border: none;
-  font-size: 14px;
+  font-size: 16px;
+  border: 2px solid transparent;
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: 20px;
+  font-weight: 600;
+  background-color: transparent;
+  transition: all 0.3s ease;
+  text-transform: capitalize; /* ตัวหนังสือแบบปกติ */
+  box-shadow: none; /* ไม่มีเงา */
 }
 
-/* สถานะ VERIFIED (สีเขียว) */
+.status-button:hover {
+  opacity: 0.85; /* ลดความทึบเมื่อ hover */
+  transform: scale(1.05); /* เพิ่มขนาดเล็กน้อยเมื่อ hover */
+}
+
+/* สีของสถานะต่างๆ */
 .status-verified {
-  background-color: #28a745;
-  /* สีเขียว */
-  color: white;
+  color: #28a745; /* สีเขียว */
+  border-color: #28a745; /* ขอบสีเขียว */
 }
 
-/* สถานะ WORKING (สีฟ้า) */
+.status-validated {
+  color: #17a2b8; /* สีฟ้า */
+  border-color: #17a2b8; /* ขอบสีฟ้า */
+}
+
 .status-working {
-  background-color: #007bff;
-  /* สีฟ้า */
-  color: white;
+  color: #fd7e14; /* สีส้ม */
+  border-color: #fd7e14; /* ขอบสีส้ม */
 }
 
-/* สถานะ VERIFY NOT COMPLETE */
-.status-not-complete {
-  background-color: #F4A300;
-  color: white;
+.status-waiting-ver {
+  color: #ffc107; /* สีเหลือง */
+  border-color: #ffc107; /* ขอบสีเหลือง */
 }
+
+.status-val-inprogress {
+  color: #6f42c1; /* สีม่วง */
+  border-color: #6f42c1; /* ขอบสีม่วง */
+}
+
+
+
 
 .clearsearch-req {
   cursor: pointer;

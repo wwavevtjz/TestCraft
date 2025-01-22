@@ -222,7 +222,7 @@ const RequirementPage = () => {
             <img src={history} alt="history" className="history" />Create Verification
           </button>
 
-          <button className="verify-button" onClick={handleVerilist}>
+          <button className="verifylist-button" onClick={handleVerilist}>
             <img src={history} alt="history" className="history" /> Verification List
           </button>
 
@@ -230,15 +230,15 @@ const RequirementPage = () => {
             <img src={history} alt="history" className="history" /> Create Validation
           </button>
 
-          <button className="verhistory-button" onClick={handleVarilist}>
+          <button className="validation-button" onClick={handleVarilist}>
             <img src={history} alt="history" className="history" /> Validation List
           </button>
 
-          <button className="review-button" onClick={handleVerificationHis}>
+          <button className="viewvervar-button" onClick={handleVerificationHis}>
             <img src={checkmark} alt="checkmark" className="checkmark" /> View Verification and Validation
           </button>
 
-          <button className="verhistory-button" onClick={handleVerificationHis}>
+          <button className="version-control-button" onClick={handleVerificationHis}>
             <img src={history} alt="history" className="history" /> Version Control
           </button>
 
@@ -361,10 +361,10 @@ const RequirementPage = () => {
                     <button
                       className={`status-button 
             ${data.requirement_status === 'VERIFIED' ? 'status-verified' : ''}
-            ${data.requirement_status === 'VALIDATED' ? 'status-verified' : ''} 
+            ${data.requirement_status === 'VALIDATED' ? 'status-validated' : ''} 
             ${data.requirement_status === 'WORKING' ? 'status-working' : ''} 
-            ${data.requirement_status === 'WAITING FOR VERIFICATION' ? 'status-not-complete' : ''}
-            ${data.requirement_status === 'VALIDATION INPROGRESS' ? 'status-not-complete' : ''}
+            ${data.requirement_status === 'WAITING FOR VERIFICATION' ? 'status-waiting-ver' : ''}
+            ${data.requirement_status === 'VALIDATION INPROGRESS' ? 'status-val-inprogress' : ''}
             `}
                     >
                       {data.requirement_status}

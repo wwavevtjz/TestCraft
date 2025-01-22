@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
 import Comment from "./Comment";
 import "./CSS/ReqVerification.css";
 
@@ -11,14 +12,15 @@ const ReqVerification = () => {
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get("project_id");
   const verificationId = queryParams.get("verification_id");
-
+  const [toastShown, setToastShown] = useState(false);
   const { selectedRequirements } = location.state || {};
   const [reqcriList, setReqcriList] = useState([]);
   const [requirementsDetails, setRequirementsDetails] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkboxState, setCheckboxState] = useState({});
-  const [allChecked, setAllChecked] = useState(false);
-  const [isReviewer, setIsReviewer] = useState(false); // เก็บสถานะว่าเป็น reviewer หรือไม่
+  const [isReviewer, setIsReviewer] = useState(false);
+
+  const localStorageKey = `checkboxState_${projectId}_${verificationId}`;
 
   useEffect(() => {
     if (!projectId || !verificationId) {
@@ -32,8 +34,19 @@ const ReqVerification = () => {
     }
 
     fetchCriteria();
-    checkReviewerStatus(); // ตรวจสอบว่า user เป็น reviewer หรือไม่
+    checkReviewerStatus();
+
+    const savedCheckboxState = localStorage.getItem(localStorageKey);
+    if (savedCheckboxState) {
+      setCheckboxState(JSON.parse(savedCheckboxState));
+    }
   }, [projectId, verificationId, selectedRequirements, navigate]);
+
+  useEffect(() => {
+    return () => {
+      setToastShown(false);
+    };
+  }, []);
 
   const fetchCriteria = async () => {
     try {
@@ -43,8 +56,16 @@ const ReqVerification = () => {
         acc[criteria.reqcri_id] = false;
         return acc;
       }, {});
-      setCheckboxState(initialCheckboxState);
       setReqcriList(response.data);
+      const savedCheckboxState = localStorage.getItem(localStorageKey);
+      if (savedCheckboxState) {
+        setCheckboxState({
+          ...initialCheckboxState,
+          ...JSON.parse(savedCheckboxState),
+        });
+      } else {
+        setCheckboxState(initialCheckboxState);
+      }
     } catch (error) {
       console.error("Error fetching criteria:", error);
     } finally {
@@ -64,7 +85,7 @@ const ReqVerification = () => {
   };
 
   const checkReviewerStatus = async () => {
-    const storedUsername = localStorage.getItem("username"); // ดึงชื่อผู้ใช้ที่ล็อกอิน
+    const storedUsername = localStorage.getItem("username");
     if (!storedUsername) {
       alert("Please log in first.");
       return;
@@ -75,11 +96,11 @@ const ReqVerification = () => {
         params: { project_id: projectId, verification_id: verificationId },
       });
 
-      const verification = response.data.find(v => v.id === parseInt(verificationId));
+      const verification = response.data.find((v) => v.id === parseInt(verificationId));
       if (verification && verification.verification_by.includes(storedUsername)) {
-        setIsReviewer(true); // ถ้าเป็น reviewer
+        setIsReviewer(true);
       } else {
-        setIsReviewer(false); // ถ้าไม่ใช่ reviewer
+        setIsReviewer(false);
       }
     } catch (error) {
       console.error("Error checking reviewer status:", error);
@@ -93,8 +114,7 @@ const ReqVerification = () => {
     };
     setCheckboxState(updatedState);
 
-    const isAllChecked = Object.values(updatedState).every((isChecked) => isChecked);
-    setAllChecked(isAllChecked);
+    localStorage.setItem(localStorageKey, JSON.stringify(updatedState));
   };
 
   const handleSave = async () => {
@@ -102,32 +122,35 @@ const ReqVerification = () => {
       alert("You are not authorized to verify this requirement.");
       return;
     }
-
+  
+    const allChecked = Object.values(checkboxState).every((value) => value);
     if (!allChecked) {
-      alert("Please select all checkboxes before saving.");
-      return;
+      // Dismiss any existing toast before showing new one
+      toast.dismiss();
+  
+      if (!toastShown) {
+        toast.success("Criteria Checklist Save", {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+  
+        setToastShown(true); 
+        
+        setTimeout(() => {
+          toast.dismiss(); 
+          navigate(`/Dashboard?project_id=${projectId}`);
+        }, 1500); // Wait for the toast autoClose to trigger before navigating
+        return;
+      }
     }
-
-    if (!projectId || requirementsDetails.length === 0) {
-      alert("Project ID or requirements details are missing. Cannot update status.");
-      return;
-    }
-
-    try {
-      const requirementIds = requirementsDetails.map((req) => req.requirement_id);
-
-      await axios.put("http://localhost:3001/update-requirements-status-verified", {
-        requirement_ids: requirementIds,
-        requirement_status: "VERIFIED",
-      });
-
-      alert("Status updated to VERIFIED successfully.");
-      navigate(`/Dashboard?project_id=${projectId}`);
-    } catch (error) {
-      console.error("Error updating status:", error.response || error.message);
-      alert("Failed to update status.");
-    }
+  
+    // The rest of your code logic...
   };
+  
 
   return (
     <div className="container">
@@ -157,7 +180,7 @@ const ReqVerification = () => {
           )}
         </div>
         <div className="box">
-          <Comment verificationId={verificationId} />  {/* ส่ง verificationId ไปยัง Comment */}
+          <Comment verificationId={verificationId} />
         </div>
       </div>
 

@@ -361,17 +361,27 @@ app.put("/statusrequirement/:id", (req, res) => {
 
 // Delete a requirement
 app.delete('/requirement/:id', (req, res) => {
-    const sql = "DELETE FROM requirement WHERE requirement_id = ?";
     const id = req.params.id;
 
-    db.query(sql, [id], (err, data) => {
+    const deleteReviewerSQL = "DELETE FROM reviewer WHERE requirement_id = ?";
+    const deleteRequirementSQL = "DELETE FROM requirement WHERE requirement_id = ?";
+
+    db.query(deleteReviewerSQL, [id], (err, data) => {
         if (err) {
             console.error(err);
-            return res.status(500).json({ message: "Error deleting requirement" });
+            return res.status(500).json({ message: "Error deleting reviewers" });
         }
-        return res.status(200).json({ message: "Requirement deleted successfully" });
+
+        db.query(deleteRequirementSQL, [id], (err, data) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: "Error deleting requirement" });
+            }
+            return res.status(200).json({ message: "Requirement deleted successfully" });
+        });
     });
 });
+
 
 // Get requirements by project ID
 app.get('/project/:id/requirement', (req, res) => {
