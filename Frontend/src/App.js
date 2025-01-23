@@ -89,7 +89,7 @@ const App = () => {
         <Route path="/Uploadfile" element={<Uploadfile />} />
 
         {/* ทำ version control */}
-        <Route path="/version-control/:id" element={<VersionControl />} />
+        <Route path="/VersionControl" element={<VersionControl />} />
 
         {/* ทำ comment */}
         <Route path="/Comment" element={<Comment />} />

@@ -1,0 +1,35 @@
+.version-control {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .version-control h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .version-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: auto;
+  }
+  
+  .version-table th,
+  .version-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .version-table th {
+    background-color: #f4f4f4;
+  }
+  
+  .version-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .version-table tr:hover {
+    background-color: #f1f1f1;
+  }
+  

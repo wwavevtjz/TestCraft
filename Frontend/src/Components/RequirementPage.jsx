@@ -135,7 +135,7 @@ const RequirementPage = () => {
 
     // สร้างตารางข้อมูล
     const verifiedRequirements = requirementList.filter(
-      (req) => req.requirement_status === "VERIFIED"
+      (req) => req.requirement_status === "VERIFIED" || req.requirement_status === "VALIDATE"
     );
 
     const tableData = verifiedRequirements.map((req) => [
@@ -212,6 +212,10 @@ const RequirementPage = () => {
     navigate(`/ValidationList?project_id=${projectId}`);
   }
 
+  const handleVerControl = () => {
+    navigate(`/VersionControl?project_id=${projectId}`);
+  }
+
   return (
     <div className="requirement-container">
       <div className="req-top-section">
@@ -238,8 +242,12 @@ const RequirementPage = () => {
             <img src={checkmark} alt="checkmark" className="checkmark" /> View Verification and Validation
           </button>
 
-          <button className="version-control-button" onClick={handleVerificationHis}>
+          <button className="version-control-button" onClick={handleVerControl}>
             <img src={history} alt="history" className="history" /> Version Control
+          </button>
+
+          <button className="version-control-button" onClick={handleExportPDF}>
+            <img src={history} alt="history" className="history" /> ExportPDF
           </button>
 
         </div>
@@ -301,7 +309,7 @@ const RequirementPage = () => {
                     }
                     style={{ cursor: "pointer", userSelect: "none" }}
                   >
-                    REQ-{(index + 1).toString().padStart(3, "0")} {/* เพิ่มเลขให้เป็น 3 หลัก */}
+                    REQ-0{data.requirement_id} {/* เพิ่มเลขให้เป็น 3 หลัก */}
                   </td>
                   <td
                     onClick={() =>
@@ -496,7 +504,7 @@ const RequirementPage = () => {
                 </thead>
                 <tbody>
                   {requirementList
-                    .filter((req) => req.requirement_status === "VERIFIED")
+                    .filter((req) => req.requirement_status === "VERIFIED" || req.requirement_status === "VALIDATED" )
                     .map((req) => (
                       <tr key={req.requirement_id}>
                         <td>REQ-0{req.requirement_id}</td>
