@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -12,15 +12,34 @@ const ReqVerification = () => {
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get("project_id");
   const verificationId = queryParams.get("verification_id");
-  const [toastShown, setToastShown] = useState(false);
   const { selectedRequirements } = location.state || {};
   const [reqcriList, setReqcriList] = useState([]);
   const [requirementsDetails, setRequirementsDetails] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkboxState, setCheckboxState] = useState({});
-  const [isReviewer, setIsReviewer] = useState(false);
 
-  const localStorageKey = `checkboxState_${projectId}_${verificationId}`;
+  const checkReviewerStatus = useCallback(async () => {
+    const storedUsername = localStorage.getItem("username");
+    if (!storedUsername) {
+      alert("Please log in first.");
+      return;
+    }
+
+    try {
+      const response = await axios.get("http://localhost:3001/verifications", {
+        params: { project_id: projectId, verification_id: verificationId },
+      });
+
+      const verification = response.data.find((v) => v.id === parseInt(verificationId));
+      if (verification && verification.verification_by.includes(storedUsername)) {
+        // setIsReviewer(true); // Remove if not used
+      } else {
+        // setIsReviewer(false); // Remove if not used
+      }
+    } catch (error) {
+      console.error("Error checking reviewer status:", error);
+    }
+  }, [projectId, verificationId]); // `useCallback` ensures the function is memoized
 
   useEffect(() => {
     if (!projectId || !verificationId) {
@@ -36,35 +55,28 @@ const ReqVerification = () => {
     fetchCriteria();
     checkReviewerStatus();
 
-    const savedCheckboxState = localStorage.getItem(localStorageKey);
-    if (savedCheckboxState) {
-      setCheckboxState(JSON.parse(savedCheckboxState));
-    }
-  }, [projectId, verificationId, selectedRequirements, navigate]);
-
-  useEffect(() => {
-    return () => {
-      setToastShown(false);
-    };
-  }, []);
+  }, [projectId, verificationId, selectedRequirements, navigate, checkReviewerStatus]);
 
   const fetchCriteria = async () => {
     try {
       setLoading(true);
       const response = await axios.get("http://localhost:3001/reqcriteria");
-      const initialCheckboxState = response.data.reduce((acc, criteria) => {
-        acc[criteria.reqcri_id] = false;
-        return acc;
-      }, {});
       setReqcriList(response.data);
-      const savedCheckboxState = localStorage.getItem(localStorageKey);
-      if (savedCheckboxState) {
-        setCheckboxState({
-          ...initialCheckboxState,
-          ...JSON.parse(savedCheckboxState),
-        });
-      } else {
-        setCheckboxState(initialCheckboxState);
+
+      // Load saved checkbox state from localStorage if available
+      const storedUsername = localStorage.getItem("username");
+      if (storedUsername) {
+        const savedCheckboxState = JSON.parse(localStorage.getItem(`checkboxState_${storedUsername}_${projectId}_${verificationId}`));
+        if (savedCheckboxState) {
+          setCheckboxState(savedCheckboxState);
+        } else {
+          // Default to all unchecked if no saved state
+          const initialCheckboxState = response.data.reduce((acc, criteria) => {
+            acc[criteria.reqcri_id] = false;
+            return acc;
+          }, {});
+          setCheckboxState(initialCheckboxState);
+        }
       }
     } catch (error) {
       console.error("Error fetching criteria:", error);
@@ -84,29 +96,6 @@ const ReqVerification = () => {
     }
   };
 
-  const checkReviewerStatus = async () => {
-    const storedUsername = localStorage.getItem("username");
-    if (!storedUsername) {
-      alert("Please log in first.");
-      return;
-    }
-
-    try {
-      const response = await axios.get("http://localhost:3001/verifications", {
-        params: { project_id: projectId, verification_id: verificationId },
-      });
-
-      const verification = response.data.find((v) => v.id === parseInt(verificationId));
-      if (verification && verification.verification_by.includes(storedUsername)) {
-        setIsReviewer(true);
-      } else {
-        setIsReviewer(false);
-      }
-    } catch (error) {
-      console.error("Error checking reviewer status:", error);
-    }
-  };
-
   const handleCheckboxChange = (id) => {
     const updatedState = {
       ...checkboxState,
@@ -114,15 +103,13 @@ const ReqVerification = () => {
     };
     setCheckboxState(updatedState);
 
-    localStorage.setItem(localStorageKey, JSON.stringify(updatedState));
+    const storedUsername = localStorage.getItem("username");
+    if (storedUsername) {
+      localStorage.setItem(`checkboxState_${storedUsername}_${projectId}_${verificationId}`, JSON.stringify(updatedState));
+    }
   };
 
   const handleSave = async () => {
-    if (!isReviewer) {
-      alert("You are not authorized to verify this requirement.");
-      return;
-    }
-
     const allChecked = Object.values(checkboxState).every((value) => value);
 
     if (!allChecked) {
@@ -136,32 +123,75 @@ const ReqVerification = () => {
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
-          onClose: () => navigate(`/Dashboard?project_id=${projectId}`), // Navigate เมื่อ toast ปิด
+          onClose: () => navigate(`/Dashboard?project_id=${projectId}`),
         });
       }
       return;
     }
 
     try {
-      const requirementIds = requirementsDetails.map((req) => req.requirement_id);
+      const storedUsername = localStorage.getItem("username");
+      if (!storedUsername) {
+        alert("Please log in first.");
+        return;
+      }
 
-      await axios.put("http://localhost:3001/update-requirements-status-verified", {
-        requirement_ids: requirementIds,
-        requirement_status: "VERIFIED",
+      const response = await axios.get("http://localhost:3001/verifications", {
+        params: { project_id: projectId, verification_id: verificationId },
       });
+      const verification = response.data.find((v) => v.id === parseInt(verificationId));
 
-      const toastId = "verify-toast";
-      if (!toast.isActive(toastId)) {
-        toast.success("All criteria verified! Status updated to VERIFIED.", {
-          toastId,
-          position: "top-right",
-          autoClose: 1500,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          onClose: () => navigate(`/Dashboard?project_id=${projectId}`),
+      if (verification) {
+        const updatedVerificationBy = verification.verification_by.map((entry) => {
+          const [username] = entry.split(":").map((item) => item.trim());
+          if (username === storedUsername) {
+            return `${username}: true`;
+          }
+          return entry;
         });
+
+        await axios.put("http://localhost:3001/update-verification-true", {
+          project_id: projectId,
+          verification_id: verificationId,
+          verification_by: updatedVerificationBy,
+        });
+
+        const allVerified = updatedVerificationBy.every((entry) => {
+          const [status] = entry.split(":").map((item) => item.trim());
+          return status === "true";
+        });
+
+        if (allVerified) {
+          const requirementIds = requirementsDetails.map((req) => req.requirement_id);
+          await axios.put("http://localhost:3001/update-requirements-status-verified", {
+            requirement_ids: requirementIds,
+            requirement_status: "VERIFIED",
+          });
+
+          const toastId = "verify-toast";
+          if (!toast.isActive(toastId)) {
+            toast.success("All criteria verified! Status updated to VERIFIED.", {
+              toastId,
+              position: "top-right",
+              autoClose: 1500,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              onClose: () => navigate(`/Dashboard?project_id=${projectId}`),
+            });
+          }
+        } else {
+          toast.warning("Not all users have verified. Please wait for everyone to verify.", {
+            position: "top-right",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            onClose: () => navigate(`/Dashboard?project_id=${projectId}`),
+          });
+        }
       }
     } catch (error) {
       console.error("Error updating verification status:", error);
@@ -175,10 +205,6 @@ const ReqVerification = () => {
       });
     }
   };
-
-
-
-
 
   return (
     <div className="container">

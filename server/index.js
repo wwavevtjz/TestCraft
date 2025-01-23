@@ -621,6 +621,10 @@ app.post('/createveri', (req, res) => {
 
 
 
+
+
+
+
 app.get('/verifications', (req, res) => {
     const { project_id, status } = req.query;
 
@@ -742,6 +746,43 @@ app.put('/update-requirements-status-verified', (req, res) => {
         res.status(200).json({ message: "Requirement statuses updated successfully." });
     });
 });
+
+app.put('/update-verification-true', (req, res) => {
+    const { verification_id, verification_by } = req.body;
+
+    if (!verification_id || !Array.isArray(verification_by)) {
+        return res.status(400).json({ message: "Invalid input data." });
+    }
+
+    // ตรวจสอบรูปแบบของ verification_by ให้มี ":"
+    const isValidFormat = verification_by.every((entry) => {
+        return typeof entry === "string" && entry.includes(":");
+    });
+
+    if (!isValidFormat) {
+        return res.status(400).json({ message: "Invalid verification_by format." });
+    }
+
+    const sql = `
+      UPDATE verification
+      SET verification_by = ?
+      WHERE verification_id = ?
+    `;
+
+    db.query(sql, [JSON.stringify(verification_by), verification_id], (err, result) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Failed to update verification_by." });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Verification not found." });
+        }
+
+        res.status(200).json({ message: "Verification updated successfully." });
+    });
+});
+
 
 //-------------------------- VALIDATION ------------------
 // Create Validation
@@ -1498,6 +1539,7 @@ app.post('/createvarcomment', (req, res) => {
         }
     });
 });
+
 
 
 
