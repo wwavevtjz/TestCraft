@@ -76,49 +76,52 @@ const CreateVeri = () => {
     const selectedReviewerNames = Object.keys(selectedReviewers).filter(
       (name) => selectedReviewers[name]
     );
-  
+
     if (!projectId) {
       toast.error("Invalid project ID.");
       return;
     }
-  
+
     if (selectedRequirements.length === 0 || selectedReviewerNames.length === 0) {
       toast.warning("Please select at least one requirement and one reviewer.");
       return;
     }
-  
+
     const storedUsername = localStorage.getItem("username");
     const createBy = storedUsername;
-  
+
     if (!createBy) {
       toast.error("No user found. Please login again.");
       return;
     }
-  
+
     const payload = {
-      requirements: [...new Set(selectedRequirements)], // ลบค่าซ้ำออก
-      reviewers: selectedReviewerNames.map((name) => `${name}: false`), // reviewers เป็น array
+      requirements: [...new Set(selectedRequirements)], // Remove duplicates
+      reviewers: selectedReviewerNames.map((name) => `${name}: false`), // reviewers as array
       project_id: projectId,
       create_by: createBy,
     };
-  
+
     console.log("Payload:", payload);
-  
+
     try {
-      setIsSubmitting(true);  // ตั้งค่า isSubmitting เพื่อปิดปุ่ม
+      setIsSubmitting(true);  // Disable submit button
       const response = await axios.post("http://localhost:3001/createveri", payload);
-  
+
       if (response.status === 201) {
-        toast.success("Verification created successfully!");
-  
+        const toastId = "create-verification-toast"; // Assign toastId
+        if (!toast.isActive(toastId)) {  // Check if toast is active
+          toast.success("Verification created successfully!", { toastId, position: "top-center" });
+        }
+
         setWorkingRequirements((prev) =>
           prev.filter((req) => !selectedRequirements.includes(req.requirement_id))
         );
-  
+
         setSelectedRequirements([]);
         setSelectedReviewers({});
-  
-        // อัปเดตสถานะของ requirements ใน Backend
+
+        // Update the status of requirements in the Backend
         const updateResults = await Promise.allSettled(
           selectedRequirements.map((requirementId) =>
             axios.put(`http://localhost:3001/update-requirements-status-waitingfor-ver/${requirementId}`, {
@@ -126,35 +129,26 @@ const CreateVeri = () => {
             })
           )
         );
-  
-        const successfulUpdates = updateResults.filter(
-          (result) => result.status === "fulfilled"
-        );
-        const failedUpdates = updateResults.filter(
-          (result) => result.status === "rejected"
-        );
-  
-        if (successfulUpdates.length > 0) {
-          toast.success(`${successfulUpdates.length} requirements updated successfully!`);
-        }
-        if (failedUpdates.length > 0) {
-          toast.error(`${failedUpdates.length} requirements failed to update.`);
-          console.error("Failed updates:", failedUpdates);
-        }
+
       } else {
         toast.error(response.data.message || "Failed to create verification(s).");
       }
     } catch (error) {
-      console.error("Error creating verification(s):", error);
+      console.error("Error creating verification:", error);
       toast.error(error.response?.data?.message || "An error occurred. Please try again.");
     } finally {
-      setIsSubmitting(false);  // ยกเลิกการปิดปุ่ม
+      setIsSubmitting(false);  // Re-enable submit button
     }
   };
-  
-  
-  
-  
+
+  // Handle cancel
+  const handleCancel = () => {
+    // Dismiss any active toast message with the specific toastId
+    toast.dismiss("create-verification-toast");
+    navigate(`/Dashboard?project_id=${projectId}`);
+  };
+
+
 
 
   // Handle checkbox for reviewers
@@ -165,15 +159,7 @@ const CreateVeri = () => {
     }));
   };
 
-  // Handle cancel
-  const handleCancel = () => {
-    // ปิด toast ที่กำลังแสดงอยู่
-    if (toastId) {
-      toast.dismiss(toastId);
-    }
-    navigate(`/Dashboard?project_id=${projectId}`);
 
-  };
 
   return (
     <div className="create-verification-container">
