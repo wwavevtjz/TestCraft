@@ -1,19 +1,19 @@
-.create-verification-container {
+.createveri-container {
   padding: 20px;
   font-family: Arial, sans-serif;
 }
 
-h1 {
+.createveri-container h1 {
   text-align: center;
   margin-bottom: 20px;
 }
 
-.content {
+.createveri-content {
   display: flex;
   justify-content: space-between;
 }
 
-.left-panel, .right-panel {
+.createveri-left-panel, .createveri-right-panel {
   width: 48%;
   background: #f9f9f9;
   padding: 20px;
@@ -21,63 +21,56 @@ h1 {
   border-radius: 8px;
 }
 
-.requirements-table {
+.createveri-requirements-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.requirements-table th, .requirements-table td {
+.createveri-requirements-table th, .createveri-requirements-table td {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: left;
 }
 
-.requirements-table th {
+.createveri-requirements-table th {
   background: #f4f4f4;
 }
 
-.reviewer-list {
-  list-style: none;
-  padding: 0;
-}
-
-.reviewer-item {
+.createveri-action-buttons {
   display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.reviewer-item input {
-  margin-right: 10px;
-}
-
-.action-buttons {
-  display: flex;
-  justify-content: center;
+  justify-content: end;
   margin-top: 20px;
 }
 
-.btn-create {
+.createveri-btn-create {
   background: #4caf50;
   color: #fff;
+  align-items: end;
   border: none;
   padding: 10px 20px;
   cursor: pointer;
   margin-right: 10px;
+  border-radius: 4px;
 }
 
-.btn-cancel {
+.createveri-btn-cancel {
   background: #f44336;
   color: #fff;
   border: none;
   padding: 10px 20px;
   cursor: pointer;
+  border-radius: 4px;
 }
 
-.btn-create:hover {
+.createveri-btn-create:hover {
   background: #45a049;
 }
 
-.btn-cancel:hover {
+.createveri-btn-cancel:hover {
   background: #e53935;
+}
+
+.createveri-error-message {
+  color: #ff0000;
+  font-weight: bold;
 }

@@ -1618,6 +1618,165 @@ app.post('/replyvercomment', (req, res) => {
 });
 
 
+// ------------------------- Baseline -------------------------
+// API สำหรับสร้าง Baseline
+
+app.post('/createbaseline', (req, res) => {
+    const { requirement_id, baseline_at } = req.body;
+
+    if (!requirement_id || !requirement_id.length) {
+        return res.status(400).send({ error: "Requirement ID is required" });
+    }
+
+    const formattedDate = new Date(baseline_at)
+        .toISOString()
+        .slice(0, 19)
+        .replace('T', ' '); // "YYYY-MM-DD HH:mm:ss"
+
+    // SQL เพื่อหา baseline_round ล่าสุดในระบบทั้งหมด
+    const findLatestBaselineRoundQuery = `
+        SELECT MAX(baseline_round) AS latest_baseline_round
+        FROM baseline
+    `;
+
+    db.query(findLatestBaselineRoundQuery, (err, result) => {
+        if (err) {
+            console.error("Database error during baseline round check:", err);
+            return res.status(500).send({
+                error: "Failed to fetch the latest baseline round",
+                details: err.sqlMessage || err.message,
+            });
+        }
+
+        // baseline_round ใหม่ = ล่าสุด + 1 (ถ้าไม่มี baseline เลย ให้เริ่มต้นที่ 1)
+        const newBaselineRound = (result[0]?.latest_baseline_round || 0) + 1;
+
+        // เตรียมข้อมูลสำหรับ insert
+        const insertBaselineQuery = `
+            INSERT INTO baseline (requirement_id, baseline_round, baseline_at)
+            VALUES ?
+        `;
+        const baselineValues = requirement_id.map((id) => [
+            id,
+            newBaselineRound,
+            formattedDate,
+        ]);
+
+        // Insert baselines
+        db.query(insertBaselineQuery, [baselineValues], (insertErr, insertResult) => {
+            if (insertErr) {
+                console.error("Database error during baseline insert:", insertErr);
+                return res.status(500).send({
+                    error: "Failed to create baseline",
+                    details: insertErr.sqlMessage || insertErr.message,
+                });
+            }
+
+            // อัปเดต requirement_status สำหรับ requirement_id ที่เกี่ยวข้อง
+            const updateRequirementQuery = `
+                UPDATE requirement
+                SET requirement_status = ?
+                WHERE requirement_id IN (?)
+            `;
+            const requirementStatus = `BASELINE`;
+
+            db.query(updateRequirementQuery, [requirementStatus, requirement_id], (updateErr, updateResult) => {
+                if (updateErr) {
+                    console.error("Database error during requirement update:", updateErr);
+                    return res.status(500).send({
+                        error: "Failed to update requirements",
+                        details: updateErr.sqlMessage || updateErr.message,
+                    });
+                }
+
+                // สร้างข้อมูล response
+                const insertedBaselines = baselineValues.map(([requirementId, baseline_round]) => ({
+                    baseline_id: insertResult.insertId++, // เริ่มจาก insertId แล้วเพิ่มทีละ 1
+                    requirement_id: requirementId,
+                    baseline_round: baseline_round,
+                    baseline_at: formattedDate,
+                }));
+
+                console.log("Inserted Baselines:", insertedBaselines);
+
+                res.status(201).send({
+                    message: "Baseline created successfully",
+                    updatedRequirements: updateResult.affectedRows,
+                    insertedRows: insertResult.affectedRows,
+                    baselines: insertedBaselines,
+                });
+            });
+        });
+    });
+});
+
+app.get("/baselines", (req, res) => {
+    const { project_id } = req.query;
+  
+    if (!project_id) {
+      return res.status(400).send({ error: "Project ID is required" });
+    }
+  
+    const query = `
+      SELECT 
+        b.baseline_round, b.baseline_at, 
+        JSON_ARRAYAGG(r.requirement_id) AS requirements 
+      FROM baseline b
+      JOIN requirement r ON b.requirement_id = r.requirement_id
+      WHERE r.project_id = ?
+      GROUP BY b.baseline_round, b.baseline_at
+      ORDER BY b.baseline_round ASC;
+    `;
+  
+    db.query(query, [project_id], (err, results) => {
+      if (err) {
+        console.error("Database error:", err.message);
+        return res.status(500).send({
+          error: "Failed to fetch baselines",
+          details: err.message,
+        });
+      }
+  
+      const baselines = results.map((row) => ({
+        baseline_round: row.baseline_round,
+        baseline_at: row.baseline_at,
+        requirements: JSON.parse(row.requirements),
+      }));
+  
+      res.status(200).send(baselines);
+    });
+  });
+
+
+app.post('/updaterequirements', (req, res) => {
+    const { requirement_id, requirement_status } = req.body;
+  
+    if (!requirement_id || !requirement_status) {
+      return res.status(400).send({ error: "Requirement ID and status are required." });
+    }
+  
+    const updateQuery = `
+      UPDATE requirement
+      SET requirement_status = ?
+      WHERE requirement_id IN (?)
+    `;
+  
+    db.query(updateQuery, [requirement_status, requirement_id], (err, result) => {
+      if (err) {
+        console.error("Database error during requirement status update:", err);
+        return res.status(500).send({
+          error: "Failed to update requirements.",
+          details: err.sqlMessage || err.message,
+        });
+      }
+  
+      res.status(200).send({
+        message: "Requirement statuses updated successfully.",
+        updatedRows: result.affectedRows,
+      });
+    });
+  });
+  
 
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;

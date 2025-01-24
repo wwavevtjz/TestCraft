@@ -162,20 +162,20 @@ const CreateVeri = () => {
 
 
   return (
-    <div className="create-verification-container">
+    <div className="createveri-container">
       <h1>Create Verification</h1>
-      <div className="content">
+      <div className="createveri-content">
         {/* Left Panel (Requirements Section) */}
-        <div className="left-panel">
+        <div className="createveri-left-panel">
           <h2>Requirements</h2>
           {loading ? (
             <p>Loading requirements...</p>
           ) : requirementsError ? (
-            <p className="error-message">{requirementsError}</p>
+            <p className="createveri-error-message">{requirementsError}</p>
           ) : workingRequirements.length === 0 ? (
             <p>No requirements found in 'WORKING' status.</p>
           ) : (
-            <table className="requirements-table">
+            <table className="createveri-requirements-table">
               <thead>
                 <tr>
                   <th>Select</th>
@@ -209,12 +209,12 @@ const CreateVeri = () => {
         </div>
 
         {/* Right Panel (Reviewers Section) */}
-        <div className="right-panel">
+        <div className="createveri-right-panel">
           <h2>Reviewers</h2>
           {isLoadingMembers ? (
             <p>Loading reviewers...</p>
           ) : membersError ? (
-            <p className="error-message">{membersError}</p>
+            <p className="createveri-error-message">{membersError}</p>
           ) : members.length === 0 ? (
             <p>No reviewers found.</p>
           ) : (
@@ -252,15 +252,15 @@ const CreateVeri = () => {
       </div>
 
       {/* Action Buttons */}
-      <div className="action-buttons">
+      <div className="createveri-action-buttons">
         <button
-          className="btn-create"
+          className="createveri-btn-create"
           onClick={handleCreateVerification}
           disabled={isSubmitting}
         >
           {isSubmitting ? "Creating..." : "Create"}
         </button>
-        <button className="btn-cancel" onClick={handleCancel}>
+        <button className="createveri-btn-cancel" onClick={handleCancel}>
           Cancel
         </button>
       </div>

@@ -9,6 +9,7 @@ import ReqVerification from './Components/ReqVerification';
 import ReqValidation from './Components/ReqValidation';
 import CreateVeri from './Components/CreateVeri';
 import CreateVar from './Components/CreateVar';
+import CreateBaseline from './Components/CreateBaseline';
 import VerificationList from './Components/VerificationList';
 import ValidationList from './Components/ValidationList';
 import VerificationHis from './Components/VerificationHis';
@@ -25,6 +26,7 @@ import ProjectConfig from './Components/ProjectConfig';
 import ViewFile from './Components/ViewFile';
 import VersionControl from './Components/VersionControl';
 import Comment from './Components/Comment';
+import Baseline from './Components/Baseline';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Make sure Bootstrap CSS is imported
 
 
@@ -93,6 +95,11 @@ const App = () => {
 
         {/* ทำ comment */}
         <Route path="/Comment" element={<Comment />} />
+
+        {/* ทำ Baseline */}
+        <Route path="/CreateBaseline" element={<CreateBaseline />} />
+        <Route path="/Baseline" element={<Baseline />} />
+
       </Routes>
     </>
   );

@@ -1,0 +1,89 @@
+.baseline-container {
+    margin: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+  }
+  
+  .baseline-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .baseline-content {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+  }
+  
+  .baseline-left-panel {
+    margin-bottom: 20px;
+  }
+  
+  .baseline-section-title {
+    font-size: 20px;
+    color: #444;
+  }
+  
+  .baseline-loading-message,
+  .baseline-error-message,
+  .baseline-no-data {
+    font-size: 16px;
+    color: #888;
+  }
+  
+  .baseline-requirements-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  
+  .baseline-requirements-table th,
+  .baseline-requirements-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  
+  .baseline-requirements-table th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+  }
+  
+  .baseline-action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  
+  .baseline-create-button {
+    padding: 8px 16px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .baseline-create-button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+  }
+  
+  .baseline-btn-cancel {
+    padding: 8px 16px;
+    font-size: 16px;
+    color: #333;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .baseline-btn-cancel:hover {
+    background-color: #e0e0e0;
+  }
+  

@@ -216,6 +216,10 @@ const RequirementPage = () => {
     navigate(`/VersionControl?project_id=${projectId}`);
   }
 
+  const handleBaseline = () => {
+    navigate(`/Baseline?project_id=${projectId}`);
+  }
+
   return (
     <div className="requirement-container">
       <div className="req-top-section">
@@ -248,6 +252,10 @@ const RequirementPage = () => {
 
           <button className="version-control-button" onClick={handleExportPDF}>
             <img src={history} alt="history" className="history" /> ExportPDF
+          </button>
+
+          <button className="version-control-button" onClick={handleBaseline}>
+            <img src={history} alt="history" className="history" /> Baseline
           </button>
 
         </div>
@@ -373,6 +381,7 @@ const RequirementPage = () => {
             ${data.requirement_status === 'WORKING' ? 'status-working' : ''} 
             ${data.requirement_status === 'WAITING FOR VERIFICATION' ? 'status-waiting-ver' : ''}
             ${data.requirement_status === 'VALIDATION INPROGRESS' ? 'status-val-inprogress' : ''}
+            ${data.requirement_status === 'BASELINE' ? 'status-val-inprogress' : ''}
             `}
                     >
                       {data.requirement_status}
