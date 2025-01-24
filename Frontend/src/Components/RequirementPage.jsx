@@ -360,7 +360,6 @@ const RequirementPage = () => {
                         )
                       }
                       className="action-button edit-req colored-edit-button"
-                      disabled={data.requirement_status === "VERIFIED"} // Disable Edit button if VERIFIED
                     >
                       <FontAwesomeIcon icon={faPen} className="action-icon" />
                     </button>
