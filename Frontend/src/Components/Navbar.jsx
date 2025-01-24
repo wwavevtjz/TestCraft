@@ -30,7 +30,7 @@ function Navbar() {
         <>
             <nav className="navbar">
                 <div className="navbar-brand">
-                    <Link to="/">
+                    <Link to="/Project">
                         <img src={logo} alt="TestCraft Logo" className="logo" />
                     </Link>
                 </div>
