@@ -44,7 +44,7 @@ const ValidationList = () => {
       .then((response) => {
         console.log("API Response:", response.data); // ตรวจสอบข้อมูลจาก API
         const filteredValidations = response.data
-          .filter((validation) => validation.requirement_status === "VALIDATION INPROGRESS")
+          .filter((validation) => validation.requirement_status === "WAITING FOR VALIDATION")
           .map((validation) => ({
             ...validation,
             validation_by: validation.validation_by || [],
