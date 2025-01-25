@@ -1,35 +1,174 @@
-.version-control {
-    padding: 20px;
-    font-family: Arial, sans-serif;
-  }
-  
-  .version-control h1 {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  
-  .version-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: auto;
-  }
-  
-  .version-table th,
-  .version-table td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
-  }
-  
-  .version-table th {
-    background-color: #f4f4f4;
-  }
-  
-  .version-table tr:nth-child(even) {
-    background-color: #f9f9f9;
-  }
-  
-  .version-table tr:hover {
-    background-color: #f1f1f1;
-  }
-  
+/* VersionControl.css */
+.version-control-container {
+  font-family: 'Arial', sans-serif;
+  background-color: #f5f7fa;
+  color: #2c3e50;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+
+.version-control-main-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.version-control-main-table th,
+.version-control-main-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.version-control-main-table th {
+  background-color: #2c3e50;
+  color: white;
+}
+
+.version-control-main-table tr:hover {
+  background-color: #f0f0f0;
+}
+
+.version-control-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.version-control-button:hover {
+  background-color: #2980b9;
+}
+
+.version-control-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.version-control-modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.version-control-modal-content h2 {
+  font-size: 1.25rem;
+  margin-bottom: 16px;
+  color: #2c3e50;
+  text-align: center;
+  font-weight: 600;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 8px;
+}
+
+.version-control-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.version-control-history-table th,
+.version-control-history-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.version-control-history-table th {
+  background-color: #34495e;
+  color: white;
+}
+
+
+.version-control-modal-content button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  margin-top: 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  float: right;
+}
+
+
+.version-control-modal-content button:hover {
+  background-color: #c0392b;
+}
+
+.version-control-header {
+  display: flex;
+  align-items: center;
+  /* จัดแนวตั้งให้อยู่กลาง */
+  justify-content: center;
+  /* จัดแนวนอนให้อยู่กลาง */
+  gap: 20px;
+  /* เพิ่มระยะห่างระหว่าง img และ h1 */
+}
+
+.version-control-title {
+  font-size: 1.8rem;
+  margin-right: 70px;
+  color: #34495e;
+  text-align: center;
+  flex-grow: 1;
+  /* ทำให้ h1 ขยายเต็มที่ในพื้นที่ที่เหลือ */
+}
+
+.version-control-backbutton {
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  border: 1px solid #3498db;
+  /* สีน้ำเงินเป็นสีหลัก */
+  color: #3498db;
+  /* สีตัวอักษร */
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.version-control-backbutton:hover {
+  background-color: #3498db;
+  color: white;
+  border-color: #2980b9;
+}
+
+.backfromvercontrol {
+  width: 20px;
+  /* ขนาดของไอคอน */
+  height: auto;
+  margin-right: 8px;
+  /* ระยะห่างระหว่างไอคอนและข้อความ */
+}
+
+.version-control-backbutton:focus {
+  outline: none;
+  /* เอาขอบออกเมื่อปุ่มถูกคลิก */
+}
+
+.version-control-backbutton:active {
+  transform: scale(0.98);
+  /* ขนาดปุ่มจะเล็กลงเล็กน้อยเมื่อคลิก */
+}

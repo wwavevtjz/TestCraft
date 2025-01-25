@@ -11,6 +11,10 @@ import checkmark from "../image/check_mark.png";
 import close from "../image/close.png";
 import verified from "../image/verified.png";
 import history from "../image/history.png";
+import createvervar from "../image/createvervar.png";
+import verificationlist from "../image/white_list.png";
+import validationlist from "../image/accepted_document.png";
+import version_control from "../image/version_control.png";
 import { jsPDF } from "jspdf"
 import "jspdf-autotable";
 import clearsearch from '../image/clearsearch.png'
@@ -20,7 +24,6 @@ Modal.setAppElement("#root"); // For accessibility
 
 const RequirementPage = () => {
   const [requirementList, setRequirementList] = useState([]);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -212,8 +215,9 @@ const RequirementPage = () => {
     navigate(`/ValidationList?project_id=${projectId}`);
   }
 
+  // ตัวอย่างฟังก์ชัน handleVerControl ที่จะนำข้อมูลไปยังหน้า VersionControl
   const handleVerControl = () => {
-    navigate(`/VersionControl?project_id=${projectId}`);
+    navigate(`/VersionControl?project_id=${projectId}`, { state: { requirementList, projectName } });
   }
 
   const handleBaseline = () => {
@@ -224,41 +228,52 @@ const RequirementPage = () => {
     <div className="requirement-container">
       <div className="req-top-section">
         <h1 className="requirement-title">Project {projectName || projectId} Requirements</h1>
-        <div className="req-action-buttons">
+        <div className="req-top-section">
+          <div className="req-action-buttons">
 
-          <button className="create-verification-button" onClick={handleCreateVeri}>
-            <img src={history} alt="history" className="history" />Create Verification
-          </button>
+            {/* Create Ver and Ver List */}
+            <div className="ver-section">
+              <button className="create-verification-button" onClick={handleCreateVeri}>
+                <img src={createvervar} alt="createver" className="createver" /> Create Verification
+              </button>
 
-          <button className="verifylist-button" onClick={handleVerilist}>
-            <img src={history} alt="history" className="history" /> Verification List
-          </button>
+              <button className="verifylist-button" onClick={handleVerilist}>
+                <img src={verificationlist} alt="verificationlist" className="verificationlist" /> Verification List
+              </button>
+            </div>
 
-          <button className="CreateVar-button" onClick={handleCreateVar}>
-            <img src={history} alt="history" className="history" /> Create Validation
-          </button>
+            {/* Create Var and Var List */}
+            <div className="var-section">
+              <button className="CreateVar-button" onClick={handleCreateVar}>
+                <img src={createvervar} alt="createvervar" className="createvervar" /> Create Validation
+              </button>
 
-          <button className="validation-button" onClick={handleVarilist}>
-            <img src={history} alt="history" className="history" /> Validation List
-          </button>
+              <button className="validation-button" onClick={handleVarilist}>
+                <img src={validationlist} alt="validationlist" className="validationlist" /> Validation List
+              </button>
+            </div>
 
-          <button className="viewvervar-button" onClick={handleVerificationHis}>
-            <img src={checkmark} alt="checkmark" className="checkmark" /> View Verification and Validation
-          </button>
+            {/* Other Action Buttons */}
+            <div className="other-buttons">
+              <button className="viewvervar-button" onClick={handleVerificationHis}>
+                <img src={checkmark} alt="checkmark" className="checkmark" /> View Verification and Validation
+              </button>
 
-          <button className="version-control-button" onClick={handleVerControl}>
-            <img src={history} alt="history" className="history" /> Version Control
-          </button>
+              <button className="version-control-button" onClick={handleVerControl}>
+                <img src={version_control} alt="version_control" className="version_control" /> Version Control
+              </button>
 
-          <button className="version-control-button" onClick={handleExportPDF}>
-            <img src={history} alt="history" className="history" /> ExportPDF
-          </button>
+              <button className="version-control-button" onClick={handleExportPDF}>
+                <img src={history} alt="history" className="history" /> ExportPDF
+              </button>
 
-          <button className="version-control-button" onClick={handleBaseline}>
-            <img src={history} alt="history" className="history" /> Baseline
-          </button>
-
+              <button className="version-control-button" onClick={handleBaseline}>
+                <img src={history} alt="history" className="history" /> Baseline
+              </button>
+            </div>
+          </div>
         </div>
+
       </div>
       {alertMessage && <p className="alert-message">{alertMessage}</p>}
       <div className="req-search">
@@ -379,8 +394,8 @@ const RequirementPage = () => {
             ${data.requirement_status === 'VALIDATED' ? 'status-validated' : ''} 
             ${data.requirement_status === 'WORKING' ? 'status-working' : ''} 
             ${data.requirement_status === 'WAITING FOR VERIFICATION' ? 'status-waiting-ver' : ''}
-            ${data.requirement_status === 'VALIDATION INPROGRESS' ? 'status-val-inprogress' : ''}
-            ${data.requirement_status === 'BASELINE' ? 'status-val-inprogress' : ''}
+            ${data.requirement_status === 'WAITING FOR VALIDATION' ? 'status-val-inprogress' : ''}
+            ${data.requirement_status === 'BASELINE' ? 'status-baseline' : ''}
             `}
                     >
                       {data.requirement_status}
@@ -424,8 +439,8 @@ const RequirementPage = () => {
                     <td>{file.filereq_id}</td> {/* แสดง `filereq_id` */}
                     <td>{file.title || file.filereq_name}</td> {/* ใช้ `title` หรือ `filereq_name` */}
                     <td>
+                      {/* เช็คว่ามี `requirement_id` หรือไม่ */}
                       {file.requirement_id ? `REQ-${file.requirement_id.toString().padStart(3, "0")}` : "N/A"}
-                      {/* แสดง `requirement_id` และทำให้เป็น 3 หลัก */}
                     </td>
                     <td className="file-actions">
                       <button
@@ -462,6 +477,7 @@ const RequirementPage = () => {
                 ))}
               </tbody>
 
+
             </table>
           )}
         </div>
@@ -485,6 +501,7 @@ const RequirementPage = () => {
             }
             setFiles((prevFiles) => [newFile, ...prevFiles]); // Add new file to the top of the list
           }}
+          projectId={projectId}
         />
       </Modal>
 
@@ -512,7 +529,7 @@ const RequirementPage = () => {
                 </thead>
                 <tbody>
                   {requirementList
-                    .filter((req) => req.requirement_status === "VERIFIED" || req.requirement_status === "VALIDATED" )
+                    .filter((req) => req.requirement_status === "VERIFIED" || req.requirement_status === "VALIDATED")
                     .map((req) => (
                       <tr key={req.requirement_id}>
                         <td>REQ-0{req.requirement_id}</td>
@@ -531,11 +548,6 @@ const RequirementPage = () => {
           </div>
         </div>
       </Modal>
-
-
-
-
-
 
 
     </div>

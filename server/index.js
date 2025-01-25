@@ -312,36 +312,36 @@ app.put("/requirement/:id", (req, res) => {
 
 // Add a new requirement for a specific project
 app.post('/requirement', (req, res) => {
-    const {
-        requirement_name,
-        requirement_type,
-        requirement_description,
-        requirement_status,
-        project_id,
-        filereq_ids // array ของ filereq_id
-    } = req.body;
+    const { requirement_name, requirement_type, requirement_description, requirement_status, project_id, filereq_ids } = req.body;
 
     // ตรวจสอบว่ามีข้อมูลที่จำเป็นทั้งหมดหรือไม่
     if (!requirement_name || !requirement_type || !requirement_description || !requirement_status || !project_id || !filereq_ids || !Array.isArray(filereq_ids)) {
         return res.status(400).json({ message: "Missing required fields or filereq_ids is not an array" });
     }
 
-    // แปลง filereq_ids เป็น JSON string
     const filereqIdsJson = JSON.stringify(filereq_ids);
 
     // สร้าง SQL query สำหรับการแทรกข้อมูล
     const sql = "INSERT INTO requirement (requirement_name, requirement_type, requirement_description, requirement_status, project_id, filereq_id) VALUES (?, ?, ?, ?, ?, ?)";
     const values = [requirement_name, requirement_type, requirement_description, requirement_status, project_id, filereqIdsJson];
 
-    // เรียกใช้ SQL query
     db.query(sql, values, (err, data) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ message: "Error adding requirement" });
         }
-        return res.status(201).json({ message: "Requirement added successfully", data });
+
+        // ต้องการส่ง requirement_id กลับมาจาก response
+        const requirementId = data.insertId; // กรณีนี้เราใช้ insertId เพื่อดึง requirement_id ที่ถูกสร้างขึ้นมาใหม่
+
+        return res.status(201).json({
+            message: "Requirement added successfully",
+            requirement_id: requirementId, // ส่ง requirement_id กลับมา
+            data
+        });
     });
 });
+
 
 // PUT /requirement/:id - Update requirement status
 app.put("/statusrequirement/:id", (req, res) => {
@@ -363,24 +363,36 @@ app.put("/statusrequirement/:id", (req, res) => {
 app.delete('/requirement/:id', (req, res) => {
     const id = req.params.id;
 
+    const deleteHistorySQL = "DELETE FROM historyreq WHERE requirement_id = ?";
     const deleteReviewerSQL = "DELETE FROM reviewer WHERE requirement_id = ?";
     const deleteRequirementSQL = "DELETE FROM requirement WHERE requirement_id = ?";
 
-    db.query(deleteReviewerSQL, [id], (err, data) => {
+    // ลบข้อมูลใน historyreq ก่อน
+    db.query(deleteHistorySQL, [id], (err, data) => {
         if (err) {
             console.error(err);
-            return res.status(500).json({ message: "Error deleting reviewers" });
+            return res.status(500).json({ message: "Error deleting history" });
         }
 
-        db.query(deleteRequirementSQL, [id], (err, data) => {
+        // ลบข้อมูลใน reviewer
+        db.query(deleteReviewerSQL, [id], (err, data) => {
             if (err) {
                 console.error(err);
-                return res.status(500).json({ message: "Error deleting requirement" });
+                return res.status(500).json({ message: "Error deleting reviewers" });
             }
-            return res.status(200).json({ message: "Requirement deleted successfully" });
+
+            // ลบข้อมูลใน requirement
+            db.query(deleteRequirementSQL, [id], (err, data) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ message: "Error deleting requirement" });
+                }
+                return res.status(200).json({ message: "Requirement deleted successfully" });
+            });
         });
     });
 });
+
 
 
 // Get requirements by project ID
@@ -807,12 +819,12 @@ app.post('/createvalidation', async (req, res) => {
             JSON.stringify(requirements), // Convert requirements array to JSON
             create_by,
             new Date(),
-            "VALIDATION INPROGRESS",
+            "WAITING FOR VALIDATION",
         ]);
 
         // Update requirement statuses for all selected requirements
         await db.query(updateRequirementStatusQuery, [
-            "VALIDATION INPROGRESS",
+            "WAITING FOR VALIDATION",
             requirements,
         ]);
 
@@ -966,27 +978,36 @@ app.post('/login', (req, res) => {
 // ------------------------- File Upload -------------------------
 // Upload file
 app.post("/upload", upload.single("file"), (req, res) => {
-    const { title } = req.body;
+    const { title, project_id } = req.body;  // รับค่าจาก form data
     const file = req.file;
 
+    // ตรวจสอบว่าไฟล์ถูกส่งมา
     if (!file) {
         return res.status(400).json({ message: "Please upload a file." });
     }
 
+    // ตรวจสอบว่า title ถูกกรอกหรือไม่
     if (!title) {
         return res.status(400).json({ message: "Title is required." });
     }
 
+    // ตรวจสอบว่าไฟล์เป็น PDF
     if (file.mimetype !== "application/pdf") {
         return res.status(400).json({ message: "Only PDF files are allowed." });
     }
 
+    // ตรวจสอบขนาดไฟล์
     if (file.size > 10 * 1024 * 1024) {
         return res.status(400).json({ message: "File size exceeds 10MB." });
     }
 
-    const sql = "INSERT INTO file_requirement (filereq_name, filereq_data) VALUES (?, ?)";
-    const values = [title, file.buffer];
+    // ตรวจสอบว่า project_id มีค่า
+    if (!project_id) {
+        return res.status(400).json({ message: "Project ID is required." });
+    }
+
+    const sql = "INSERT INTO file_requirement (filereq_name, filereq_data, project_id) VALUES (?, ?, ?)";
+    const values = [title, file.buffer, project_id];  // ส่งค่า project_id
 
     db.query(sql, values, (err, result) => {
         if (err) {
@@ -997,6 +1018,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
         res.status(200).json({ message: "File uploaded successfully.", fileId: result.insertId });
     });
 });
+
 
 
 
@@ -1712,11 +1734,11 @@ app.post('/createbaseline', (req, res) => {
 
 app.get("/baselines", (req, res) => {
     const { project_id } = req.query;
-  
+
     if (!project_id) {
-      return res.status(400).send({ error: "Project ID is required" });
+        return res.status(400).send({ error: "Project ID is required" });
     }
-  
+
     const query = `
       SELECT 
         b.baseline_round, b.baseline_at, 
@@ -1727,56 +1749,104 @@ app.get("/baselines", (req, res) => {
       GROUP BY b.baseline_round, b.baseline_at
       ORDER BY b.baseline_round ASC;
     `;
-  
+
     db.query(query, [project_id], (err, results) => {
-      if (err) {
-        console.error("Database error:", err.message);
-        return res.status(500).send({
-          error: "Failed to fetch baselines",
-          details: err.message,
-        });
-      }
-  
-      const baselines = results.map((row) => ({
-        baseline_round: row.baseline_round,
-        baseline_at: row.baseline_at,
-        requirements: JSON.parse(row.requirements),
-      }));
-  
-      res.status(200).send(baselines);
+        if (err) {
+            console.error("Database error:", err.message);
+            return res.status(500).send({
+                error: "Failed to fetch baselines",
+                details: err.message,
+            });
+        }
+
+        const baselines = results.map((row) => ({
+            baseline_round: row.baseline_round,
+            baseline_at: row.baseline_at,
+            requirements: JSON.parse(row.requirements),
+        }));
+
+        res.status(200).send(baselines);
     });
-  });
+});
 
 
 app.post('/updaterequirements', (req, res) => {
     const { requirement_id, requirement_status } = req.body;
-  
+
     if (!requirement_id || !requirement_status) {
-      return res.status(400).send({ error: "Requirement ID and status are required." });
+        return res.status(400).send({ error: "Requirement ID and status are required." });
     }
-  
+
     const updateQuery = `
       UPDATE requirement
       SET requirement_status = ?
       WHERE requirement_id IN (?)
     `;
-  
+
     db.query(updateQuery, [requirement_status, requirement_id], (err, result) => {
-      if (err) {
-        console.error("Database error during requirement status update:", err);
-        return res.status(500).send({
-          error: "Failed to update requirements.",
-          details: err.sqlMessage || err.message,
+        if (err) {
+            console.error("Database error during requirement status update:", err);
+            return res.status(500).send({
+                error: "Failed to update requirements.",
+                details: err.sqlMessage || err.message,
+            });
+        }
+
+        res.status(200).send({
+            message: "Requirement statuses updated successfully.",
+            updatedRows: result.affectedRows,
         });
-      }
-  
-      res.status(200).send({
-        message: "Requirement statuses updated successfully.",
-        updatedRows: result.affectedRows,
-      });
     });
-  });
-  
+});
+
+//------------------------------HISTORY REQUIREMENT----------------------------------
+//บันทึกลงตาราง HISTORY REQUIREMENT
+app.post('/historyReqWorking', (req, res) => {
+    console.log('Request Body:', req.body);
+
+    const sql = `
+        INSERT INTO historyreq 
+        (requirement_id, requirement_status) 
+        VALUES (?, ?)
+    `;
+    const values = [
+        req.body.requirement_id,
+        req.body.requirement_status,
+    ];
+
+    db.query(sql, values, (err, data) => {
+        if (err) {
+            console.error('Database Error:', err);
+            return res.status(500).json({ message: "Error adding to historyreq" });
+        }
+        return res.status(200).json({ message: "History added successfully", data });
+    });
+});
+
+//เเสดง HISTORY REQUIREMENT จาก REQ-ID นั้นที่กด VIEW
+app.get('/getHistoryByRequirementId', (req, res) => {
+    const requirementId = req.query.requirement_id;
+
+    if (!requirementId) {
+        return res.status(400).json({ message: "Missing requirement_id" });
+    }
+
+    const sql = `
+        SELECT * FROM historyreq 
+        WHERE requirement_id = ? 
+        ORDER BY historyreq_at ASC;
+    `;
+
+    db.query(sql, [requirementId], (err, data) => {
+        if (err) {
+            console.error('Database Error:', err);
+            return res.status(500).json({ message: "Error fetching history" });
+        }
+        console.log('Fetched History:', data);  // ตรวจสอบว่าได้รับข้อมูลจากฐานข้อมูล
+        return res.status(200).json({ message: "History fetched successfully", data });
+    });
+
+});
 
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;

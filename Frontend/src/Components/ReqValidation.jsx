@@ -61,12 +61,35 @@ const ReqValidation = () => {
 
     try {
       const requirementIds = requirementsDetails.map((req) => req.requirement_id);
+
+      // Step 1: Update the status of the requirements to "VALIDATED"
       await axios.put("http://localhost:3001/update-requirements-status-validated", {
         requirement_ids: requirementIds,
         requirement_status: "VALIDATED",
       });
+
+      // Step 2: Record history for each requirement in historyReqWorking with "VALIDATED" status
+      for (const requirementId of requirementIds) {
+        const historyReqData = {
+          requirement_id: requirementId,
+          requirement_status: "VALIDATED",  // Set status to "VALIDATED"
+        };
+
+        // Send to historyReqWorking
+        const historyResponse = await axios.post(
+          "http://localhost:3001/historyReqWorking",
+          historyReqData
+        );
+
+        if (historyResponse.status !== 200) {
+          console.error("Failed to add history for requirement:", requirementId);
+        }
+      }
+
+      // Show success message
       toast.success("Status updated to VALIDATED successfully.");
       navigate(`/Dashboard?project_id=${projectId}`);
+
     } catch (error) {
       console.error("Error updating status:", error.response || error.message);
       toast.error("Failed to update status.");

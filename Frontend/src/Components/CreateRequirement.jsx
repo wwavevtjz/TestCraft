@@ -33,47 +33,74 @@ const CreateRequirement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ตรวจสอบว่าข้อมูลที่กรอกครบถ้วนหรือไม่
     console.log("Form Data:", requirementStatement, requirementType, description, selectedFileIds);
 
+    // ตรวจสอบว่าฟอร์มมีข้อมูลครบหรือไม่
     if (!requirementStatement || !requirementType || !description || selectedFileIds.length === 0) {
       setError("Please fill in all fields.");
       return;
     }
 
-    // สร้างข้อมูลที่ต้องส่งไปที่เซิร์ฟเวอร์
     const newRequirement = {
       requirement_name: requirementStatement,
       requirement_type: requirementType,
       requirement_description: description,
       project_id: projectId,
-      filereq_ids: selectedFileIds, // ส่งเป็น array ของ filereq_id (ไม่ต้อง stringify)
-      requirement_status: "WORKING",
+      filereq_ids: selectedFileIds,
+      requirement_status: "WORKING", // กำหนดสถานะเริ่มต้นเป็น WORKING
     };
 
-    // ส่งข้อมูลไปยัง API
     try {
+      // ส่งคำขอไปยัง API เพื่อสร้าง requirement ใหม่
       const response = await axios.post("http://localhost:3001/requirement", newRequirement);
-      console.log("API Response:", response); // ตรวจสอบการตอบกลับจาก API
+
+      // ตรวจสอบว่าการสร้าง requirement สำเร็จหรือไม่
       if (response.status === 201) {
-        alert("Requirement created successfully");
-        navigate(`/Dashboard?project_id=${projectId}`, {
-          state: { selectedSection: "Requirement" },
-        });
+        console.log("Requirement created successfully:", response.data);
+
+        const requirementId = response.data.requirement_id; // ดึง requirement_id จาก response
+
+        // ตรวจสอบว่า requirement_id มีค่า
+        if (!requirementId) {
+          throw new Error("Requirement ID is missing from response.");
+        }
+
+        // ส่งข้อมูลไปยัง API เพื่อบันทึกประวัติใน historyreq
+        const historyReqData = {
+          requirement_id: requirementId,
+          requirement_status: newRequirement.requirement_status,
+        };
+
+        const historyResponse = await axios.post("http://localhost:3001/historyReqWorking", historyReqData);
+
+        if (historyResponse.status === 200) {
+          console.log("History added successfully:", historyResponse.data);
+          alert("Requirement and history added successfully");
+
+          // นำทางไปยังหน้า Dashboard
+          navigate(`/Dashboard?project_id=${projectId}`, {
+            state: { selectedSection: "Requirement" },
+          });
+        } else {
+          console.error("Failed to add history:", historyResponse);
+          alert("Failed to add history");
+        }
       } else {
         console.error("Failed to create requirement:", response);
         alert("Failed to create requirement");
       }
     } catch (error) {
-      console.error("Error creating requirement:", error);
-      if (error.response) {
-        console.log("API Error Response:", error.response.data); // แสดงข้อความ error ที่ได้รับจาก API
-        setError(error.response.data.message || "Something went wrong");
-      } else {
-        setError("Network error. Please try again.");
-      }
+      console.error("Error:", error);
+      setError(error.response?.data?.message || "Something went wrong");
     }
   };
+
+
+
+
+
+
+
 
   // ฟังก์ชันสำหรับการจัดการการเปลี่ยนแปลงของ react-select
   const handleFileChange = (selectedOptions) => {

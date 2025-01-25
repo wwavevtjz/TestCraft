@@ -99,7 +99,7 @@ const ReqVerification = () => {
 
   const handleSave = async () => {
     const allChecked = Object.values(checkboxState).every((value) => value);
-
+  
     if (!allChecked) {
       toast.success("Criteria Checklist Saved", {
         position: "top-right",
@@ -112,19 +112,19 @@ const ReqVerification = () => {
       });
       return;
     }
-
+  
     try {
       const storedUsername = localStorage.getItem("username");
       if (!storedUsername) {
         alert("Please log in first.");
         return;
       }
-
+  
       const response = await axios.get("http://localhost:3001/verifications", {
         params: { project_id: projectId, verification_id: verificationId },
       });
       const verification = response.data.find((v) => v.id === parseInt(verificationId));
-
+  
       if (verification) {
         const updatedVerificationBy = verification.verification_by.map((entry) => {
           const [username, status] = entry.split(":").map((item) => item.trim());
@@ -133,25 +133,45 @@ const ReqVerification = () => {
           }
           return entry;
         });
-
+  
         await axios.put("http://localhost:3001/update-verification-true", {
           project_id: projectId,
           verification_id: verificationId,
           verification_by: updatedVerificationBy,
         });
-
+  
         const allVerified = updatedVerificationBy.every((entry) => {
           const [, status] = entry.split(":").map((item) => item.trim());
           return status === "true";
         });
-
+  
         if (allVerified) {
           const requirementIds = requirementsDetails.map((req) => req.requirement_id);
+          
+          // Update requirement status to "VERIFIED" in the Backend
           await axios.put("http://localhost:3001/update-requirements-status-verified", {
             requirement_ids: requirementIds,
             requirement_status: "VERIFIED",
           });
-
+  
+          // Loop through each requirement and log history in historyReqWorking with "VERIFIED"
+          for (const requirementId of requirementIds) {
+            const historyReqData = {
+              requirement_id: requirementId,
+              requirement_status: "VERIFIED",  // Set status to "VERIFIED"
+            };
+  
+            // Send to historyReqWorking
+            const historyResponse = await axios.post(
+              "http://localhost:3001/historyReqWorking",
+              historyReqData
+            );
+  
+            if (historyResponse.status !== 200) {
+              console.error("Failed to add history for requirement:", requirementId);
+            }
+          }
+  
           toast.success("All criteria verified! Status updated to VERIFIED.", {
             position: "top-right",
             autoClose: 1500,
@@ -185,6 +205,7 @@ const ReqVerification = () => {
       });
     }
   };
+  
 
   return (
     <div className="container">

@@ -142,3 +142,82 @@
     background-color: #d32f2f;
     /* สีเมื่อ hover */
 }
+
+/* ส่วนของตาราง Requirement History */
+.requirement-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* ส่วนของแถวหัวตาราง */
+.requirement-history-table th {
+    background-color: #2c3e50;
+    color: white;
+    padding: 12px 20px;
+    font-weight: bold;
+    text-align: left;
+}
+
+/* กำหนดขนาดและรูปแบบของเซลล์ภายในตาราง */
+.requirement-history-table td {
+    background-color: #fff;
+    padding: 12px 20px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+/* เมื่อ hover แถวตาราง */
+.requirement-history-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* ขอบล่างของแถวตาราง */
+.requirement-history-table td,
+.requirement-history-table th {
+    border-bottom: 1px solid #ddd;
+}
+
+/* กำหนดลักษณะการแสดงผลสำหรับข้อความ "Loading history..." */
+.requirement-history-table td[colspan="3"] {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.2em;
+    color: #888;
+}
+
+/* ปรับขนาดคอลัมน์ให้เหมาะสม */
+.requirement-history-table th,
+.requirement-history-table td {
+    min-width: 150px;
+    /* ปรับให้คอลัมน์มีขนาดพอดี */
+}
+
+/* เพิ่มกรอบให้กับตาราง */
+.requirement-history-table {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* เพิ่มความนุ่มนวลให้กับการ hover */
+.requirement-history-table tr:hover {
+    background-color: #e8f5e9;
+    cursor: pointer;
+}
+
+/* การจัดการภายในตารางให้ดูเป็นระเบียบ */
+.requirement-history-table td {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #555;
+}
+
+/* จัดให้ข้อความในตารางแสดงผลเป็นกลาง */
+.requirement-history-table th,
+.requirement-history-table td {
+    text-align: center;
+}

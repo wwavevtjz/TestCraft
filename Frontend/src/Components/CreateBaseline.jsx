@@ -58,51 +58,69 @@ const CreateBaseline = () => {
       toast.error("Invalid project ID.");
       return;
     }
-  
+
     if (selectedRequirements.length === 0) {
       toast.warning("Please select at least one requirement.");
       return;
     }
-  
+
     if (isSubmitting) {
       toast.warning("Submitting in progress. Please wait.");
       return;
     }
-  
+
     setIsSubmitting(true);
-  
+
     const baselineAt = new Date().toISOString();
-  
+
     const payload = {
       requirement_id: selectedRequirements,
       baseline_at: baselineAt,
     };
-  
+
     try {
       const response = await axios.post(
         "http://localhost:3001/createbaseline",
         payload
       );
-  
+
       if (response.status === 201) {
         const result = response.data;
-  
+
         toast.success("Baseline set successfully!");
-  
-        // อัปเดต requirement_status เป็น 'BASELINE_X' ผ่าน API
+
+        // Step 1: Update requirement status to 'BASELINE'
         const updatePayload = {
           requirement_id: selectedRequirements,
           requirement_status: `BASELINE`,
         };
-  
+
         await axios.post("http://localhost:3001/updaterequirements", updatePayload);
-  
-        // กรองออกจากรายการและล้างการเลือก
+
+        // Step 2: Record history for each requirement in historyReqWorking with "BASELINE" status
+        for (const requirementId of selectedRequirements) {
+          const historyReqData = {
+            requirement_id: requirementId,
+            requirement_status: "BASELINE",  // Set status to "BASELINE"
+          };
+
+          // Send to historyReqWorking
+          const historyResponse = await axios.post(
+            "http://localhost:3001/historyReqWorking",
+            historyReqData
+          );
+
+          if (historyResponse.status !== 200) {
+            console.error("Failed to add history for requirement:", requirementId);
+          }
+        }
+
+        // Step 3: Filter out processed requirements and clear selection
         setValidatedRequirements((prev) =>
           prev.filter((req) => !selectedRequirements.includes(req.requirement_id))
         );
         setSelectedRequirements([]);
-  
+
         console.log("Baseline and requirement statuses updated successfully.");
       } else {
         throw new Error(response.data.message || "Failed to set baseline.");
@@ -115,11 +133,12 @@ const CreateBaseline = () => {
     } finally {
       setIsSubmitting(false);
     }
-  
+
     navigate(`/Baseline?project_id=${projectId}`);
   };
-  
-  
+
+
+
 
   const handleCancel = () => {
     navigate(`/Baseline?project_id=${projectId}`);
@@ -169,7 +188,7 @@ const CreateBaseline = () => {
           )}
         </div>
       </div>
-  
+
       <div className="baseline-action-buttons">
         <button
           className="baseline-create-button"
@@ -183,7 +202,7 @@ const CreateBaseline = () => {
         </button>
       </div>
     </div>
-  );  
+  );
 };
 
 export default CreateBaseline;

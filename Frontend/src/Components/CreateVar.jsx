@@ -47,68 +47,87 @@ const CreateVar = () => {
 
   const handleCreateValidation = async () => {
     if (!projectId) {
-        if (toastId) toast.dismiss(toastId);
-        setToastId(toast.error("Invalid project ID."));
-        return;
+      if (toastId) toast.dismiss(toastId);
+      setToastId(toast.error("Invalid project ID."));
+      return;
     }
-
+  
     if (selectedRequirements.length === 0) {
-        if (toastId) toast.dismiss(toastId);
-        setToastId(toast.warning("Please select at least one requirement."));
-        return;
+      if (toastId) toast.dismiss(toastId);
+      setToastId(toast.warning("Please select at least one requirement."));
+      return;
     }
-
+  
     const storedUsername = localStorage.getItem("username");
     const createBy = storedUsername;
-
+  
     if (!createBy) {
-        if (toastId) toast.dismiss(toastId);
-        setToastId(toast.error("No user found. Please login again."));
-        return;
+      if (toastId) toast.dismiss(toastId);
+      setToastId(toast.error("No user found. Please login again."));
+      return;
     }
-
+  
     const payload = {
-        requirements: [...new Set(selectedRequirements)], // Unique requirements
-        project_id: projectId,
-        create_by: createBy,
+      requirements: [...new Set(selectedRequirements)], // Unique requirements
+      project_id: projectId,
+      create_by: createBy,
     };
-
+  
     if (isSubmitting) {
-        if (toastId) toast.dismiss(toastId);
-        setToastId(toast.warning("Submitting in progress. Please wait."));
-        return;
+      if (toastId) toast.dismiss(toastId);
+      setToastId(toast.warning("Submitting in progress. Please wait."));
+      return;
     }
-
+  
     setIsSubmitting(true);
-
+  
     try {
-        const response = await axios.post("http://localhost:3001/createvalidation", payload);
-
-        if (response.status === 201) {
-            if (toastId) toast.dismiss(toastId);
-            setToastId(toast.success("Validation created successfully!"));
-
-            // Update frontend state
-            setVerifiedRequirements((prev) =>
-                prev.filter((req) => !selectedRequirements.includes(req.requirement_id))
-            );
-            setSelectedRequirements([]);
-        } else {
-            if (toastId) toast.dismiss(toastId);
-            setToastId(toast.error(response.data.message || "Failed to create validation."));
-        }
-    } catch (error) {
-        console.error("Error creating validation:", error);
-
-        const errorMessage =
-            error.response?.data?.message || "An error occurred. Please try again.";
+      const response = await axios.post("http://localhost:3001/createvalidation", payload);
+  
+      if (response.status === 201) {
         if (toastId) toast.dismiss(toastId);
-        setToastId(toast.error(errorMessage));
+        setToastId(toast.success("Validation created successfully!"));
+  
+        // Update frontend state
+        setVerifiedRequirements((prev) =>
+          prev.filter((req) => !selectedRequirements.includes(req.requirement_id))
+        );
+        setSelectedRequirements([]);
+  
+        // Loop through selected requirements and add them to history with status "WAITING FOR VALIDATION"
+        for (const requirementId of selectedRequirements) {
+          const historyReqData = {
+            requirement_id: requirementId,
+            requirement_status: "WAITING FOR VALIDATION",  // Set status to "WAITING FOR VALIDATION"
+          };
+  
+          // Send to historyReqWorking
+          const historyResponse = await axios.post(
+            "http://localhost:3001/historyReqWorking",
+            historyReqData
+          );
+  
+          if (historyResponse.status !== 200) {
+            console.error("Failed to add history for requirement:", requirementId);
+          }
+        }
+  
+      } else {
+        if (toastId) toast.dismiss(toastId);
+        setToastId(toast.error(response.data.message || "Failed to create validation."));
+      }
+    } catch (error) {
+      console.error("Error creating validation:", error);
+  
+      const errorMessage =
+        error.response?.data?.message || "An error occurred. Please try again.";
+      if (toastId) toast.dismiss(toastId);
+      setToastId(toast.error(errorMessage));
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
-};
-
+  };
+  
 
   const handleCancel = () => {
     if (toastId) {

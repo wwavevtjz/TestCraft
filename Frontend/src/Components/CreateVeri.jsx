@@ -76,60 +76,78 @@ const CreateVeri = () => {
     const selectedReviewerNames = Object.keys(selectedReviewers).filter(
       (name) => selectedReviewers[name]
     );
-
+  
     if (!projectId) {
       toast.error("Invalid project ID.");
       return;
     }
-
+  
     if (selectedRequirements.length === 0 || selectedReviewerNames.length === 0) {
       toast.warning("Please select at least one requirement and one reviewer.");
       return;
     }
-
+  
     const storedUsername = localStorage.getItem("username");
     const createBy = storedUsername;
-
+  
     if (!createBy) {
       toast.error("No user found. Please login again.");
       return;
     }
-
+  
     const payload = {
       requirements: [...new Set(selectedRequirements)], // Remove duplicates
       reviewers: selectedReviewerNames.map((name) => `${name}: false`), // reviewers as array
       project_id: projectId,
       create_by: createBy,
     };
-
+  
     console.log("Payload:", payload);
-
+  
     try {
       setIsSubmitting(true);  // Disable submit button
       const response = await axios.post("http://localhost:3001/createveri", payload);
-
+  
       if (response.status === 201) {
         const toastId = "create-verification-toast"; // Assign toastId
         if (!toast.isActive(toastId)) {  // Check if toast is active
           toast.success("Verification created successfully!", { toastId, position: "top-center" });
         }
-
+  
         setWorkingRequirements((prev) =>
           prev.filter((req) => !selectedRequirements.includes(req.requirement_id))
         );
-
+  
         setSelectedRequirements([]);
         setSelectedReviewers({});
-
-        // Update the status of requirements in the Backend
+  
+        // Loop through selected requirements and add them to history with status "WAITING FOR VERIFICATION"
+        for (const requirementId of selectedRequirements) {
+          const historyReqData = {
+            requirement_id: requirementId,
+            requirement_status: "WAITING FOR VERIFICATION",  // ตั้งค่า status เป็น "WAITING FOR VERIFICATION"
+          };
+  
+          // ส่งข้อมูลไปที่ historyReqWorking
+          const historyResponse = await axios.post(
+            "http://localhost:3001/historyReqWorking",
+            historyReqData
+          );
+  
+          if (historyResponse.status !== 200) {
+            console.error("Failed to add history for requirement:", requirementId);
+          }
+        }
+  
+        // Update the status of requirements in the Backend to "WAITING FOR VERIFICATION"
         const updateResults = await Promise.allSettled(
           selectedRequirements.map((requirementId) =>
             axios.put(`http://localhost:3001/update-requirements-status-waitingfor-ver/${requirementId}`, {
-              requirement_status: "WAITING FOR VERIFICATION",
+              requirement_status: "WAITING FOR VERIFICATION",  // ปรับ status เป็น "WAITING FOR VERIFICATION"
             })
           )
         );
-
+  
       } else {
         toast.error(response.data.message || "Failed to create verification(s).");
       }
@@ -140,6 +158,7 @@ const CreateVeri = () => {
       setIsSubmitting(false);  // Re-enable submit button
     }
   };
+  
 
   // Handle cancel
   const handleCancel = () => {
