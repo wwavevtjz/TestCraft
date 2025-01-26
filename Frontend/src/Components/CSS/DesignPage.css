@@ -1,0 +1,95 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+  }
+  
+  .designpage-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .designpage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .designpage-header h1 {
+    font-size: 1.8rem;
+    color: #333;
+  }
+  
+  .designpage-header-buttons .btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    margin-left: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  
+  .designpage-header-buttons .btn:hover {
+    background-color: #0056b3;
+  }
+  
+  .designpage-summary h2 {
+    font-size: 1.4rem;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  .summary-table th,
+  .summary-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .summary-table th {
+    background-color: #f1f1f1;
+    color: #333;
+  }
+  
+  .diagram-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .diagram-table th,
+  .diagram-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .diagram-table th {
+    background-color: #f1f1f1;
+    color: #333;
+  }
+  
+  .action-btn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  
+  .action-btn:hover {
+    color: #007bff;
+  }
+  

@@ -1,34 +1,47 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
-import CreateProject from './Components/CreateProject';
-import CreateRequirement from './Components/CreateRequirement';
-import RequirementPage from './Components/RequirementPage';
-import ViewEditReq from './Components/ViewEditReq';
-import UpdateRequirement from './Components/UpdateRequirement';
-import ReqVerification from './Components/ReqVerification';
-import ReqValidation from './Components/ReqValidation';
-import CreateVeri from './Components/CreateVeri';
-import CreateVar from './Components/CreateVar';
-import CreateBaseline from './Components/CreateBaseline';
-import VerificationList from './Components/VerificationList';
-import ValidationList from './Components/ValidationList';
-import VerificationHis from './Components/VerificationHis';
-import Project from './Components/Project';
-import Navbar from './Components/Navbar';
-import Dashboard from './Components/Dashboard';
-import UpdateProject from './Components/UpdateProject';
-import Home from './Components/Home';
-import TryToReq from './Components/TryToReq';
-import Uploadfile from './Components/Uploadfile';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Make sure Bootstrap CSS is imported
+
+// Login
 import Login from './Components/Login';
 import Signup from './Components/Signup';
+
+// Home
+import Home from './Components/Home';
+import Navbar from './Components/Navbar';
+
+// Project
+import Project from './Components/Project';
+import CreateProject from './Components/CreateProject';
+import UpdateProject from './Components/UpdateProject';
 import ProjectConfig from './Components/ProjectConfig';
+
+// Dashboard
+import Dashboard from './Components/Dashboard';
+
+// Requirement
+import RequirementPage from './Components/RequirementPage';
+import CreateRequirement from './Components/CreateRequirement';
+import ViewEditReq from './Components/ViewEditReq';
+import UpdateRequirement from './Components/UpdateRequirement';
+import CreateVeri from './Components/CreateVeri';
+import VerificationList from './Components/VerificationList';
+import ReqVerification from './Components/ReqVerification';
+import CreateVar from './Components/CreateVar';
+import ValidationList from './Components/ValidationList';
+import ReqValidation from './Components/ReqValidation';
+import Baseline from './Components/Baseline';
+import CreateBaseline from './Components/CreateBaseline';
+import VeriVaView from './Components/VeriVaView';
+import TryToReq from './Components/TryToReq';
+import Uploadfile from './Components/Uploadfile';
 import ViewFile from './Components/ViewFile';
 import VersionControl from './Components/VersionControl';
 import Comment from './Components/Comment';
-import Baseline from './Components/Baseline';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Make sure Bootstrap CSS is imported
 
+// Design
+import DesignPage from './Components/DesignPage';
+import CreateDesign from './Components/CreateDesign';
 
 
 // Notify
@@ -80,7 +93,7 @@ const App = () => {
         <Route path="/ReqVerification" element={<ReqVerification />} />
         <Route path="/ReqValidation" element={<ReqValidation />} />
         <Route path="/ViewFile" element={<ViewFile />} />
-        <Route path="/VerificationHis" element={<VerificationHis />} />
+        <Route path="/VeriVaView" element={<VeriVaView />} />
 
         {/* Routes สำหรับ Login */}
         <Route path="/" element={<Login setUsername={setUsername} />} />
@@ -100,6 +113,10 @@ const App = () => {
         <Route path="/CreateBaseline" element={<CreateBaseline />} />
         <Route path="/Baseline" element={<Baseline />} />
 
+        {/* ทำ Design */}
+        <Route path="/DesignPage" element={<DesignPage />} />
+        <Route path="/CreateDesign" element={<CreateDesign />} />
+        
       </Routes>
     </>
   );

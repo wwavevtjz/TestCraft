@@ -1,0 +1,141 @@
+/* Container */
+.veriVaView {
+    background-color: #f9fafb; /* พื้นหลังโทนอ่อน */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* เงา */
+    font-family: 'Arial', sans-serif; /* ฟอนต์มาตรฐาน */
+  }
+  
+  /* Title */
+  .veriVaView__title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #2c3e50; /* สีโทนเข้ม */
+    border-bottom: 2px solid #3498db; /* เส้นขอบสีฟ้า */
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  
+  /* Filter */
+  .veriVaView__filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .veriVaView__filter-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #34495e; /* สีโทนเข้ม */
+  }
+  
+  .veriVaView__filter-select {
+    padding: 8px 12px;
+    font-size: 1rem;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    background-color: #ffffff;
+    color: #2c3e50;
+    outline: none;
+    transition: all 0.3s;
+  }
+  
+  .veriVaView__filter-select:hover,
+  .veriVaView__filter-select:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+  }
+  
+  /* Loading & Error Messages */
+  .veriVaView__loading {
+    font-size: 1.1rem;
+    color: #2980b9;
+    font-weight: 500;
+  }
+  
+  .veriVaView__error {
+    font-size: 1.1rem;
+    color: #e74c3c;
+    font-weight: 500;
+  }
+  
+  /* Table */
+  .veriVaView__table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .veriVaView__table-header {
+    background-color: #3498db; /* สีพื้นหลัง */
+    color: #ffffff; /* สีตัวอักษร */
+    text-align: left;
+  }
+  
+  .veriVaView__table-header th {
+    padding: 12px 16px;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  
+  .veriVaView__table-row:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  
+  .veriVaView__table-row:nth-child(odd) {
+    background-color: #ffffff;
+  }
+  
+  .veriVaView__table-row:hover {
+    background-color: #ecf3fa;
+  }
+  
+  .veriVaView__table-cell {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    color: #34495e;
+    border-bottom: 1px solid #ecf0f1;
+    text-align: center;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .veriVaView {
+      padding: 10px;
+    }
+  
+    .veriVaView__title {
+      font-size: 1.5rem;
+    }
+  
+    .veriVaView__filter {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
+    }
+  
+    .veriVaView__filter-select {
+      width: 100%;
+    }
+  
+    .veriVaView__table-cell {
+      font-size: 0.85rem;
+    }
+  }
+  
+  .veriVaView__export-button {
+    background: #4caf50;
+    color: #fff;
+    align-items: end;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-right: 10px;
+    border-radius: 4px;
+  }

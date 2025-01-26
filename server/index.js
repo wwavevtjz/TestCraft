@@ -366,33 +366,43 @@ app.delete('/requirement/:id', (req, res) => {
     const deleteHistorySQL = "DELETE FROM historyreq WHERE requirement_id = ?";
     const deleteReviewerSQL = "DELETE FROM reviewer WHERE requirement_id = ?";
     const deleteRequirementSQL = "DELETE FROM requirement WHERE requirement_id = ?";
+    const deleteBaselineSQL = "DELETE FROM baseline WHERE requirement_id = ?";
 
-    // ลบข้อมูลใน historyreq ก่อน
-    db.query(deleteHistorySQL, [id], (err, data) => {
+    // ลบข้อมูลใน baseline ก่อน
+    db.query(deleteBaselineSQL, [id], (err, data) => {
         if (err) {
             console.error(err);
-            return res.status(500).json({ message: "Error deleting history" });
+            return res.status(500).json({ message: "Error deleting baseline" });
         }
 
-        // ลบข้อมูลใน reviewer
-        db.query(deleteReviewerSQL, [id], (err, data) => {
+        // ลบข้อมูลใน historyreq
+        db.query(deleteHistorySQL, [id], (err, data) => {
             if (err) {
                 console.error(err);
-                return res.status(500).json({ message: "Error deleting reviewers" });
+                return res.status(500).json({ message: "Error deleting history" });
             }
 
-            // ลบข้อมูลใน requirement
-            db.query(deleteRequirementSQL, [id], (err, data) => {
+            // ลบข้อมูลใน reviewer
+            db.query(deleteReviewerSQL, [id], (err, data) => {
                 if (err) {
                     console.error(err);
-                    return res.status(500).json({ message: "Error deleting requirement" });
+                    return res.status(500).json({ message: "Error deleting reviewers" });
                 }
-                return res.status(200).json({ message: "Requirement deleted successfully" });
+
+                // ลบข้อมูลใน requirement
+                db.query(deleteRequirementSQL, [id], (err, data) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({ message: "Error deleting requirement" });
+                    }
+
+                    // Return success if all deletions are successful
+                    return res.status(200).json({ message: "Requirement deleted successfully" });
+                });
             });
         });
     });
 });
-
 
 
 // Get requirements by project ID
@@ -439,6 +449,20 @@ app.put('/requirement/:requirementId/status', (req, res) => {
     );
 });
 
+// filter status VERIFIED AND VALIDATED
+app.get("/api/requirements", (req, res) => {
+    const query =
+      "SELECT * FROM requirement WHERE requirement_status IN ('VERIFIED', 'VALIDATED')";
+    db.query(query, (err, results) => {
+      if (err) {
+        console.error("Error fetching data:", err);
+        res.status(500).send("Error fetching data");
+      } else {
+        res.json(results);
+      }
+    });
+  });
+  
 // ------------------------- Requirement Verification -------------------------
 // Fetch all criteria
 app.get('/reqcriteria', (req, res) => {
@@ -597,6 +621,7 @@ app.post('/reqverified', (req, res) => {
         res.status(201).json({ message: "Requirement Verified created successfully", data: result });
     });
 });
+
 
 //-------------------------- VERIFICATION ------------------
 // Create Verification

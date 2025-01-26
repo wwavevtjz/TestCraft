@@ -194,8 +194,8 @@ const RequirementPage = () => {
     navigate(`/ViewFile`, { state: { file } });
   };
 
-  const handleVerificationHis = () => {
-    navigate(`/VerificationHis`);
+  const handleVerivaliView = () => {
+    navigate(`/VeriVaView?project_id=${projectId}`);
   }
 
   const handleCreateVeri = () => {
@@ -205,7 +205,6 @@ const RequirementPage = () => {
   const handleVerilist = () => {
     navigate(`/VerificationList?project_id=${projectId}`);
   }
-
 
   const handleCreateVar = () => {
     navigate(`/CreateVar?project_id=${projectId}`);
@@ -255,16 +254,12 @@ const RequirementPage = () => {
 
             {/* Other Action Buttons */}
             <div className="other-buttons">
-              <button className="viewvervar-button" onClick={handleVerificationHis}>
+              <button className="viewvervar-button" onClick={handleVerivaliView}>
                 <img src={checkmark} alt="checkmark" className="checkmark" /> View Verification and Validation
               </button>
 
               <button className="version-control-button" onClick={handleVerControl}>
                 <img src={version_control} alt="version_control" className="version_control" /> Version Control
-              </button>
-
-              <button className="version-control-button" onClick={handleExportPDF}>
-                <img src={history} alt="history" className="history" /> ExportPDF
               </button>
 
               <button className="version-control-button" onClick={handleBaseline}>
