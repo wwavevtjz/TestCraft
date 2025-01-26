@@ -1,3 +1,7 @@
+.requirement-title {
+  text-align: center;
+}
+
 .requirement-container {
   display: grid;
   grid-template-rows: auto 1fr auto;

@@ -138,7 +138,7 @@ const CreateVar = () => {
 
   return (
     <div className="create-validation-container">
-      <h1>Create Validation</h1>
+      <h1 className="createvar">Create Validation</h1>
       <div className="content">
         <div className="left-panel">
           <h2>Requirements</h2>
