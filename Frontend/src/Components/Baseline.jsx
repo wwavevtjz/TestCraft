@@ -66,7 +66,6 @@ const Baseline = () => {
       </div>
 
       <div className="list-baseline">
-        <h2>List Baseline</h2>
         {baselines.length === 0 ? (
           <p>No baselines available.</p>
         ) : (
