@@ -42,7 +42,9 @@ import Comment from './Components/Comment';
 // Design
 import DesignPage from './Components/DesignPage';
 import CreateDesign from './Components/CreateDesign';
-
+import CreateVeriDesign from './Components/CreateVeriDesign';
+import VeriDesign from './Components/VeriDesign';
+import DesignVerifed from './Components/DesignVerifed';
 
 // Notify
 import { ToastContainer } from 'react-toastify';
@@ -86,8 +88,6 @@ const App = () => {
         {/* Routes สำหรับ Requirements */}
         <Route path="/requirementPage" element={<RequirementPage />} />
         <Route path="/ViewEditReq" element={<ViewEditReq />} />
-
-        
         <Route path="/CreateRequirement" element={<CreateRequirement />} />
         <Route path="/UpdateRequirement" element={<UpdateRequirement />} />
         <Route path="/ReqVerification" element={<ReqVerification />} />
@@ -116,7 +116,9 @@ const App = () => {
         {/* ทำ Design */}
         <Route path="/DesignPage" element={<DesignPage />} />
         <Route path="/CreateDesign" element={<CreateDesign />} />
-        
+        <Route path="/CreateVeriDesign" element={<CreateVeriDesign />}/>
+        <Route path="/VeriDesign" element={<VeriDesign />}/>
+        <Route path="/DesignVerifed" element={<DesignVerifed />}/>
       </Routes>
     </>
   );

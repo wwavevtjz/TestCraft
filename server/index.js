@@ -657,11 +657,6 @@ app.post('/createveri', (req, res) => {
 });
 
 
-
-
-
-
-
 app.get('/verifications', (req, res) => {
     const { project_id, status } = req.query;
 
@@ -1147,8 +1142,7 @@ app.delete('/files/:fileId', (req, res) => {
     });
 });
 
-// ----------------------- File Validation ----------------------- 
-
+// ----------------------- File Validation -----------------------
 // อัปโหลดไฟล์
 app.post("/uploadfile-var", upload.single("file"), (req, res) => {
     try {
@@ -1664,7 +1658,6 @@ app.post('/replyvercomment', (req, res) => {
     });
 });
 
-
 // ------------------------- Baseline -------------------------
 // API สำหรับสร้าง Baseline
 
@@ -1873,6 +1866,307 @@ app.get('/getHistoryByRequirementId', (req, res) => {
 
 });
 
+// ----------------------------- DESIGN ------------------------------
+// Create Design API
+app.post("/design", (req, res) => {
+    console.log("Request body:", req.body); // Debug log
+    
+    const {
+      diagram_name,
+      design_type,
+      diagram_type,
+      design_description,
+      project_id,
+      design_status,
+      requirement_id,
+    } = req.body;
+  
+    if (
+      !diagram_name ||
+      !design_type ||
+      !diagram_type ||
+      !design_description ||
+      !project_id ||
+      !design_status ||
+      !requirement_id
+    ) {
+      console.error("Missing fields in request:", req.body); // Debug log
+      return res.status(400).json({ message: "All fields are required." });
+    }
+  
+    const query = `
+      INSERT INTO design (
+        project_id, 
+        requirement_id, 
+        design_type, 
+        diagram_name, 
+        diagram_type, 
+        design_description, 
+        design_status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    db.query(
+      query,
+      [
+        project_id,
+        JSON.stringify(requirement_id), // Store as JSON
+        design_type,
+        diagram_name,
+        diagram_type,
+        design_description,
+        design_status,
+      ],
+      (err, results) => {
+        if (err) {
+          console.error("Error inserting design:", err);
+          return res.status(500).json({ message: "Failed to create design." });
+        }
+        res.status(201).json({ message: "Design created successfully.", design_id: results.insertId });
+      }
+    );
+  });
+  
+
+// Endpoint to get designs by project_id
+app.get("/design", (req, res) => {
+    const { project_id } = req.query;
+  
+    if (!project_id) {
+      return res.status(400).json({ error: "Project ID is required." });
+    }
+  
+    const query = `
+      SELECT * 
+      FROM design 
+      WHERE project_id = ?;
+    `;
+  
+    db.query(query, [project_id], (err, results) => {
+      if (err) {
+        console.error("Error fetching designs:", err);
+        res.status(500).json({ error: "Failed to fetch designs" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
+  });
+  
+// Update design status
+app.put("/statusdesign", (req, res) => {
+    const { id } = req.params;
+    const { design_status } = req.body;  // Only update the status
+    const sql = "UPDATE design SET design_status = ? WHERE design_id = ?";
+
+    db.query(sql, [design_status, id], (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: "Error updating design status" });
+        }
+        return res.status(200).json({ message: "Design status updated successfully" });
+    });
+});
+
+// ------------------------- DESIGN HISTORY -----------------------------------
+// เพิ่มข้อมูลลงตาราง historydesign
+app.post('/addHistoryDesign', (req, res) => { 
+    const { design_id, design_status } = req.body;
+  
+    if (!design_id || !design_status) {
+      return res.status(400).json({ message: "กรุณาระบุ 'design_id' และ 'design_status'" });
+    }
+  
+    const sql = `
+        INSERT INTO historydesign (design_id, design_status, design_at)
+        VALUES (?, ?, NOW())
+    `;
+  
+    db.query(sql, [design_id, design_status], (err, result) => {
+      if (err) {
+        console.error('Database Error:', err);
+        return res.status(500).json({ message: "ไม่สามารถเพิ่มข้อมูลประวัติการออกแบบได้" });
+      }
+  
+      return res.status(200).json({ message: "บันทึกประวัติการออกแบบสำเร็จ!", insertedId: result.insertId });
+    });
+  });
+
+// ดึงข้อมูลประวัติการออกแบบโดยอ้างอิง design_id
+app.get('/getHistoryByDesignId', (req, res) => { 
+    const design_id = req.query.design_id;
+
+    if (!design_id) {
+        return res.status(400).json({ message: "กรุณาระบุ 'design_id'" });
+    }
+
+    const sql = `
+        SELECT * FROM historydesign
+        WHERE design_id = ?
+        ORDER BY design_at ASC
+    `;
+
+    db.query(sql, [design_id], (err, results) => {
+        if (err) {
+            console.error('Database Error:', err);
+            return res.status(500).json({ message: "ไม่สามารถดึงข้อมูลประวัติการออกแบบได้" });
+        }
+
+        return res.status(200).json({ message: "ดึงข้อมูลสำเร็จ!", data: results });
+    });
+});
+
+// ------------------------- DESIGN CRITERIA ----------------------------------
+app.post("/designcriteria", async (req, res) => {
+    const { designcri_name, design_id } = req.body;
+
+    if (!designcri_name || !design_id) {
+        return res.status(400).send("ข้อมูลไม่ครบถ้วน");
+    }
+
+    try {
+        const result = await db.query(
+            "INSERT INTO designcriteria (design_cri_name, design_id) VALUES (?, ?)",
+            [designcri_name, design_id]
+        );
+        res.status(201).send({ message: "Design criteria added successfully", id: result.insertId });
+    } catch (error) {
+        console.error("Error inserting design criteria:", error);
+        res.status(500).send("เกิดข้อผิดพลาดในการเพิ่มข้อมูล");
+    }
+});
+
+app.get("/designcriteria", async (req, res) => {
+    try {
+        const result = await db.query("SELECT * FROM designcriteria");
+        res.status(200).send(result);
+    } catch (error) {
+        console.error("Error fetching design criteria:", error);
+        res.status(500).send("เกิดข้อผิดพลาดในการดึงข้อมูล");
+    }
+});
+
+// ------------------------- DESIGN VERIFICATION -------------------------
+// การ createdesign
+app.post("/createveridesign", (req, res) => {
+    const veridesignData = req.body;
+  
+    if (!Array.isArray(veridesignData) || veridesignData.length === 0) {
+      return res.status(400).json({ message: "Invalid data format or empty array." });
+    }
+  
+    const query =
+      "INSERT INTO veridesign (project_id, create_by, requirement_id, veridesign_at, veridesign_status, veridesign_by) VALUES ?";
+  
+    const formatDateTime = (date) => {
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const hours = String(d.getHours()).padStart(2, "0");
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      const seconds = String(d.getSeconds()).padStart(2, "0");
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    };
+  
+    const values = veridesignData.map((item) => [
+      item.project_id,
+      item.create_by,
+      item.requirement_id,
+      formatDateTime(item.veridesign_at),
+      item.veridesign_status,
+      JSON.stringify(item.veridesign_by), // Convert `veridesign_by` to JSON string
+    ]);
+  
+    db.query(query, [values], (err, result) => {
+      if (err) {
+        console.error("Error inserting data:", err);
+        return res.status(500).json({ message: "Failed to create veridesign records." });
+      }
+  
+      res.status(201).json({
+        message: "Veridesign records created successfully.",
+        affectedRows: result.affectedRows,
+      });
+    });
+  });
+
+// ดึงข้อมูล req_design ที่มี status working
+app.get("/veridesign", (req, res) => {
+    const { project_id } = req.query;
+  
+    if (!project_id) {
+      return res.status(400).json({ error: "Project ID is required." });
+    }
+  
+    const query = `
+      SELECT * 
+      FROM design 
+      WHERE project_id = ? AND design_status = 'WORKING';
+    `;
+  
+    db.query(query, [project_id], (err, results) => {
+      if (err) {
+        console.error("Error fetching designs:", err);
+        res.status(500).json({ error: "Failed to fetch designs" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
+  });
+
+
+  // ดึงข้อมูล req_design ที่มี status working
+app.get("/verilistdesign", (req, res) => {
+    const { project_id } = req.query;
+  
+    if (!project_id) {
+      return res.status(400).json({ error: "Project ID is required." });
+    }
+  
+    const query = `
+      SELECT * 
+      FROM design 
+      WHERE project_id = ? AND design_status = 'WAITING FOR VERIFICATION';
+    `;
+  
+    db.query(query, [project_id], (err, results) => {
+      if (err) {
+        console.error("Error fetching designs:", err);
+        res.status(500).json({ error: "Failed to fetch designs" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
+  });
+
+// Update status waitingforveri ของ design
+  app.put('/update-design-status-waitingfor-ver/:id', (req, res) => {
+    const { id } = req.params;
+    const { design_status } = req.body;
+
+    if (!design_status) {
+        return res.status(400).json({ message: "Missing design_status field." });
+    }
+
+    const query = `
+      UPDATE design
+      SET design_status = ?
+      WHERE design_id = ?
+    `;
+
+    db.query(query, [design_status, id], (err, result) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Database error." });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Design not found." });
+        }
+
+        res.status(200).json({ message: "Design status updated successfully." });
+    });
+});
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;
 app.listen(PORT, () => {

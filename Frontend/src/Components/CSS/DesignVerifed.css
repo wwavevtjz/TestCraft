@@ -1,0 +1,96 @@
+/* design-verified.css */
+
+.design-verified-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.design-verified-title {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.design-verified-flex-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.design-verified-box {
+    flex: 1;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.design-verified-checklist {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Custom checkbox styling */
+.design-verified-checkbox {
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+}
+
+/* Checkbox hover and checked styling */
+.design-verified-checkbox:hover {
+    border-color: #007bff;
+}
+
+.design-verified-checkbox:checked {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+/* Label styling */
+label {
+    font-size: 16px;
+    font-weight: normal;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Table for design details */
+.design-verified-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.design-verified-table th,
+.design-verified-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+.design-verified-button-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.design-verified-save-button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.design-verified-save-button:hover {
+    background-color: #0056b3;
+}
+
+/* Custom styling for the design details table */
+.design-verified-designs {
+    margin-top: 20px;
+}

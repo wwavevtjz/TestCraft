@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
@@ -6,21 +6,20 @@ import "./CSS/CreateDesign.css";
 
 const CreateDesign = () => {
   const [baselineRequirements, setbaselineRequirements] = useState([]);
-
   const [designStatement, setDesignStatement] = useState("");
   const [designType, setDesignType] = useState("");
   const [diagramType, setDiagramType] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
-  const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [selectedFileIds, setSelectedFileIds] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedRequirementsId, setRequirementsId] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(window.location.search);
   const projectId = queryParams.get("project_id");
 
-  // Fetch Requirements
-  const fetchRequirements = async () => {
+  // Fetch Requirements with useCallback
+  const fetchRequirements = useCallback(async () => {
     if (!projectId) return;
 
     setLoading(true);
@@ -41,70 +40,81 @@ const CreateDesign = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Fetch Files
-  const fetchFiles = async () => {
-    if (projectId) {
-      try {
-        const response = await axios.get(
-          `http://localhost:3001/files?project_id=${projectId}`
-        );
-        setUploadedFiles(response.data);
-      } catch (error) {
-        console.error("Error fetching files:", error);
-      }
-    }
-  };
+  }, [projectId]); // Include projectId as a dependency
 
   useEffect(() => {
     fetchRequirements();
-    fetchFiles();
-  }, [projectId]);
+  }, [fetchRequirements]); // Add fetchRequirements to the dependency array
+
+  // Handle File Upload
+  const handleFileChange = (e) => {
+    setSelectedFile(e.target.files[0]);
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedFile) {
+      setError("Please select a file to upload.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    formData.append("project_id", projectId);
+
+    try {
+      const response = await axios.post("http://localhost:3001/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.status === 200) {
+        alert("File uploaded successfully");
+        setSelectedFile(null);
+      } else {
+        alert("Failed to upload file");
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      setError("Failed to upload file. Please try again later.");
+    }
+  };
 
   // Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!designStatement || !designType || !diagramType || !description || selectedFileIds.length === 0) {
+  
+    if (!designStatement || !designType || !diagramType || !description || selectedRequirementsId.length === 0) {
       setError("Please fill in all fields.");
       return;
     }
-
+  
     const newDesign = {
-      design_name: designStatement,
+      diagram_name: designStatement,
       design_type: designType,
       diagram_type: diagramType,
       design_description: description,
       project_id: projectId,
-      filereq_ids: selectedFileIds,
-      design_status: "IN PROGRESS",
+      design_status: "WORKING",
+      requirement_id: selectedRequirementsId, // Ensure this is passed
     };
-
+  
     try {
       const response = await axios.post("http://localhost:3001/design", newDesign);
-
+  
       if (response.status === 201) {
-        const designId = response.data.design_id;
-
-        if (!designId) throw new Error("Design ID is missing from response.");
-
-        const historyDesignData = {
-          design_id: designId,
-          design_status: newDesign.design_status,
-        };
-
-        const historyResponse = await axios.post(
-          "http://localhost:3001/historyDesignWorking",
-          historyDesignData
-        );
-
-        if (historyResponse.status === 200) {
-          alert("Design and history added successfully");
-          navigate(`/Dashboard?project_id=${projectId}`, { state: { selectedSection: "Design" } });
-        } else {
-          alert("Failed to add history");
-        }
+        alert("Design added successfully");
+  
+        // Get the design_id from the created design to add the history
+        const design_id = response.data.design_id;
+  
+        // Add the history design record
+        await axios.post("http://localhost:3001/addHistoryDesign", {
+          design_id: design_id,
+          design_status: "WORKING",
+        });
+  
+        navigate(`/Dashboard?project_id=${projectId}`, { state: { selectedSection: "Design" } });
       } else {
         alert("Failed to create design");
       }
@@ -113,18 +123,28 @@ const CreateDesign = () => {
       setError(error.response?.data?.message || "Something went wrong");
     }
   };
-
-  const handleFileChange = (selectedOptions) => {
-    const fileIds = selectedOptions ? selectedOptions.map((option) => option.value) : [];
-    setSelectedFileIds(fileIds);
-  };
-
+  
   return (
     <div className="create-design-container">
       <h1 className="create-design-header">Create Software Design</h1>
       {loading && <p className="loading-message">Loading...</p>}
       {error && <p className="create-design-error">{error}</p>}
       <form className="create-design-form" onSubmit={handleSubmit}>
+
+        {/* Diagram Name */}
+        <div className="create-design-form-group">
+          <label htmlFor="designStatement">Diagram Name:</label>
+          <input
+            type="text"
+            id="designStatement"
+            value={designStatement}
+            onChange={(e) => setDesignStatement(e.target.value)}
+            placeholder="Enter Diagram Name"
+            required
+            className="create-design-input"
+          />
+        </div>
+
         {/* Design Type */}
         <div className="create-design-form-group">
           <label htmlFor="designType">Design Type:</label>
@@ -138,8 +158,8 @@ const CreateDesign = () => {
             <option value="" disabled>
               Select Design Type
             </option>
-            <option value="System Design">High-Level Design</option>
-            <option value="UI/UX Design">Low-Level Design</option>
+            <option value="High-Level Design">High-Level Design</option>
+            <option value="Low-Level Design">Low-Level Design</option>
           </select>
         </div>
 
@@ -163,43 +183,36 @@ const CreateDesign = () => {
           </select>
         </div>
 
-        {/* Diagram Name */}
+        {/* Requirements ID */}
+        <label htmlFor="designStatement">Requirement ID:</label>
+        <Select
+          isMulti
+          options={baselineRequirements.map((req) => ({
+            value: req.requirement_id,
+            label: `REQ-${req.requirement_id}: ${req.requirement_name}`,
+          }))}
+          onChange={(selectedOptions) =>
+            setRequirementsId(selectedOptions.map((option) => option.value))
+          }
+        />
+
+        {/* File Upload */}
         <div className="create-design-form-group">
-          <label htmlFor="designStatement">Diagram Name:</label>
+          <label htmlFor="fileUpload">Upload File:</label>
           <input
-            type="text"
-            id="designStatement"
-            value={designStatement}
-            onChange={(e) => setDesignStatement(e.target.value)}
-            placeholder="Enter Diagram Name"
-            required
-            className="create-design-input"
+            type="file"
+            id="fileUpload"
+            onChange={handleFileChange}
+            className="create-design-input-file"
           />
+          <button
+            type="button"
+            className="create-design-btn-upload"
+            onClick={handleFileUpload}
+          >
+            Upload File
+          </button>
         </div>
-
-              {/* Requirements ID */}
-              <label htmlFor="Requirement ID">Requirement ID:</label>
-              <Select
-                  isMulti
-                  options={baselineRequirements.map((req) => ({
-                      value: req.requirement_id, // ใช้ requirement_id เป็น value
-                      label: `REQ-${req.requirement_id}: ${req.requirement_name}`, // รวมทั้งสองค่าใน label
-                  }))}
-
-                  value={baselineRequirements
-                      .filter((req) => selectedFileIds.includes(req.requirement_id))
-                      .map((req) => ({
-                          value: req.requirement_id,
-                          label: `REQ-${req.requirement_id}: ${req.requirement_name}`, // แสดง requirement_id และ name สำหรับ selected values
-                      }))}
-
-                  onChange={handleFileChange}
-                  placeholder="Select Requirements"
-                  className="select-files"
-                  required
-              />
-
-
 
         {/* Description */}
         <div className="create-design-form-group">

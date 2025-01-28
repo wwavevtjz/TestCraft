@@ -4,45 +4,89 @@ import { useNavigate } from "react-router-dom";
 import './CSS/ProjectConfig.css';
 
 const ProjectConfig = () => {
-    const [newCriteria, setNewCriteria] = useState("");
+    const [newReqCriteria, setNewReqCriteria] = useState("");
     const [reqcriList, setReqcriList] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loadingReq, setLoadingReq] = useState(true);
+
+    const [newDesignCriteria, setNewDesignCriteria] = useState("");
+    const [designCriList, setDesignCriList] = useState([]);
+    const [loadingDesign, setLoadingDesign] = useState(true);
+
     const [editingId, setEditingId] = useState(null);
     const [editValue, setEditValue] = useState("");
 
-    const navigate = useNavigate(); // ใช้เพื่อไปยังหน้า VersionControl.jsx
+    const navigate = useNavigate();
 
     useEffect(() => {
-        fetchCriteria();
+        fetchReqCriteria();
+        fetchDesignCriteria();
     }, []);
 
-    // Fetch Criteria List
-    const fetchCriteria = async () => {
+    // Fetch Requirement Criteria List
+    const fetchReqCriteria = async () => {
         try {
-            setLoading(true);
+            setLoadingReq(true);
             const response = await axios.get("http://localhost:3001/reqcriteria");
             setReqcriList(response.data);
         } catch (error) {
-            console.error("Error fetching criteria:", error);
+            console.error("Error fetching requirement criteria:", error);
         } finally {
-            setLoading(false);
+            setLoadingReq(false);
         }
     };
 
-    // Add New Criteria
-    const handleAdd = async () => {
-        if (newCriteria.trim() === "") {
-            alert("กรุณากรอกชื่อ Criteria ก่อน");
+    // Fetch Design Criteria List
+    const fetchDesignCriteria = async () => {
+        try {
+            setLoadingDesign(true);
+            const response = await axios.get("http://localhost:3001/designcriteria");
+            setDesignCriList(response.data);
+        } catch (error) {
+            console.error("Error fetching design criteria:", error);
+        } finally {
+            setLoadingDesign(false);
+        }
+    };
+
+    // Add New Requirement Criteria
+    const handleAddReqCriteria = async () => {
+        if (newReqCriteria.trim() === "") {
+            alert("กรุณากรอกชื่อ Requirement Criteria ก่อน");
             return;
         }
         try {
-            await axios.post("http://localhost:3001/reqcriteria", { reqcri_name: newCriteria });
-            setNewCriteria("");
-            fetchCriteria();
+            await axios.post("http://localhost:3001/reqcriteria", { reqcri_name: newReqCriteria });
+            setNewReqCriteria("");
+            fetchReqCriteria();
         } catch (error) {
-            console.error("Error adding criteria:", error);
+            console.error("Error adding requirement criteria:", error);
         }
     };
+
+
+// Add New Design Criteria
+const handleAddDesignCriteria = async () => {
+    if (newDesignCriteria.trim() === "") {
+        alert("กรุณากรอกชื่อ Design Criteria ก่อน");
+        return;
+    }
+    try {
+        // ตัวอย่าง: สมมุติ design_id และ member_id ได้มาจากสถานะของโปรเจกต์หรือผู้ใช้ที่ล็อกอิน
+        const design_id = 1; // แทนค่าด้วย ID จริง
+        const member_id = 2; // แทนค่าด้วย ID จริง
+
+        await axios.post("http://localhost:3001/designcriteria", {
+            designcri_name: newDesignCriteria,
+            design_id,
+            member_id,
+        });
+
+        setNewDesignCriteria("");
+        fetchDesignCriteria();
+    } catch (error) {
+        console.error("Error adding design criteria:", error);
+    }
+};
 
     // Edit Criteria
     const handleUpdate = async () => {
@@ -54,26 +98,24 @@ const ProjectConfig = () => {
             await axios.put(`http://localhost:3001/reqcriteria/${editingId}`, { reqcri_name: editValue });
             setEditingId(null);
             setEditValue("");
-            fetchCriteria();
+            fetchReqCriteria();
         } catch (error) {
             console.error("Error updating criteria:", error);
         }
     };
 
     // Delete Criteria
-    const handleDelete = async (id) => {
+    const handleDelete = async (id, isDesign) => {
         if (!window.confirm("คุณแน่ใจหรือว่าต้องการลบ Criteria นี้?")) return;
         try {
-            await axios.delete(`http://localhost:3001/reqcriteria/${id}`);
-            fetchCriteria();
+            const endpoint = isDesign
+                ? `http://localhost:3001/designcriteria/${id}`
+                : `http://localhost:3001/reqcriteria/${id}`;
+            await axios.delete(endpoint);
+            isDesign ? fetchDesignCriteria() : fetchReqCriteria();
         } catch (error) {
             console.error("Error deleting criteria:", error);
         }
-    };
-
-    // Navigate to VersionControl Page
-    const handleViewHistory = (id) => {
-        navigate(`/version-control/${id}`);
     };
 
     return (
@@ -83,73 +125,69 @@ const ProjectConfig = () => {
             </div>
 
             <div className="project-config-content">
+
+                {/* Software Requirement Specification Verification Criteria */}
                 <div className="project-config-checklist-section">
                     <h2>Software Requirement Specification Verification Criteria</h2>
                     <div className="project-config-input-container">
                         <input
                             type="text"
-                            value={newCriteria}
-                            onChange={(e) => setNewCriteria(e.target.value)}
+                            value={newReqCriteria}
+                            onChange={(e) => setNewReqCriteria(e.target.value)}
                             placeholder="Add New Criteria"
                             className="project-config-input"
                         />
-                        <button className="project-config-add-button" onClick={handleAdd}>
+                        <button className="project-config-add-button" onClick={handleAddReqCriteria}>
                             Add
                         </button>
                     </div>
-                    {loading ? (
+                    {loadingReq ? (
                         <p>Loading...</p>
                     ) : (
                         <ul className="project-config-criteria-list">
                             {reqcriList.map((criteria) => (
-                                <li
-                                    key={criteria.reqcri_id}
-                                    className="project-config-criteria-item"
-                                >
-                                    {editingId === criteria.reqcri_id ? (
-                                        <>
-                                            <input
-                                                type="text"
-                                                value={editValue}
-                                                onChange={(e) => setEditValue(e.target.value)}
-                                                className="project-config-input"
-                                            />
-                                            <button className="project-config-save-button" onClick={handleUpdate}>
-                                                Save
-                                            </button>
-                                            <button
-                                                className="project-config-cancel-button"
-                                                onClick={() => setEditingId(null)}
-                                            >
-                                                Cancel
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span>{criteria.reqcri_name}</span>
-                                            <button
-                                                className="project-config-edit-button"
-                                                onClick={() => {
-                                                    setEditingId(criteria.reqcri_id);
-                                                    setEditValue(criteria.reqcri_name);
-                                                }}
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                className="project-config-delete-button"
-                                                onClick={() => handleDelete(criteria.reqcri_id)}
-                                            >
-                                                Delete
-                                            </button>
-                                            <button
-                                                className="project-config-history-button"
-                                                onClick={() => handleViewHistory(criteria.reqcri_id)}
-                                            >
-                                                History
-                                            </button>
-                                        </>
-                                    )}
+                                <li key={criteria.reqcri_id} className="project-config-criteria-item">
+                                    <span>{criteria.reqcri_name}</span>
+                                    <button
+                                        className="project-config-delete-button"
+                                        onClick={() => handleDelete(criteria.reqcri_id, false)}
+                                    >
+                                        Delete
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
+                {/* Software Design Verification Criteria */}
+                <div className="project-config-checklist-section">
+                    <h2>Software Design Verification Criteria</h2>
+                    <div className="project-config-input-container">
+                        <input
+                            type="text"
+                            value={newDesignCriteria}
+                            onChange={(e) => setNewDesignCriteria(e.target.value)}
+                            placeholder="Add New Criteria"
+                            className="project-config-input"
+                        />
+                        <button className="project-config-add-button" onClick={handleAddDesignCriteria}>
+                            Add
+                        </button>
+                    </div>
+                    {loadingDesign ? (
+                        <p>Loading...</p>
+                    ) : (
+                        <ul className="project-config-criteria-list">
+                            {designCriList.map((criteria) => (
+                                <li key={criteria.designcri_id} className="project-config-criteria-item">
+                                    <span>{criteria.design_cri_name}</span>
+                                    <button
+                                        className="project-config-delete-button"
+                                        onClick={() => handleDelete(criteria.designcri_id, true)}
+                                    >
+                                        Delete
+                                    </button>
                                 </li>
                             ))}
                         </ul>

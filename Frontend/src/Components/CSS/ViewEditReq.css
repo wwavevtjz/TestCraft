@@ -118,8 +118,6 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    width: 40%;
-    /* ลดขนาดปุ่มเพื่อให้พอดีกับ 2 ปุ่ม */
     transition: background-color 0.3s ease;
     /* เพิ่ม transition เมื่อ hover */
 }

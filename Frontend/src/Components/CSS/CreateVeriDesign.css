@@ -1,0 +1,79 @@
+.createveridesign-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .createveridesign-container h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .createveridesign-content {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .createveridesign-left-panel,
+  .createveridesign-right-panel {
+    width: 48%;
+    background: #f9f9f9;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  
+  .createveridesign-designs-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .createveridesign-designs-table th,
+  .createveridesign-designs-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .createveridesign-designs-table th {
+    background: #f4f4f4;
+  }
+  
+  .createveridesign-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+  
+  .createveridesign-button.create-button {
+    background: #4caf50;
+    color: #fff;
+    align-items: end;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-left: 10px;
+    border-radius: 4px;
+  }
+  
+  .createveridesign-button.cancel-button {
+    background: #f44336;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .createveridesign-button.create-button:hover {
+    background: #45a049;
+  }
+  
+  .createveridesign-button.cancel-button:hover {
+    background: #e53935;
+  }
+  
+  .createveridesign-error-message {
+    color: #ff0000;
+    font-weight: bold;
+  }
+  
