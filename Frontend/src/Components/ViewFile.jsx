@@ -15,7 +15,10 @@ const ViewFile = () => {
             <h1>View File</h1>
             <p><strong>ID:</strong> {file.filereq_id}</p>
             <p><strong>File Name:</strong> {file.title || file.filereq_name}</p>
-            <p><strong>Requirement ID:</strong> REQ-0{file.requirement_id}</p>
+            <p><strong>Requirement ID:</strong>{file.requirement_ids && file.requirement_ids.length > 0
+                ? file.requirement_ids.map(id => `REQ-${id}`).join(", ")
+                : "-"}</p>
+
         </div>
     );
 };

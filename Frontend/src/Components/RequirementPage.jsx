@@ -323,7 +323,7 @@ const RequirementPage = () => {
                     }
                     style={{ cursor: "pointer", userSelect: "none" }}
                   >
-                    REQ-0{data.requirement_id} {/* เพิ่มเลขให้เป็น 3 หลัก */}
+                    REQ-{data.requirement_id} {/* เพิ่มเลขให้เป็น 3 หลัก */}
                   </td>
                   <td
                     onClick={() =>
@@ -429,7 +429,11 @@ const RequirementPage = () => {
                   <tr key={file.filereq_id}>
                     <td>{file.filereq_id}</td>
                     <td>{file.filereq_name}</td>
-                    <td>{file.requirement_ids && file.requirement_ids.length > 0 ? file.requirement_ids.join(", ") : "-"}</td>
+                    <td>
+                      {file.requirement_ids && file.requirement_ids.length > 0
+                        ? file.requirement_ids.map(id => `REQ-${id}`).join(", ")
+                        : "-"}
+                    </td>
                     <td className="file-actions">
                       <button className="view-requirement-button" onClick={() => handleViewFile(file)}>
                         <FontAwesomeIcon icon={faEye} />
