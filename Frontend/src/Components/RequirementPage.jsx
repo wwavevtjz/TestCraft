@@ -100,19 +100,6 @@ const RequirementPage = () => {
     }
   }, [searchQuery, requirementList]);
 
-  useEffect(() => {
-    if (projectId) {
-      axios
-        .get(`http://localhost:3001/requirements?project_id=${projectId}`)
-        .then((res) => {
-          setRequirements(res.data); // Update state with fetched requirements
-        })
-        .catch((err) => {
-          console.error("Error fetching requirements:", err);
-        });
-    }
-  }, [projectId, setRequirements]); // Include both dependencies
-
   const handleDelete = (requirementId) => {
     if (window.confirm("Are you sure you want to delete this requirement?")) {
       axios
@@ -128,6 +115,7 @@ const RequirementPage = () => {
         });
     }
   };
+
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -159,11 +147,6 @@ const RequirementPage = () => {
     // ดาวน์โหลด PDF
     doc.save(`${projectName}_verified_requirements.pdf`);
   };
-
-  const handleCloseReviewModal = () => {
-    setIsReviewModalOpen(false);
-  };
-
 
   const handleOpenModal = () => {
     setIsModalOpen(true); // Open the modal
@@ -223,6 +206,19 @@ const RequirementPage = () => {
     navigate(`/Baseline?project_id=${projectId}`);
   }
 
+  const handleUploadSuccess = (newFile) => {
+    setFiles((prevFiles) => [newFile, ...prevFiles]); // Add new file locally
+
+    // Fetch updated files from server after upload
+    axios
+      .get(`http://localhost:3001/files?project_id=${projectId}`)
+      .then((res) => {
+        setFiles(res.data); // Update files from server
+      })
+      .catch((err) => {
+        console.error("Error fetching updated files:", err);
+      });
+  };
   return (
     <div className="requirement-container">
       <div className="req-top-section">
@@ -422,8 +418,8 @@ const RequirementPage = () => {
             <table className="table-file">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Name</th>
+                  <th>File ID</th>
+                  <th>File Name</th>
                   <th>Requirement ID</th>
                   <th>Actions</th>
                 </tr>
@@ -431,17 +427,11 @@ const RequirementPage = () => {
               <tbody>
                 {files.map((file) => (
                   <tr key={file.filereq_id}>
-                    <td>{file.filereq_id}</td> {/* แสดง `filereq_id` */}
-                    <td>{file.title || file.filereq_name}</td> {/* ใช้ `title` หรือ `filereq_name` */}
-                    <td>
-                      {/* เช็คว่ามี `requirement_id` หรือไม่ */}
-                      {file.requirement_id ? `REQ-${file.requirement_id.toString().padStart(3, "0")}` : "N/A"}
-                    </td>
+                    <td>{file.filereq_id}</td>
+                    <td>{file.filereq_name}</td>
+                    <td>{file.requirement_ids && file.requirement_ids.length > 0 ? file.requirement_ids.join(", ") : "-"}</td>
                     <td className="file-actions">
-                      <button
-                        className="view-requirement-button"
-                        onClick={() => handleViewFile(file)}
-                      >
+                      <button className="view-requirement-button" onClick={() => handleViewFile(file)}>
                         <FontAwesomeIcon icon={faEye} />
                       </button>
 
@@ -450,9 +440,7 @@ const RequirementPage = () => {
                         onClick={() => {
                           const link = document.createElement("a");
                           link.href = `http://localhost:3001/files/${file.filereq_id}`;
-                          link.download = file.filereq_name.endsWith(".pdf")
-                            ? file.filereq_name
-                            : `${file.filereq_name}.pdf`;
+                          link.download = file.filereq_name.endsWith(".pdf") ? file.filereq_name : `${file.filereq_name}.pdf`;
                           document.body.appendChild(link);
                           link.click();
                           document.body.removeChild(link);
@@ -461,16 +449,14 @@ const RequirementPage = () => {
                         <FontAwesomeIcon icon={faDownload} />
                       </button>
 
-                      <button
-                        className="delete-file-button"
-                        onClick={() => handleDeleteFile(file.filereq_id)}
-                      >
+                      <button className="delete-file-button" onClick={() => handleDeleteFile(file.filereq_id)}>
                         <FontAwesomeIcon icon={faTrash} className="delete-file" />
                       </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
+
 
 
             </table>
@@ -490,60 +476,10 @@ const RequirementPage = () => {
       >
         <UploadFile
           onClose={handleCloseModal}
-          onUploadSuccess={(newFile) => {
-            if (!newFile.title) {
-              newFile.title = newFile.filereq_name; // Ensure title fallback
-            }
-            setFiles((prevFiles) => [newFile, ...prevFiles]); // Add new file to the top of the list
-          }}
+          onUploadSuccess={handleUploadSuccess} // Pass the success handler to the modal
           projectId={projectId}
         />
       </Modal>
-
-      <Modal
-        isOpen={isReviewModalOpen}
-        onRequestClose={handleCloseReviewModal}
-        contentLabel="Review Verified PDF"
-        className="review-modal"
-        overlayClassName="modal-overlay"
-      >
-        <div className="modal-content-reviewreq">
-          <div className="verified-requirements-section">
-            <h3 className="ver-topic">Verified Requirements</h3>
-            <img onClick={handleCloseReviewModal} src={close} alt="close-reviewreq" className="close-reviewreq" />
-            {requirementList.length > 0 ? (
-              <table className="verified-requirements-table">
-                <thead>
-                  <tr>
-                    <th>REQ-ID</th>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {requirementList
-                    .filter((req) => req.requirement_status === "VERIFIED" || req.requirement_status === "VALIDATED")
-                    .map((req) => (
-                      <tr key={req.requirement_id}>
-                        <td>REQ-0{req.requirement_id}</td>
-                        <td>{req.requirement_name}</td>
-                        <td>{req.requirement_description}</td>
-                        <td>{req.requirement_type}</td>
-                        <td>{req.requirement_status}<img src={verified} alt="verified" className="verified" /></td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            ) : (
-              <p>No verified requirements yet.</p>
-            )}
-            <button className="ExportPDF" onClick={handleExportPDF}>Export PDF</button>
-          </div>
-        </div>
-      </Modal>
-
 
     </div>
   );

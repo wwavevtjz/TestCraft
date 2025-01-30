@@ -255,17 +255,21 @@ app.get('/project/:project_id/requirement', (req, res) => {
 // ดึงข้อมูลจาก requirement มา update
 app.get('/requirement/:id', (req, res) => {
     const { id } = req.params;
+
     const sql = `
         SELECT 
+            r.project_id,
             r.requirement_id,
             r.requirement_name,
             r.requirement_type,
             r.requirement_description,
             r.requirement_status,
-            r.filereq_id
+            COALESCE(GROUP_CONCAT(frr.filereq_id), '[]') AS filereq_ids
         FROM requirement r
-        LEFT JOIN file_requirement f ON r.filereq_id = f.filereq_id
+        LEFT JOIN file_requirement_relation frr ON r.requirement_id = frr.requirement_id
         WHERE r.requirement_id = ?
+        GROUP BY r.requirement_id, r.requirement_name, r.requirement_type, 
+                 r.requirement_description, r.requirement_status;
     `;
 
     db.query(sql, [id], (err, results) => {
@@ -276,9 +280,17 @@ app.get('/requirement/:id', (req, res) => {
         if (results.length === 0) {
             return res.status(404).json({ message: 'Requirement not found' });
         }
-        return res.status(200).json(results[0]); // ส่งข้อมูล requirement ที่รวม filereq_name มา
+
+        // แปลง filereq_ids จาก String เป็น Array
+        const formattedResult = {
+            ...results[0],
+            filereq_ids: results[0].filereq_ids ? results[0].filereq_ids.split(',').map(id => Number(id)) : []
+        };
+
+        return res.status(200).json(formattedResult);
     });
 });
+
 
 
 // API สำหรับการอัปเดต requirement
@@ -310,7 +322,7 @@ app.put("/requirement/:id", (req, res) => {
 
 
 
-// Add a new requirement for a specific project
+
 app.post('/requirement', (req, res) => {
     const { requirement_name, requirement_type, requirement_description, requirement_status, project_id, filereq_ids } = req.body;
 
@@ -319,11 +331,9 @@ app.post('/requirement', (req, res) => {
         return res.status(400).json({ message: "Missing required fields or filereq_ids is not an array" });
     }
 
-    const filereqIdsJson = JSON.stringify(filereq_ids);
-
-    // สร้าง SQL query สำหรับการแทรกข้อมูล
-    const sql = "INSERT INTO requirement (requirement_name, requirement_type, requirement_description, requirement_status, project_id, filereq_id) VALUES (?, ?, ?, ?, ?, ?)";
-    const values = [requirement_name, requirement_type, requirement_description, requirement_status, project_id, filereqIdsJson];
+    // สร้าง SQL query สำหรับการแทรกข้อมูลในตาราง requirement
+    const sql = "INSERT INTO requirement (requirement_name, requirement_type, requirement_description, requirement_status, project_id) VALUES (?, ?, ?, ?, ?)";
+    const values = [requirement_name, requirement_type, requirement_description, requirement_status, project_id];
 
     db.query(sql, values, (err, data) => {
         if (err) {
@@ -331,16 +341,34 @@ app.post('/requirement', (req, res) => {
             return res.status(500).json({ message: "Error adding requirement" });
         }
 
-        // ต้องการส่ง requirement_id กลับมาจาก response
-        const requirementId = data.insertId; // กรณีนี้เราใช้ insertId เพื่อดึง requirement_id ที่ถูกสร้างขึ้นมาใหม่
+        const requirementId = data.insertId; // ดึงค่า requirement_id ที่เพิ่งสร้างขึ้นมา
 
-        return res.status(201).json({
-            message: "Requirement added successfully",
-            requirement_id: requirementId, // ส่ง requirement_id กลับมา
-            data
+        // ถ้าไม่มี filereq_ids ให้ส่ง response ทันที
+        if (filereq_ids.length === 0) {
+            return res.status(201).json({
+                message: "Requirement added successfully",
+                requirement_id: requirementId
+            });
+        }
+
+        // เตรียม SQL สำหรับการแทรกข้อมูลลงในตาราง file_requirement_relation
+        const insertRelationSql = "INSERT INTO file_requirement_relation (filereq_id, requirement_id) VALUES ?";
+        const relationValues = filereq_ids.map(filereq_id => [filereq_id, requirementId]);
+
+        db.query(insertRelationSql, [relationValues], (relationErr, relationData) => {
+            if (relationErr) {
+                console.error(relationErr);
+                return res.status(500).json({ message: "Error inserting into file_requirement_relation" });
+            }
+
+            return res.status(201).json({
+                message: "Requirement and file relationships added successfully",
+                requirement_id: requirementId
+            });
         });
     });
 });
+
 
 
 // PUT /requirement/:id - Update requirement status
@@ -363,46 +391,61 @@ app.put("/statusrequirement/:id", (req, res) => {
 app.delete('/requirement/:id', (req, res) => {
     const id = req.params.id;
 
+    console.log(id);
+
+
     const deleteHistorySQL = "DELETE FROM historyreq WHERE requirement_id = ?";
     const deleteReviewerSQL = "DELETE FROM reviewer WHERE requirement_id = ?";
     const deleteRequirementSQL = "DELETE FROM requirement WHERE requirement_id = ?";
+    const deleteRequrementFromRelationSQL = "DELETE FROM file_requirement_relation WHERE requirement_id = ?"
     const deleteBaselineSQL = "DELETE FROM baseline WHERE requirement_id = ?";
+    const updateFileRequirementSQL = "UPDATE file_requirement SET requirement_id = NULL WHERE requirement_id = ?"; // อัปเดตให้ requirement_id เป็น NULL
 
-    // ลบข้อมูลใน baseline ก่อน
-    db.query(deleteBaselineSQL, [id], (err, data) => {
+    // ลบข้อมูลใน file_requirement ก่อน
+    db.query(updateFileRequirementSQL, [id], (err, data) => {
         if (err) {
             console.error(err);
-            return res.status(500).json({ message: "Error deleting baseline" });
+            return res.status(500).json({ message: "Error updating file_requirement" });
         }
 
-        // ลบข้อมูลใน historyreq
-        db.query(deleteHistorySQL, [id], (err, data) => {
+        // ลบข้อมูลใน baseline ก่อน
+        db.query(deleteBaselineSQL, [id], (err, data) => {
             if (err) {
                 console.error(err);
-                return res.status(500).json({ message: "Error deleting history" });
+                return res.status(500).json({ message: "Error deleting baseline" });
             }
 
-            // ลบข้อมูลใน reviewer
-            db.query(deleteReviewerSQL, [id], (err, data) => {
+            // ลบข้อมูลใน historyreq
+            db.query(deleteHistorySQL, [id], (err, data) => {
                 if (err) {
                     console.error(err);
-                    return res.status(500).json({ message: "Error deleting reviewers" });
+                    return res.status(500).json({ message: "Error deleting history" });
                 }
 
-                // ลบข้อมูลใน requirement
-                db.query(deleteRequirementSQL, [id], (err, data) => {
+                // ลบข้อมูลใน reviewer
+                db.query(deleteReviewerSQL, [id], (err, data) => {
                     if (err) {
                         console.error(err);
-                        return res.status(500).json({ message: "Error deleting requirement" });
+                        return res.status(500).json({ message: "Error deleting reviewers" });
                     }
 
-                    // Return success if all deletions are successful
-                    return res.status(200).json({ message: "Requirement deleted successfully" });
+                    // ลบข้อมูลใน requirement
+                    db.query(deleteRequrementFromRelationSQL, [id])
+                    db.query(deleteRequirementSQL, [id], (err, data) => {
+                        if (err) {
+                            console.error(err);
+                            return res.status(500).json({ message: "Error deleting requirement" });
+                        }
+
+                        // Return success if all deletions are successful
+                        return res.status(200).json({ message: "Requirement and associated data deleted successfully" });
+                    });
                 });
             });
         });
     });
 });
+
 
 
 // Get requirements by project ID
@@ -452,17 +495,17 @@ app.put('/requirement/:requirementId/status', (req, res) => {
 // filter status VERIFIED AND VALIDATED
 app.get("/api/requirements", (req, res) => {
     const query =
-      "SELECT * FROM requirement WHERE requirement_status IN ('VERIFIED', 'VALIDATED')";
+        "SELECT * FROM requirement WHERE requirement_status IN ('VERIFIED', 'VALIDATED')";
     db.query(query, (err, results) => {
-      if (err) {
-        console.error("Error fetching data:", err);
-        res.status(500).send("Error fetching data");
-      } else {
-        res.json(results);
-      }
+        if (err) {
+            console.error("Error fetching data:", err);
+            res.status(500).send("Error fetching data");
+        } else {
+            res.json(results);
+        }
     });
-  });
-  
+});
+
 // ------------------------- Requirement Verification -------------------------
 // Fetch all criteria
 app.get('/reqcriteria', (req, res) => {
@@ -1043,38 +1086,40 @@ app.post("/upload", upload.single("file"), (req, res) => {
 
 
 app.get('/files', (req, res) => {
-    const { project_id } = req.query; // ดึง project_id จาก query parameters
+    const { project_id } = req.query; // รับค่า project_id จาก query parameters
 
     if (!project_id) {
-        return res.status(400).send('project_id is required');
+        return res.status(400).json({ message: "project_id is required" });
     }
 
-    const sql = "SELECT * FROM file_requirement WHERE project_id = ?";
+    // SQL สำหรับการ JOIN file_requirement และ file_requirement_relation
+    const sql = `
+        SELECT 
+            fr.filereq_id, 
+            fr.filereq_name, 
+            COALESCE(GROUP_CONCAT(frr.requirement_id), '[]') AS requirement_ids
+        FROM file_requirement fr
+        LEFT JOIN file_requirement_relation frr ON fr.filereq_id = frr.filereq_id
+        WHERE fr.project_id = ?
+        GROUP BY fr.filereq_id, fr.filereq_name;
+    `;
+
     db.query(sql, [project_id], (err, result) => {
         if (err) {
             console.error('Error fetching files:', err);
-            return res.status(500).send('Error fetching files');
+            return res.status(500).json({ message: "Error fetching files" });
         }
 
-        // เพิ่มการจัดการ requirement_id หากเป็น JSON string
+        // แปลง requirement_ids จาก String เป็น Array
         const formattedResult = result.map(file => ({
             ...file,
-            requirement_id: file.requirement_id
-                ? (() => {
-                    try {
-                        // แปลง JSON string เป็น Array
-                        return JSON.parse(file.requirement_id);
-                    } catch (e) {
-                        console.error('Invalid JSON format for requirement_id:', file.requirement_id);
-                        return []; // หาก JSON ไม่ถูกต้อง คืนค่าเป็น Array ว่าง
-                    }
-                })()
-                : [] // หาก requirement_id เป็น null หรือ undefined ให้คืน Array ว่าง
+            requirement_ids: file.requirement_ids ? file.requirement_ids.split(',').map(id => Number(id)) : []
         }));
 
         res.json(formattedResult);
     });
 });
+
 
 
 
@@ -1867,48 +1912,29 @@ app.get('/getHistoryByRequirementId', (req, res) => {
 });
 
 // ----------------------------- DESIGN ------------------------------
-// Create Design API
+// Create Design
 app.post("/design", (req, res) => {
     console.log("Request body:", req.body); // Debug log
-    
-    const {
-      diagram_name,
-      design_type,
-      diagram_type,
-      design_description,
-      project_id,
-      design_status,
-      requirement_id,
-    } = req.body;
-  
-    if (
-      !diagram_name ||
-      !design_type ||
-      !diagram_type ||
-      !design_description ||
-      !project_id ||
-      !design_status ||
-      !requirement_id
-    ) {
-      console.error("Missing fields in request:", req.body); // Debug log
-      return res.status(400).json({ message: "All fields are required." });
+    const { diagram_name, design_type, diagram_type, design_description, project_id, design_status, requirement_id } = req.body;
+
+    if (!diagram_name || !design_type || !diagram_type || !design_description || !project_id || !design_status || !requirement_id) {
+        console.error("Missing fields in request:", req.body); // Debug log
+        return res.status(400).json({ message: "All fields are required." });
     }
-  
+
     const query = `
-      INSERT INTO design (
-        project_id, 
-        requirement_id, 
-        design_type, 
-        diagram_name, 
-        diagram_type, 
-        design_description, 
-        design_status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO design (
+            project_id, 
+            requirement_id, 
+            design_type, 
+            diagram_name, 
+            diagram_type, 
+            design_description, 
+            design_status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    db.query(
-      query,
-      [
+    db.query(query, [
         project_id,
         JSON.stringify(requirement_id), // Store as JSON
         design_type,
@@ -1916,46 +1942,42 @@ app.post("/design", (req, res) => {
         diagram_type,
         design_description,
         design_status,
-      ],
-      (err, results) => {
+    ], (err, results) => {
         if (err) {
-          console.error("Error inserting design:", err);
-          return res.status(500).json({ message: "Failed to create design." });
+            console.error("Error inserting design:", err);
+            return res.status(500).json({ message: "Failed to create design." });
         }
         res.status(201).json({ message: "Design created successfully.", design_id: results.insertId });
-      }
-    );
-  });
-  
-
-// Endpoint to get designs by project_id
-app.get("/design", (req, res) => {
-    const { project_id } = req.query;
-  
-    if (!project_id) {
-      return res.status(400).json({ error: "Project ID is required." });
-    }
-  
-    const query = `
-      SELECT * 
-      FROM design 
-      WHERE project_id = ?;
-    `;
-  
-    db.query(query, [project_id], (err, results) => {
-      if (err) {
-        console.error("Error fetching designs:", err);
-        res.status(500).json({ error: "Failed to fetch designs" });
-      } else {
-        res.status(200).json(results);
-      }
     });
-  });
-  
-// Update design status
+});
+
+// Get Designs by Project ID
+app.get("/design", (req, res) => {
+    const { project_id, status } = req.query;
+    if (!project_id) return res.status(400).json({ error: "Project ID is required." });
+
+    let query = `SELECT * FROM design WHERE project_id = ?`;
+    const params = [project_id];
+
+    if (status) {
+        query += " AND design_status = ?";
+        params.push(status);
+    }
+
+    db.query(query, params, (err, results) => {
+        if (err) {
+            console.error("Error fetching designs:", err);
+            res.status(500).json({ error: "Failed to fetch designs" });
+        } else {
+            res.status(200).json(results);
+        }
+    });
+});
+
+// Update Design Status
 app.put("/statusdesign", (req, res) => {
     const { id } = req.params;
-    const { design_status } = req.body;  // Only update the status
+    const { design_status } = req.body;
     const sql = "UPDATE design SET design_status = ? WHERE design_id = ?";
 
     db.query(sql, [design_status, id], (err, data) => {
@@ -1967,37 +1989,35 @@ app.put("/statusdesign", (req, res) => {
     });
 });
 
-// ------------------------- DESIGN HISTORY -----------------------------------
-// เพิ่มข้อมูลลงตาราง historydesign
-app.post('/addHistoryDesign', (req, res) => { 
+
+// Add History Design
+app.post("/addHistoryDesign", (req, res) => {
     const { design_id, design_status } = req.body;
-  
+
     if (!design_id || !design_status) {
-      return res.status(400).json({ message: "กรุณาระบุ 'design_id' และ 'design_status'" });
+        return res.status(400).json({ message: "กรุณาระบุ 'design_id' และ 'design_status'" });
     }
-  
+
     const sql = `
         INSERT INTO historydesign (design_id, design_status, design_at)
         VALUES (?, ?, NOW())
     `;
-  
+
     db.query(sql, [design_id, design_status], (err, result) => {
-      if (err) {
-        console.error('Database Error:', err);
-        return res.status(500).json({ message: "ไม่สามารถเพิ่มข้อมูลประวัติการออกแบบได้" });
-      }
-  
-      return res.status(200).json({ message: "บันทึกประวัติการออกแบบสำเร็จ!", insertedId: result.insertId });
+        if (err) {
+            console.error("❌ Database Error:", err);
+            return res.status(500).json({ message: "ไม่สามารถเพิ่มข้อมูลประวัติการออกแบบได้" });
+        }
+
+        console.log(`📜 History added for Design ID: ${design_id} with status: ${design_status}`);
+        return res.status(200).json({ message: "บันทึกประวัติการออกแบบสำเร็จ!", insertedId: result.insertId });
     });
-  });
+});
 
-// ดึงข้อมูลประวัติการออกแบบโดยอ้างอิง design_id
-app.get('/getHistoryByDesignId', (req, res) => { 
+// Get History by Design ID
+app.get('/getHistoryByDesignId', (req, res) => {
     const design_id = req.query.design_id;
-
-    if (!design_id) {
-        return res.status(400).json({ message: "กรุณาระบุ 'design_id'" });
-    }
+    if (!design_id) return res.status(400).json({ message: "กรุณาระบุ 'design_id'" });
 
     const sql = `
         SELECT * FROM historydesign
@@ -2015,132 +2035,184 @@ app.get('/getHistoryByDesignId', (req, res) => {
     });
 });
 
-// ------------------------- DESIGN CRITERIA ----------------------------------
-app.post("/designcriteria", async (req, res) => {
-    const { designcri_name, design_id } = req.body;
-
-    if (!designcri_name || !design_id) {
-        return res.status(400).send("ข้อมูลไม่ครบถ้วน");
-    }
-
-    try {
-        const result = await db.query(
-            "INSERT INTO designcriteria (design_cri_name, design_id) VALUES (?, ?)",
-            [designcri_name, design_id]
-        );
-        res.status(201).send({ message: "Design criteria added successfully", id: result.insertId });
-    } catch (error) {
-        console.error("Error inserting design criteria:", error);
-        res.status(500).send("เกิดข้อผิดพลาดในการเพิ่มข้อมูล");
-    }
+// Fetch all criteria
+app.get('/designcriteria', (req, res) => {
+    const sql = "SELECT * FROM designcriteria";
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.error('Error fetching Design Criteria:', err);
+            return res.status(500).send('Error fetching Design Criteria');
+        }
+        res.json(result);
+    });
 });
 
-app.get("/designcriteria", async (req, res) => {
-    try {
-        const result = await db.query("SELECT * FROM designcriteria");
-        res.status(200).send(result);
-    } catch (error) {
-        console.error("Error fetching design criteria:", error);
-        res.status(500).send("เกิดข้อผิดพลาดในการดึงข้อมูล");
+// Add new criteria
+app.post('/designcriteria', (req, res) => {
+    const { design_cri_name } = req.body;
+
+    if (!design_cri_name || design_cri_name.trim() === "") {
+        return res.status(400).json({ message: "Criteria name is required" });
     }
+
+    const sql = "INSERT INTO designcriteria (design_cri_name) VALUES (?)";
+    db.query(sql, [design_cri_name], (err, result) => {
+        if (err) {
+            console.error('Error creating criteria:', err);
+            return res.status(500).json({ message: "Error creating criteria" });
+        }
+        res.status(201).json({ message: "Criteria created successfully", data: result });
+    });
 });
 
-// ------------------------- DESIGN VERIFICATION -------------------------
-// การ createdesign
+// Update criteria
+app.put('/updatedesigncriteria', (req, res) => {
+    const { design_cri_name } = req.body;
+    const { id } = req.params;
+
+    if (!design_cri_name || design_cri_name.trim() === "") {
+        return res.status(400).json({ message: "Criteria name is required" });
+    }
+
+    const sql = "UPDATE designcriteria SET design_cri_name = ? WHERE design_cri_name = ?";
+    db.query(sql, [design_cri_name, id], (err, result) => {
+        if (err) {
+            console.error('Error updating criteria:', err);
+            return res.status(500).json({ message: "Error updating criteria" });
+        }
+        res.status(200).json({ message: "Criteria updated successfully", data: result });
+    });
+});
+
+// Delete criteria
+app.delete('/deletedesigncriteria', (req, res) => {
+    const { id } = req.params;
+
+    const checkSql = "SELECT * FROM designcriteria WHERE design_cri_name = ?";
+    const deleteSql = "DELETE FROM designcriteria WHERE design_cri_name = ?";
+
+    db.query(checkSql, [id], (err, result) => {
+        if (err) {
+            console.error('Error checking criteria:', err);
+            return res.status(500).json({ message: "Error checking criteria" });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({ message: "Criteria not found" });
+        }
+
+        db.query(deleteSql, [id], (err, result) => {
+            if (err) {
+                console.error('Error deleting criteria:', err);
+                return res.status(500).json({ message: "Error deleting criteria" });
+            }
+            res.status(200).json({ message: "Criteria deleted successfully" });
+        });
+    });
+});
+
+// Create Veridesign
 app.post("/createveridesign", (req, res) => {
     const veridesignData = req.body;
-  
     if (!Array.isArray(veridesignData) || veridesignData.length === 0) {
-      return res.status(400).json({ message: "Invalid data format or empty array." });
+        return res.status(400).json({ message: "Invalid data format or empty array." });
     }
-  
+
     const query =
-      "INSERT INTO veridesign (project_id, create_by, requirement_id, veridesign_at, veridesign_status, veridesign_by) VALUES ?";
-  
+        "INSERT INTO veridesign (project_id, create_by, requirement_id, veridesign_at, veridesign_status, veridesign_by) VALUES ?";
+
     const formatDateTime = (date) => {
-      const d = new Date(date);
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      const hours = String(d.getHours()).padStart(2, "0");
-      const minutes = String(d.getMinutes()).padStart(2, "0");
-      const seconds = String(d.getSeconds()).padStart(2, "0");
-      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        const hours = String(d.getHours()).padStart(2, "0");
+        const minutes = String(d.getMinutes()).padStart(2, "0");
+        const seconds = String(d.getSeconds()).padStart(2, "0");
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     };
-  
+
     const values = veridesignData.map((item) => [
-      item.project_id,
-      item.create_by,
-      item.requirement_id,
-      formatDateTime(item.veridesign_at),
-      item.veridesign_status,
-      JSON.stringify(item.veridesign_by), // Convert `veridesign_by` to JSON string
+        item.project_id,
+        item.create_by,
+        item.requirement_id,
+        formatDateTime(item.veridesign_at),
+        item.veridesign_status,
+        JSON.stringify(item.veridesign_by), // Convert `veridesign_by` to JSON string
     ]);
-  
+
     db.query(query, [values], (err, result) => {
-      if (err) {
-        console.error("Error inserting data:", err);
-        return res.status(500).json({ message: "Failed to create veridesign records." });
-      }
-  
-      res.status(201).json({
-        message: "Veridesign records created successfully.",
-        affectedRows: result.affectedRows,
-      });
+        if (err) {
+            console.error("Error inserting data:", err);
+            return res.status(500).json({ message: "Failed to create veridesign records." });
+        }
+
+        res.status(201).json({
+            message: "Veridesign records created successfully.",
+            affectedRows: result.affectedRows,
+        });
     });
-  });
+});
 
 // ดึงข้อมูล req_design ที่มี status working
 app.get("/veridesign", (req, res) => {
     const { project_id } = req.query;
-  
+
     if (!project_id) {
-      return res.status(400).json({ error: "Project ID is required." });
+        return res.status(400).json({ error: "Project ID is required." });
     }
-  
+
     const query = `
       SELECT * 
       FROM design 
       WHERE project_id = ? AND design_status = 'WORKING';
     `;
-  
+
     db.query(query, [project_id], (err, results) => {
-      if (err) {
-        console.error("Error fetching designs:", err);
-        res.status(500).json({ error: "Failed to fetch designs" });
-      } else {
-        res.status(200).json(results);
-      }
+        if (err) {
+            console.error("Error fetching designs:", err);
+            res.status(500).json({ error: "Failed to fetch designs" });
+        } else {
+            res.status(200).json(results);
+        }
     });
-  });
+});
 
-
-  // ดึงข้อมูล req_design ที่มี status working
+// ดึงข้อมูล req_design ที่มี WAITING FOR VERIFICATION
 app.get("/verilistdesign", (req, res) => {
-    const { project_id } = req.query;
-  
+    const { project_id, veri_design_id } = req.query; // รับ veri_design_id ด้วย
+
     if (!project_id) {
-      return res.status(400).json({ error: "Project ID is required." });
+        return res.status(400).json({ error: "Project ID is required." });
     }
-  
-    const query = `
+
+    // กำหนดเงื่อนไข SQL
+    let query = `
       SELECT * 
       FROM design 
-      WHERE project_id = ? AND design_status = 'WAITING FOR VERIFICATION';
+      WHERE project_id = ? AND design_status = 'WAITING FOR VERIFICATION'
     `;
-  
-    db.query(query, [project_id], (err, results) => {
-      if (err) {
-        console.error("Error fetching designs:", err);
-        res.status(500).json({ error: "Failed to fetch designs" });
-      } else {
-        res.status(200).json(results);
-      }
+
+    let params = [project_id];
+
+    if (veri_design_id) {
+        query += " AND design_id = ?"; // เพิ่มเงื่อนไขเฉพาะ design ที่ต้องการ
+        params.push(veri_design_id);
+    }
+
+    db.query(query, params, (err, results) => {
+        if (err) {
+            console.error("❌ Error fetching designs:", err);
+            res.status(500).json({ error: "Failed to fetch designs" });
+        } else {
+            console.log("🎨 VeriDesign Response:", results);
+            res.status(200).json(results);
+        }
     });
-  });
+});
 
 // Update status waitingforveri ของ design
-  app.put('/update-design-status-waitingfor-ver/:id', (req, res) => {
+app.put('/update-design-status-waitingfor-ver/:id', (req, res) => {
     const { id } = req.params;
     const { design_status } = req.body;
 
@@ -2167,6 +2239,199 @@ app.get("/verilistdesign", (req, res) => {
         res.status(200).json({ message: "Design status updated successfully." });
     });
 });
+
+// 🔹 อัปเดตสถานะ Design เป็น "VERIFIED"
+app.put("/update-design-status-verified", (req, res) => {
+    let { design_id, design_status } = req.body;
+
+    console.log("📌 Received request:", req.body);
+
+    if (!design_id || !Array.isArray(design_id) || design_id.length === 0) {
+        return res.status(400).json({ error: "Invalid design_id format. Must be a non-empty array." });
+    }
+
+    // ตรวจสอบค่า design_id ก่อน Query
+    design_id = design_id.map((id) => parseInt(id, 10)).filter((id) => !isNaN(id));
+
+    console.log("✅ Parsed design_id:", design_id);
+
+    if (design_id.length === 0) {
+        return res.status(400).json({ error: "Invalid design_id values." });
+    }
+
+    const query = `UPDATE design SET design_status = ? WHERE design_id IN (${design_id.map(() => "?").join(",")})`;
+
+    console.log("🔹 Running Query:", query);
+
+    db.query(query, [design_status, ...design_id], (err, result) => {
+        if (err) {
+            console.error("❌ Error updating design status:", err);
+            return res.status(500).json({ error: "Failed to update design status." });
+        }
+
+        console.log("✅ Update Success! Rows affected:", result.affectedRows);
+        res.status(200).json({ message: "Design status updated successfully." });
+    });
+});
+
+
+// ------------------------- Design Baseline -------------------------
+
+// API สำหรับสร้าง Design Baseline
+app.post('/createdesignbaseline', (req, res) => {
+    const { design_id } = req.body;
+
+    if (!design_id || !design_id.length) {
+        return res.status(400).send({ error: "Design ID is required" });
+    }
+
+    // ค้นหา baseline_round ล่าสุดของ design
+    const findLatestBaselineRoundQuery = `
+        SELECT design_id, COALESCE(MAX(baselinedesign_round), 0) AS latest_baselinedesign_round
+        FROM baselinedesign
+        WHERE design_id IN (?)
+        GROUP BY design_id
+    `;
+
+    db.query(findLatestBaselineRoundQuery, [design_id], (err, results) => {
+        if (err) {
+            console.error("Database error during baselinedesign round check:", err);
+            return res.status(500).send({
+                error: "Failed to fetch the latest baselinedesign round",
+                details: err.sqlMessage || err.message,
+            });
+        }
+
+        console.log("Results from findLatestBaselineRoundQuery:", results);
+
+        const roundMap = {};
+        design_id.forEach(id => {
+            // ค้นหาค่า baselinedesign_round ล่าสุดของ design_id ปัจจุบัน
+            const latestEntry = results.find(row => row.design_id === id);
+
+            if (latestEntry) {
+                roundMap[id] = latestEntry.baselinedesign_round + 1; // ถ้ามีค่า ให้เพิ่มขึ้น 1
+            } else {
+                roundMap[id] = 1; // ถ้ายังไม่มี baseline ให้เริ่มที่ 1
+            }
+        });
+
+        console.log("Updated roundMap:", roundMap); // ตรวจสอบค่ารอบใหม่
+
+        if (!design_id || design_id.length === 0) {
+            return res.status(400).send({ error: "Design ID is required" });
+        }
+
+        const formattedDate = new Date().toISOString().slice(0, 19).replace("T", " ");
+        const baselineValues = design_id.map((id) => [
+            id,
+            roundMap[id],
+            formattedDate,
+        ]);
+
+        console.log("baselineValues to be inserted:", baselineValues);
+
+        const insertBaselineQuery = `
+            INSERT INTO baselinedesign (design_id, baselinedesign_round, baselinedesign_at)
+            VALUES ?
+        `;
+
+        db.query(insertBaselineQuery, [baselineValues], (insertErr, insertResult) => {
+            if (insertErr) {
+                console.error("Database error during baselinedesign insert:", insertErr);
+                return res.status(500).send({
+                    error: "Failed to create design baselinedesign",
+                    details: insertErr.sqlMessage || insertErr.message,
+                });
+            }
+
+            const updateDesignQuery = `
+                UPDATE design
+                SET design_status = 'BASELINE'
+                WHERE design_id IN (?)
+            `;
+
+            db.query(updateDesignQuery, [design_id], (updateErr, updateResult) => {
+                if (updateErr) {
+                    console.error("Database error during design update:", updateErr);
+                    return res.status(500).send({
+                        error: "Failed to update designs",
+                        details: updateErr.sqlMessage || updateErr.message,
+                    });
+                }
+
+                console.log("Inserted Design Baselines:", baselineValues);
+
+                res.status(201).send({
+                    message: "Design baseline created successfully",
+                    updatedDesigns: updateResult.affectedRows,
+                    insertedRows: insertResult.affectedRows,
+                    baselinedesign: baselineValues,
+                });
+            });
+        });
+    });
+});
+
+// ดึง Design ที่มีสถานะ VERIFIED สำหรับ Project ID
+app.get("/designverified/:projectId", (req, res) => {
+    const { projectId } = req.params;
+
+    if (!projectId) {
+        return res.status(400).json({ message: "Project ID is required" });
+    }
+
+    const sql = `SELECT * FROM design WHERE project_id = ? AND design_status = 'VERIFIED'`;
+
+    db.query(sql, [projectId], (err, results) => {
+        if (err) {
+            console.error("Error fetching designs:", err);
+            return res.status(500).json({ message: "Failed to fetch designs." });
+        }
+        res.json(results);
+    });
+});
+
+// ดึงข้อมูล Design Baseline ตาม Project ID
+app.get("/designbaseline", (req, res) => {
+    const { project_id } = req.query;
+    console.log("Received project_id:", project_id);
+
+    if (!project_id) {
+        return res.status(400).json({ error: "Project ID is required" });
+    }
+
+    const sql = `
+        SELECT 
+            b.baselinedesign_id, 
+            b.design_id, 
+            b.baselinedesign_round, 
+            b.baselinedesign_at
+        FROM baselinedesign b
+        JOIN design d ON b.design_id = d.design_id
+        WHERE d.project_id = ?
+        GROUP BY b.baselinedesign_id
+    `;
+
+    db.query(sql, [project_id], (err, results) => {
+        if (err) {
+            console.error("Error fetching baselines:", err);
+            return res.status(500).json({ error: "Failed to fetch baselines" });
+        }
+
+        console.log("Fetched baselines:", results);
+
+        const formattedResults = results.map((row) => ({
+            baselinedesign_id: row.baselinedesign_id,
+            design_id: row.design_id,
+            baselinedesign_round: row.baselinedesign_round,
+            baselinedesign_at: row.baselinedesign_at
+        }));
+
+        res.json(formattedResults);
+    });
+});
+
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;
 app.listen(PORT, () => {

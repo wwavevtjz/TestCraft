@@ -14,28 +14,30 @@ const ViewEditReq = () => {
     // ฟังก์ชันแยกวันที่และเวลา
     const formatDate = (dateString) => {
         const date = new Date(dateString);
-    
+
         // จัดรูปแบบวันที่
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0'); // เดือนเริ่มจาก 0
         const year = date.getFullYear();
-    
+
         // จัดรูปแบบเวลา
         const hours = String(date.getHours()).padStart(2, '0');
         const minutes = String(date.getMinutes()).padStart(2, '0');
         const seconds = String(date.getSeconds()).padStart(2, '0');
-    
+
         const formattedDate = `${day}/${month}/${year}`; // วันที่ในรูปแบบ "DD/MM/YYYY"
         const formattedTime = `${hours}:${minutes}:${seconds}`; // เวลาในรูปแบบ "HH:mm:ss"
-    
+
         return { date: formattedDate, time: formattedTime };
     };
-    
+
 
     useEffect(() => {
+
         const fetchRequirement = async (requirementId) => {
             try {
                 const response = await axios.get(`http://localhost:3001/requirement/${requirementId}`);
+
                 setRequirement(response.data);
             } catch (error) {
                 console.error('Error fetching requirement:', error);
@@ -44,6 +46,7 @@ const ViewEditReq = () => {
 
         // ตรวจสอบค่า requirement จาก location หรือ URL
         if (location.state && location.state.requirement) {
+            fetchRequirement(location.state.requirement.requirement_id);
             setRequirement(location.state.requirement);
             fetchHistory(location.state.requirement.requirement_id);
         } else if (location.search) {
@@ -81,6 +84,8 @@ const ViewEditReq = () => {
     if (!requirement) {
         return <p>Loading requirement data...</p>;
     }
+    console.log("DST", historyData)
+    console.log("DST2", requirement)
 
     return (
         <div>
@@ -111,7 +116,19 @@ const ViewEditReq = () => {
                         <strong className="view-requirement-label">Status:</strong> {requirement.requirement_status}
                     </p>
                     <p>
-                        <strong className="view-requirement-label">File ID:</strong> <span className="file-id-highlight">{requirement.filereq_id}</span>
+                        <strong className="view-requirement-label">File IDs:</strong>
+                        <span className="file-id-highlight">
+                            {requirement.filereq_ids && requirement.filereq_ids.length > 0 ? (
+                                <ul>
+                                    {requirement.filereq_ids.map((filereq_id, index) => (
+                                        <li key={index}>{filereq_id}</li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <span>No File IDs available</span>
+                            )}
+                        </span>
+
                     </p>
                 </div>
                 <div className="view-requirement-text">

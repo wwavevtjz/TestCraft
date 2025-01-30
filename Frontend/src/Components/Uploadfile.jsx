@@ -34,17 +34,11 @@ const UploadFile = ({ onClose, onUploadSuccess, projectId, requirementId }) => {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("title", title);
-        formData.append("project_id", projectId);  // Send projectId
-        formData.append("requirement_id", requirementId);  // Send requirementId
-
-        // Check the formData before sending
-        console.log("Form Data before sending:");
-        for (let pair of formData.entries()) {
-            console.log(pair[0] + ": " + pair[1]);
-        }
+        formData.append("project_id", projectId);
+        formData.append("requirement_id", requirementId);
 
         setIsUploading(true);
-        setErrorMessage(""); // Reset error message
+        setErrorMessage("");
 
         try {
             const response = await axios.post("http://localhost:3001/upload", formData, {
@@ -53,9 +47,12 @@ const UploadFile = ({ onClose, onUploadSuccess, projectId, requirementId }) => {
 
             const newFile = response.data;
             alert("File uploaded successfully.");
+
+            // ส่งข้อมูลไฟล์ที่อัปโหลดกลับไปให้ RequirementPage
             if (onUploadSuccess) {
                 onUploadSuccess(newFile);
             }
+
             onClose();
         } catch (error) {
             console.error("Error uploading file:", error.response || error.message);
@@ -67,12 +64,10 @@ const UploadFile = ({ onClose, onUploadSuccess, projectId, requirementId }) => {
 
     return (
         <div className="upload-file-container">
-            <button className="upload-file-close" onClick={onClose} disabled={isUploading}>
-                ×
-            </button>
+            <button className="upload-file-close" onClick={onClose} disabled={isUploading}>×</button>
             <div className="upload-file-header">Add File</div>
 
-            {errorMessage && <div className="error-message">{errorMessage}</div>}  {/* Display error message */}
+            {errorMessage && <div className="error-message">{errorMessage}</div>}
 
             <div className="form-group">
                 <label htmlFor="title">Title:</label>
@@ -83,11 +78,10 @@ const UploadFile = ({ onClose, onUploadSuccess, projectId, requirementId }) => {
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Enter file title"
                     disabled={isUploading}
-                    aria-label="File title"
                 />
             </div>
 
-            <label htmlFor="file-upload" className="upload-button" aria-label="Upload file">
+            <label htmlFor="file-upload" className="upload-button">
                 <FontAwesomeIcon icon={faUpload} className="upload-button-icon" />
                 <span className="upload-text">Upload File</span>
             </label>
@@ -97,7 +91,6 @@ const UploadFile = ({ onClose, onUploadSuccess, projectId, requirementId }) => {
                 accept="application/pdf"
                 style={{ display: "none" }}
                 onChange={handleFileChange}
-                aria-label="Choose file"
             />
 
             {fileName && <div className="file-name">Selected File: {fileName}</div>}

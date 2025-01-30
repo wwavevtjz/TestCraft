@@ -166,7 +166,8 @@ const CreateRequirement = () => {
             isMulti
             options={uploadedFiles.map((file) => ({
               value: file.filereq_id,
-              label: file.filereq_name, // แสดงชื่อไฟล์
+              label: `${file.filereq_id} - ${file.filereq_name}`
+
             }))}
             value={uploadedFiles.filter((file) => selectedFileIds.includes(file.filereq_id)).map((file) => ({
               value: file.filereq_id,
