@@ -296,29 +296,61 @@ app.get('/requirement/:id', (req, res) => {
 // API สำหรับการอัปเดต requirement
 app.put("/requirement/:id", (req, res) => {
     const { id } = req.params;
-    const { requirement_name, requirement_description, requirement_type, filereq_id } = req.body;
+    const { requirement_name, requirement_description, requirement_type, filereq_ids } = req.body;
 
-    // ตรวจสอบว่าข้อมูลที่จำเป็นทั้งหมดมีหรือไม่
-    if (!requirement_name || !requirement_description || !requirement_type || !filereq_id) {
-        return res.status(400).json({ message: "Missing required fields" });
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (!requirement_name || !requirement_description || !requirement_type || !Array.isArray(filereq_ids)) {
+        return res.status(400).json({ message: "Missing required fields or filereq_ids is not an array" });
     }
 
-    // สร้าง SQL สำหรับการอัปเดตข้อมูล requirement
-    const sql =
-        "UPDATE requirement SET requirement_name = ?, requirement_description = ?, requirement_type = ?, filereq_id = ? WHERE requirement_id = ?";
+    // อัปเดตข้อมูล requirement
+    const updateRequirementSql = `
+        UPDATE requirement 
+        SET requirement_name = ?, requirement_description = ?, requirement_type = ? 
+        WHERE requirement_id = ?
+    `;
 
-    db.query(sql, [requirement_name, requirement_description, requirement_type, filereq_id, id], (err, data) => {
+    db.query(updateRequirementSql, [requirement_name, requirement_description, requirement_type, id], (err, result) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ message: "Error updating requirement" });
         }
-        // ตรวจสอบว่ามีการอัปเดตหรือไม่
-        if (data.affectedRows === 0) {
+        if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Requirement not found or no changes made" });
         }
-        return res.status(200).json({ message: "Requirement updated successfully" });
+
+        // ลบความสัมพันธ์เก่ากับไฟล์
+        const deleteRelationSql = "DELETE FROM file_requirement_relation WHERE requirement_id = ?";
+        db.query(deleteRelationSql, [id], (deleteErr) => {
+            if (deleteErr) {
+                console.error(deleteErr);
+                return res.status(500).json({ message: "Error deleting old file relationships" });
+            }
+
+            // เพิ่มความสัมพันธ์ใหม่ถ้ามี filereq_ids
+            if (filereq_ids.length > 0) {
+                const insertRelationSql = "INSERT INTO file_requirement_relation (filereq_id, requirement_id) VALUES ?";
+                const relationValues = filereq_ids.map(filereq_id => [filereq_id, id]);
+
+                db.query(insertRelationSql, [relationValues], (relationErr) => {
+                    if (relationErr) {
+                        console.error(relationErr);
+                        return res.status(500).json({ message: "Error inserting new file relationships" });
+                    }
+
+                    return res.status(200).json({
+                        message: "Requirement and file relationships updated successfully"
+                    });
+                });
+            } else {
+                return res.status(200).json({
+                    message: "Requirement updated successfully, no file relationships changed"
+                });
+            }
+        });
     });
 });
+
 
 
 
@@ -1914,11 +1946,11 @@ app.get('/getHistoryByRequirementId', (req, res) => {
 // ----------------------------- DESIGN ------------------------------
 // Create Design
 app.post("/design", (req, res) => {
-    console.log("Request body:", req.body); // Debug log
+    console.log("Request body:", req.body);
     const { diagram_name, design_type, diagram_type, design_description, project_id, design_status, requirement_id } = req.body;
 
     if (!diagram_name || !design_type || !diagram_type || !design_description || !project_id || !design_status || !requirement_id) {
-        console.error("Missing fields in request:", req.body); // Debug log
+        console.error("Missing fields in request:", req.body);
         return res.status(400).json({ message: "All fields are required." });
     }
 
@@ -1947,8 +1979,33 @@ app.post("/design", (req, res) => {
             console.error("Error inserting design:", err);
             return res.status(500).json({ message: "Failed to create design." });
         }
+
         res.status(201).json({ message: "Design created successfully.", design_id: results.insertId });
     });
+});
+
+app.post("/uploadDesignFiles", upload.array("files"), (req, res) => {
+    const { design_id } = req.body;
+
+    if (!design_id || !req.files) {
+        return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    const insertFilesQuery = `
+        INSERT INTO file_design (design_id, file_design_data, create_at, update_at) 
+        VALUES (?, ?, NOW(), NOW())
+    `;
+
+    req.files.forEach((file) => {
+        db.query(insertFilesQuery, [design_id, file.buffer], (err) => {
+            if (err) {
+                console.error("Error inserting files:", err);
+                return res.status(500).json({ message: "Failed to save file references." });
+            }
+        });
+    });
+
+    res.status(200).json({ message: "Files uploaded successfully." });
 });
 
 // Get Designs by Project ID
@@ -1990,6 +2047,7 @@ app.put("/statusdesign", (req, res) => {
 });
 
 
+//----------------------------------------- DESIGN HISTORY -----------------------------------------------------
 // Add History Design
 app.post("/addHistoryDesign", (req, res) => {
     const { design_id, design_status } = req.body;
@@ -2035,6 +2093,8 @@ app.get('/getHistoryByDesignId', (req, res) => {
     });
 });
 
+
+//----------------------------------------- DESIGN CRITERIA -----------------------------------------------------
 // Fetch all criteria
 app.get('/designcriteria', (req, res) => {
     const sql = "SELECT * FROM designcriteria";
@@ -2111,6 +2171,7 @@ app.delete('/deletedesigncriteria', (req, res) => {
     });
 });
 
+//----------------------------------------- VERIFICATION DESIGN -----------------------------------------------------
 // Create Veridesign
 app.post("/createveridesign", (req, res) => {
     const veridesignData = req.body;
@@ -2118,41 +2179,53 @@ app.post("/createveridesign", (req, res) => {
         return res.status(400).json({ message: "Invalid data format or empty array." });
     }
 
-    const query =
-        "INSERT INTO veridesign (project_id, create_by, requirement_id, veridesign_at, veridesign_status, veridesign_by) VALUES ?";
+    // ดึงค่า veridesign_round ล่าสุดของ project_id นี้
+    const projectId = veridesignData[0].project_id; // สมมติว่าใช้ project_id ตัวแรกเป็นตัวอ้างอิง
+    const getLatestRoundQuery = `SELECT MAX(veridesign_round) AS latestRound FROM veridesign WHERE project_id = ?`;
 
-    const formatDateTime = (date) => {
-        const d = new Date(date);
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
-        const hours = String(d.getHours()).padStart(2, "0");
-        const minutes = String(d.getMinutes()).padStart(2, "0");
-        const seconds = String(d.getSeconds()).padStart(2, "0");
-        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    };
-
-    const values = veridesignData.map((item) => [
-        item.project_id,
-        item.create_by,
-        item.requirement_id,
-        formatDateTime(item.veridesign_at),
-        item.veridesign_status,
-        JSON.stringify(item.veridesign_by), // Convert `veridesign_by` to JSON string
-    ]);
-
-    db.query(query, [values], (err, result) => {
+    db.query(getLatestRoundQuery, [projectId], (err, results) => {
         if (err) {
-            console.error("Error inserting data:", err);
-            return res.status(500).json({ message: "Failed to create veridesign records." });
+            console.error("Error fetching latest veridesign_round:", err);
+            return res.status(500).json({ message: "Failed to fetch latest veridesign_round." });
         }
 
-        res.status(201).json({
-            message: "Veridesign records created successfully.",
-            affectedRows: result.affectedRows,
+        // ถ้ายังไม่มีข้อมูล ให้เริ่มต้นจาก 1
+        const latestRound = results[0].latestRound || 0;
+        let nextRound = latestRound + 1;
+
+        const query =
+            `INSERT INTO veridesign (project_id, veridesign_round, create_by, design_id, veridesign_at, veridesign_by) VALUES ?`;
+
+        const formatDateTime = (date) => {
+            const d = new Date(date);
+            return d.toISOString().slice(0, 19).replace("T", " ");
+        };
+
+        const values = veridesignData.map((item) => [
+            item.project_id,
+            nextRound,  // เพิ่มรอบแบบอัตโนมัติ
+            item.create_by,
+            item.design_id,
+            formatDateTime(item.veridesign_at),
+            JSON.stringify(item.veridesign_by),
+        ]);
+
+        db.query(query, [values], (err, result) => {
+            if (err) {
+                console.error("Error inserting data:", err);
+                return res.status(500).json({ message: "Failed to create veridesign records." });
+            }
+
+            res.status(201).json({
+                message: "Veridesign records created successfully.",
+                affectedRows: result.affectedRows,
+            });
         });
     });
 });
+
+
+
 
 // ดึงข้อมูล req_design ที่มี status working
 app.get("/veridesign", (req, res) => {
@@ -2180,36 +2253,71 @@ app.get("/veridesign", (req, res) => {
 
 // ดึงข้อมูล req_design ที่มี WAITING FOR VERIFICATION
 app.get("/verilistdesign", (req, res) => {
-    const { project_id, veri_design_id } = req.query; // รับ veri_design_id ด้วย
+    const { project_id } = req.query;
 
     if (!project_id) {
         return res.status(400).json({ error: "Project ID is required." });
     }
 
-    // กำหนดเงื่อนไข SQL
     let query = `
-      SELECT * 
-      FROM design 
-      WHERE project_id = ? AND design_status = 'WAITING FOR VERIFICATION'
+        SELECT 
+            vd.veridesign_round,
+            vd.create_by,
+            vd.veridesign_at,
+            GROUP_CONCAT(d.design_id) AS design_ids,  -- รวม design_id
+            d.design_status,
+            vd.veridesign_by
+        FROM 
+            veridesign vd
+        LEFT JOIN 
+            design d ON vd.design_id = d.design_id
+        WHERE 
+            vd.project_id = ?
+        GROUP BY 
+            vd.veridesign_round, vd.create_by, vd.veridesign_at, d.design_status, vd.veridesign_by
+        ORDER BY 
+            vd.veridesign_round ASC
+        LIMIT 25;
     `;
 
-    let params = [project_id];
-
-    if (veri_design_id) {
-        query += " AND design_id = ?"; // เพิ่มเงื่อนไขเฉพาะ design ที่ต้องการ
-        params.push(veri_design_id);
-    }
-
-    db.query(query, params, (err, results) => {
+    db.query(query, [project_id], (err, results) => {
         if (err) {
             console.error("❌ Error fetching designs:", err);
             res.status(500).json({ error: "Failed to fetch designs" });
         } else {
-            console.log("🎨 VeriDesign Response:", results);
+            const processedResults = results.map((design) => ({
+                ...design,
+                veridesign_by: JSON.parse(design.veridesign_by || "[]").map(rev => rev.reviewerName),
+                design_ids: design.design_ids ? design.design_ids.split(",") : []  // แปลง design_ids เป็น array
+            }));
+
+            console.log("🎨 VeriDesign Response:", processedResults);
+            res.status(200).json(processedResults);
+        }
+    });
+});
+
+// get ข้อมูลเฉพาะเมื่อกดที่ verify ในหน้า View Verification
+app.get("/verifydesign", (req, res) => {
+    const { design_id } = req.query;
+    
+    if (!design_id) {
+        return res.status(400).json({ error: "Design ID is required." });
+    }
+
+    const designIdsArray = design_id.split(","); // แปลงเป็น array
+    let query = `SELECT * FROM design WHERE design_id IN (?)`;
+
+    db.query(query, [designIdsArray], (err, results) => {
+        if (err) {
+            console.error("Error fetching designs:", err);
+            res.status(500).json({ error: "Failed to fetch designs" });
+        } else {
             res.status(200).json(results);
         }
     });
 });
+
 
 // Update status waitingforveri ของ design
 app.put('/update-design-status-waitingfor-ver/:id', (req, res) => {
@@ -2240,7 +2348,7 @@ app.put('/update-design-status-waitingfor-ver/:id', (req, res) => {
     });
 });
 
-// 🔹 อัปเดตสถานะ Design เป็น "VERIFIED"
+// อัปเดตสถานะ Design เป็น "VERIFIED"
 app.put("/update-design-status-verified", (req, res) => {
     let { design_id, design_status } = req.body;
 
@@ -2274,18 +2382,95 @@ app.put("/update-design-status-verified", (req, res) => {
     });
 });
 
+app.put("/update-veridesign-true", (req, res) => {
+    const { project_id, veridesign_id, veridesign_by } = req.body;
+    console.log("📌 Received update request:", req.body);
+
+    // ตรวจสอบว่าค่าที่รับมาครบหรือไม่
+    if (!project_id || !veridesign_id || !veridesign_by) {
+        console.error("❌ Missing required fields:", { project_id, veridesign_id, veridesign_by });
+        return res.status(400).json({ error: "Missing required fields." });
+    }
+
+    // คำสั่ง SQL อัปเดต veridesign
+    let updateQuery = `
+        UPDATE veridesign 
+        SET veridesign_by = ? 
+        WHERE project_id = ? AND veridesign_id = ?
+    `;
+
+    console.log("📝 SQL Query:", updateQuery);
+    db.query(updateQuery, [JSON.stringify(veridesign_by), project_id, veridesign_id], (err, result) => {
+        if (err) {
+            console.error("❌ Error updating verification status:", err);
+            return res.status(500).json({ error: "Failed to update verification status." });
+        }
+
+        console.log("✅ Verification updated successfully:", result);
+
+        // ตรวจสอบว่าสถานะของการตรวจสอบครบหรือยัง
+        const checkQuery = `
+            SELECT veridesign_by FROM veridesign WHERE project_id = ? AND veridesign_id = ?
+        `;
+
+        db.query(checkQuery, [project_id, veridesign_id], (checkErr, checkResult) => {
+            if (checkErr) {
+                console.error("❌ Error checking verification:", checkErr);
+                return res.status(500).json({ error: "Failed to verify design status." });
+            }
+
+            let reviewers = [];
+            try {
+                reviewers = JSON.parse(checkResult[0].veridesign_by || "[]");
+            } catch (parseErr) {
+                console.error("❌ Error parsing veridesign_by:", parseErr);
+                return res.status(500).json({ error: "Invalid verification data format." });
+            }
+
+            console.log("🔍 Current reviewers:", reviewers);
+
+            // ตรวจสอบว่าทุกคนตรวจสอบครบหรือยัง
+            const allVerified = reviewers.length > 0 && reviewers.every((entry) => entry.includes(": true"));
+            console.log("🔄 All Verified:", allVerified);
+
+            if (allVerified) {
+                const updateDesignQuery = `
+                    UPDATE design 
+                    SET design_status = 'VERIFIED' 
+                    WHERE design_id IN (
+                        SELECT design_id FROM veridesign WHERE project_id = ? AND veridesign_id = ?
+                    )
+                `;
+
+                db.query(updateDesignQuery, [project_id, veridesign_id], (updateErr, updateResult) => {
+                    if (updateErr) {
+                        console.error("❌ Error updating design status:", updateErr);
+                        return res.status(500).json({ error: "Failed to update design status." });
+                    }
+
+                    console.log("✅ Design status updated to VERIFIED!");
+                    res.status(200).json({ success: true, message: "Design verified successfully." });
+                });
+            } else {
+                res.status(200).json({ success: false, message: "Not all reviewers have verified." });
+            }
+        });
+    });
+});
+
+
 
 // ------------------------- Design Baseline -------------------------
-
 // API สำหรับสร้าง Design Baseline
 app.post('/createdesignbaseline', (req, res) => {
     const { design_id } = req.body;
 
+    // Check if design_id is provided and not empty
     if (!design_id || !design_id.length) {
         return res.status(400).send({ error: "Design ID is required" });
     }
 
-    // ค้นหา baseline_round ล่าสุดของ design
+    // Query to find the latest baseline round for the given design_id(s)
     const findLatestBaselineRoundQuery = `
         SELECT design_id, COALESCE(MAX(baselinedesign_round), 0) AS latest_baselinedesign_round
         FROM baselinedesign
@@ -2304,26 +2489,19 @@ app.post('/createdesignbaseline', (req, res) => {
 
         console.log("Results from findLatestBaselineRoundQuery:", results);
 
+        // Create a map of design_id to the next baseline round number
         const roundMap = {};
         design_id.forEach(id => {
-            // ค้นหาค่า baselinedesign_round ล่าสุดของ design_id ปัจจุบัน
             const latestEntry = results.find(row => row.design_id === id);
-
-            if (latestEntry) {
-                roundMap[id] = latestEntry.baselinedesign_round + 1; // ถ้ามีค่า ให้เพิ่มขึ้น 1
-            } else {
-                roundMap[id] = 1; // ถ้ายังไม่มี baseline ให้เริ่มที่ 1
-            }
+            // If an entry exists, increment the round by 1
+            roundMap[id] = latestEntry ? latestEntry.latest_baselinedesign_round + 1 : 1;
         });
 
-        console.log("Updated roundMap:", roundMap); // ตรวจสอบค่ารอบใหม่
+        console.log("Updated roundMap:", roundMap);
 
-        if (!design_id || design_id.length === 0) {
-            return res.status(400).send({ error: "Design ID is required" });
-        }
-
+        // Prepare the values to be inserted into the database
         const formattedDate = new Date().toISOString().slice(0, 19).replace("T", " ");
-        const baselineValues = design_id.map((id) => [
+        const baselineValues = design_id.map(id => [
             id,
             roundMap[id],
             formattedDate,
@@ -2331,6 +2509,7 @@ app.post('/createdesignbaseline', (req, res) => {
 
         console.log("baselineValues to be inserted:", baselineValues);
 
+        // Query to insert baseline values into the database
         const insertBaselineQuery = `
             INSERT INTO baselinedesign (design_id, baselinedesign_round, baselinedesign_at)
             VALUES ?
@@ -2345,6 +2524,7 @@ app.post('/createdesignbaseline', (req, res) => {
                 });
             }
 
+            // Query to update design status to 'BASELINE'
             const updateDesignQuery = `
                 UPDATE design
                 SET design_status = 'BASELINE'
@@ -2362,6 +2542,7 @@ app.post('/createdesignbaseline', (req, res) => {
 
                 console.log("Inserted Design Baselines:", baselineValues);
 
+                // Send response with the result
                 res.status(201).send({
                     message: "Design baseline created successfully",
                     updatedDesigns: updateResult.affectedRows,
@@ -2372,6 +2553,7 @@ app.post('/createdesignbaseline', (req, res) => {
         });
     });
 });
+
 
 // ดึง Design ที่มีสถานะ VERIFIED สำหรับ Project ID
 app.get("/designverified/:projectId", (req, res) => {

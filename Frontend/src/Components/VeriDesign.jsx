@@ -2,57 +2,56 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
+import notverify from "../image/notverify.png";
+import verifydone from "../image/verifydone.png";
 import "./CSS/VeriDesign.css";
-import closeModalIcon from "../image/close.png";
-import notVerifiedIcon from "../image/notverify.png";
-import verifiedIcon from "../image/verifydone.png";
 
-const Modal = ({ show, onClose, details = {}, assignedReviewers = [] }) => {
+const Modal = ({ show, onClose, details = {}, veridesignBy = [] }) => {
     if (!show) return null;
 
-    // แปลงข้อมูล assignedReviewers จาก ["Name: value"] เป็น { name, value }
-    const parsedReviewers = assignedReviewers.map((entry) => {
-        const [name, value] = entry.split(": ");
-        return { name, value: value === "true" };
-    });
+// แปลงข้อมูล veridesignBy จาก ["Name: value"] เป็น { name, value }
+const parsedVeridesignBy = veridesignBy.map((entry) => {
+    const [name, value] = entry.split(": ");
+    return { name, value: value === "true" }; // แปลงค่า value เป็น boolean
+});
+console.log(parsedVeridesignBy);
 
-    return (
-        <div className="modal-overlay-review">
-            <div className="modal-content-review">
-                <h3>Design Details</h3>
-                <div>
-                    <p><strong>Design ID:</strong> {details.design_id}</p>
-                    <p><strong>Design Name:</strong> {details.design_name}</p>
-                    <p><strong>Created By:</strong> {details.created_by}</p>
-                </div>
 
-                <h3>Reviewers</h3>
-                {parsedReviewers.length > 0 ? (
-                    parsedReviewers.map((reviewer, index) => (
-                        <div className="list-reviewer" key={index}>
-                            <span>{reviewer.name}</span>
-                            <img
-                                src={reviewer.value ? verifiedIcon : notVerifiedIcon}
-                                alt={reviewer.value ? "Verified" : "Not Verified"}
-                                className="verification-status-icon"
-                            />
-                        </div>
-                    ))
-                ) : (
-                    <div>No reviewers assigned yet.</div>
-                )}
-
-                <button className="close-modal-review-button" onClick={onClose}>
-                    <img src={closeModalIcon} alt="Close" className="closemodalreview" />
-                </button>
+return (
+    <div className="modal-overlay-review">
+        <div className="modal-content-review">
+            <h3>Design Details</h3>
+            <div>
+                <p><strong>Design ID:</strong> {details.design_ids?.join(", ") || "N/A"}</p>
+                <p><strong>Created By:</strong> {details.created_by}</p>
             </div>
-        </div>
-    );
-};
 
+
+            <h3>Verification Status</h3>
+            {parsedVeridesignBy.length > 0 ? (
+                parsedVeridesignBy.map((reviewer, index) => (
+                    <div className="list-reviewer" key={index}>
+                        <span>{reviewer.name}</span>
+                        <img
+                            src={reviewer.value ? verifydone : notverify}
+                            alt={reviewer.value ? "Verified" : "Not Verified"}
+                            className="verification-status-icon"
+                        />
+                    </div>
+                ))
+            ) : (
+                <div>No verification by users found.</div>
+            )}
+
+
+            <button className="close-modal-review-button" onClick={onClose}>✖ Close</button>
+        </div>
+    </div>
+);
+};
 const VeriDesign = () => {
     const [designs, setDesigns] = useState([]);
-    const [selectedDetails, setSelectedDetails] = useState({});
+    const [selectedDesign, setSelectedDesign] = useState({});
     const [assignedReviewers, setAssignedReviewers] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const navigate = useNavigate();
@@ -60,49 +59,63 @@ const VeriDesign = () => {
     const queryParams = new URLSearchParams(location.search);
     const projectId = queryParams.get("project_id");
 
+    
     const fetchDesigns = useCallback(() => {
-        axios
-            .get(`http://localhost:3001/verilistdesign?project_id=${projectId}`)
+        axios.get(`http://localhost:3001/verilistdesign?project_id=${projectId}`)
             .then((response) => {
-                const filteredDesigns = response.data.filter(
-                    (design) => design.design_status === "WAITING FOR VERIFICATION"
-                );
-                setDesigns(filteredDesigns);
+                const processedDesigns = response.data
+                    .map((design) => ({
+                        ...design,
+                        veridesign_by: (() => {
+                            // ตรวจสอบว่าข้อมูล veridesign_by เป็น array ของชื่อผู้รีวิว
+                            if (Array.isArray(design.veridesign_by)) {
+                                return design.veridesign_by; // หากเป็น array ของชื่อผู้รีวิว ให้ใช้ตรงๆ
+                            }
+    
+                            // หากไม่ใช่ array, ให้ลองแปลงเป็น array ของชื่อ (ตามกรณีที่เป็น string หรือ format อื่นๆ)
+                            try {
+                                return JSON.parse(design.veridesign_by || "[]").map(rev => rev.reviewerName);
+                            } catch (error) {
+                                console.error("Error parsing veridesign_by:", error);
+                                return [];
+                            }
+                        })()
+                    }))
+                    .filter((design) => design.design_status === "WAITING FOR VERIFICATION")
+                    .map((design) => ({
+                        ...design,
+                        veridesign_by: design.veridesign_by || [],
+                    }));
+                setDesigns(processedDesigns);
             })
             .catch((err) => {
                 console.error("Error fetching designs:", err);
                 toast.error("Error fetching designs.");
             });
     }, [projectId]);
-
+    
     useEffect(() => {
         fetchDesigns();
     }, [fetchDesigns]);
 
-    const handleSearchClick = (details, reviewers) => {
-        setSelectedDetails(details || {});
-        setAssignedReviewers(reviewers || []);
+    const handleSearchClick = (design, veridesignBy) => {
+        setSelectedDesign(design || {});
+        setAssignedReviewers(veridesignBy || []);
         setShowModal(true);
     };
 
-    const handleVerifyClick = (designId) => {
-        if (!projectId) {
-            toast.error("Invalid project ID.");
+    const handleVerifyClick = (design) => {
+        if (!projectId || !design?.design_ids?.length) {
+            toast.error("Invalid project ID or no design selected.");
             return;
         }
-
-        const storedUsername = localStorage.getItem("username");
-        if (!storedUsername) {
-            toast.error("No user found. Please log in.");
-            return;
-        }
-
+    
+        const designId = design.design_ids.join(",");
         navigate(`/DesignVerifed?project_id=${projectId}&design_id=${designId}`, {
-            state: { design_id: designId, project_id: projectId },
+            state: { selectedDesign: design.design_ids }
         });
     };
-
-    const closeModal = () => setShowModal(false);
+    
 
     return (
         <div className="design-list-container">
@@ -113,10 +126,9 @@ const VeriDesign = () => {
                 <table className="design-table">
                     <thead>
                         <tr>
-                            <th>Design ID</th>
-                            <th>Design Name</th>
+                            <th>Round</th>
                             <th>Created By</th>
-                            <th>Date Created</th>
+                            <th>Date</th>
                             <th>Status</th>
                             <th>Reviewers</th>
                             <th>Actions</th>
@@ -124,11 +136,10 @@ const VeriDesign = () => {
                     </thead>
                     <tbody>
                         {designs.map((design) => (
-                            <tr key={design.design_id}>
-                                <td>{design.design_id}</td>
-                                <td>{design.diagram_name}</td>
-                                <td>{design.created_by}</td>
-                                <td>{new Date(design.created_at).toLocaleDateString()}</td>
+                            <tr key={design.veridesign_round}>
+                                <td>{design.veridesign_round}</td>
+                                <td>{design.create_by}</td>
+                                <td>{new Date(design.veridesign_at).toLocaleDateString()}</td>
                                 <td>{design.design_status || " "}</td>
                                 <td>
                                     <button
@@ -136,8 +147,12 @@ const VeriDesign = () => {
                                         title="View Reviewers"
                                         onClick={() =>
                                             handleSearchClick(
-                                                { design_id: design.design_id, ...design },
-                                                design.assigned_reviewers || []
+                                                { 
+                                                    design_ids: design.design_ids,
+                                                    design_status: design.design_status,
+                                                    created_by: design.create_by
+                                                },
+                                                design.veridesign_by
                                             )
                                         }
                                     >
@@ -145,12 +160,7 @@ const VeriDesign = () => {
                                     </button>
                                 </td>
                                 <td>
-                                    <button
-                                        className="verify-button"
-                                        onClick={() => handleVerifyClick(design.design_id)}
-                                    >
-                                        Verify
-                                    </button>
+                                    <button onClick={() => handleVerifyClick(design)}>Verify</button>
                                 </td>
                             </tr>
                         ))}
@@ -160,9 +170,9 @@ const VeriDesign = () => {
 
             <Modal
                 show={showModal}
-                onClose={closeModal}
-                details={selectedDetails}
-                assignedReviewers={assignedReviewers}
+                onClose={() => setShowModal(false)}
+                details={selectedDesign}
+                veridesignBy={assignedReviewers}
             />
         </div>
     );

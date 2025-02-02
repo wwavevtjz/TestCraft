@@ -19,7 +19,6 @@ const CreateVeriDesign = () => {
   const projectId = queryParams.get("project_id");
   const navigate = useNavigate();
 
-  // Fetch working designs
 // Fetch working designs
 useEffect(() => {
     if (projectId) {
@@ -39,7 +38,6 @@ useEffect(() => {
     }
   }, [projectId]);
   
-
   // Fetch project members
   useEffect(() => {
     if (projectId) {
@@ -99,14 +97,14 @@ const handleCreateVerification = async () => {
       veridesign_id: null, // Auto-incremented in the database
       project_id: projectId,
       create_by: createBy,
-      requirement_id: designId,
+      design_id: designId,
       veridesign_at: timestamp,
       veridesign_status: "WAITING FOR VERIFICATION",
       veridesign_by: selectedReviewerNames.map((reviewerName, index) => ({
         reviewerName,
       })),
     }));
-  
+
     try {
       setIsSubmitting(true); // Disable submit button
 
@@ -115,10 +113,12 @@ const handleCreateVerification = async () => {
         selectedDesigns.map((designId) =>
           axios.put(`http://localhost:3001/update-design-status-waitingfor-ver/${designId}`, {
             design_status: "WAITING FOR VERIFICATION",  // Set status as "WAITING FOR VERIFICATION"
+            
           })
         )
       );
-  
+      console.log(updateResults); // ใช้ตัวแปรเพื่อป้องกัน warning
+
       // Create veridesign records in the backend
       const response = await axios.post("http://localhost:3001/createveridesign", payload);
 

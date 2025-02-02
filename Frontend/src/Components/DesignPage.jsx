@@ -47,7 +47,7 @@ const DesignPage = () => {
 
     // Navigate to the CreateVeriDesign page
     const handleViewBaseline = () => {
-      navigate(`/Designbaseline?project_id=${projectId}`);
+      navigate(`/DesignBaseline?project_id=${projectId}`);
     };
 
   return (
@@ -58,7 +58,7 @@ const DesignPage = () => {
           <button className="create-design-button" onClick={handleCreateDesign}> Create Design </button>
           <button className="create-design-button" onClick={handleCreateVeriDesign}> CreateVeriDesign </button>
           <button className="create-design-button" onClick={handleViewVeriDesign}> View Verification </button>
-          <button className="create-design-button" onClick={handleViewVeriDesign}> Baseline </button>
+          <button className="create-design-button" onClick={handleViewBaseline}> Baseline </button>
         </div>
       </header>
 

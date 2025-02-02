@@ -26,21 +26,25 @@ const CreateDesign = () => {
     setError("");
 
     try {
-      const response = await axios.get(
-        `http://localhost:3001/project/${projectId}/requirement`,
-        { params: { status: "BASELINE" } }
-      );
-      const baseline = response.data.filter(
-        (req) => req.requirement_status === "BASELINE"
-      );
-      setbaselineRequirements(baseline);
+        const response = await axios.get(
+            `http://localhost:3001/project/${projectId}/requirement`,
+            { params: { status: "BASELINE" } }
+        );
+
+        console.log("Fetched requirements:", response.data); // 🔍 ตรวจสอบข้อมูล
+
+        const baseline = response.data.filter(
+            (req) => req.requirement_status === "BASELINE"
+        );
+
+        setbaselineRequirements(baseline);
     } catch (error) {
-      console.error("Error fetching requirements:", error);
-      setError("Failed to load requirements. Please try again later.");
+        console.error("Error fetching requirements:", error);
+        setError("Failed to load requirements. Please try again later.");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  }, [projectId]); // Include projectId as a dependency
+}, [projectId]); // Include projectId as a dependency
 
   useEffect(() => {
     fetchRequirements();
@@ -89,40 +93,56 @@ const CreateDesign = () => {
       return;
     }
   
-    const newDesign = {
-      diagram_name: designStatement,
-      design_type: designType,
-      diagram_type: diagramType,
-      design_description: description,
-      project_id: projectId,
-      design_status: "WORKING",
-      requirement_id: selectedRequirementsId, // Ensure this is passed
-    };
+    setLoading(true);
+    setError("");
   
     try {
-      const response = await axios.post("http://localhost:3001/design", newDesign);
+      // สร้าง Design ใหม่
+      const newDesign = {
+        diagram_name: designStatement,
+        design_type: designType,
+        diagram_type: diagramType,
+        design_description: description,
+        project_id: projectId,
+        design_status: "WORKING",
+        requirement_id: selectedRequirementsId,
+      };
   
-      if (response.status === 201) {
-        alert("Design added successfully");
+      const designResponse = await axios.post("http://localhost:3001/design", newDesign);
+      
+      if (designResponse.status === 201) {
+        const design_id = designResponse.data.design_id;
   
-        // Get the design_id from the created design to add the history
-        const design_id = response.data.design_id;
+        // อัปโหลดไฟล์หากมีการเลือกไฟล์
+        if (selectedFile.length > 0) {
+          const formData = new FormData();
+          selectedFile.forEach((file) => {
+            formData.append("files", file);
+          });
+          formData.append("design_id", design_id);
   
-        // Add the history design record
+          await axios.post("http://localhost:3001/uploadDesignFiles", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        }
+  
+        // เพิ่มบันทึกประวัติของ Design
         await axios.post("http://localhost:3001/addHistoryDesign", {
           design_id: design_id,
           design_status: "WORKING",
         });
   
+        alert("Design created successfully!");
         navigate(`/Dashboard?project_id=${projectId}`, { state: { selectedSection: "Design" } });
-      } else {
-        alert("Failed to create design");
       }
     } catch (error) {
       console.error("Error:", error);
       setError(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
+  
   
   return (
     <div className="create-design-container">
@@ -202,16 +222,11 @@ const CreateDesign = () => {
           <input
             type="file"
             id="fileUpload"
-            onChange={handleFileChange}
+            multiple // รองรับหลายไฟล์
+            onChange={(e) => setSelectedFile(Array.from(e.target.files))} // เก็บไฟล์ใน state
             className="create-design-input-file"
           />
-          <button
-            type="button"
-            className="create-design-btn-upload"
-            onClick={handleFileUpload}
-          >
-            Upload File
-          </button>
+
         </div>
 
         {/* Description */}

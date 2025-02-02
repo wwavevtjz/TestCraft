@@ -45,6 +45,8 @@ import CreateDesign from './Components/CreateDesign';
 import CreateVeriDesign from './Components/CreateVeriDesign';
 import VeriDesign from './Components/VeriDesign';
 import DesignVerifed from './Components/DesignVerifed';
+import DesignBaseline from './Components/DesignBaseline';
+import CreateDesignbaseline from './Components/CreateDesignbaseline';
 
 // Notify
 import { ToastContainer } from 'react-toastify';
@@ -119,6 +121,9 @@ const App = () => {
         <Route path="/CreateVeriDesign" element={<CreateVeriDesign />}/>
         <Route path="/VeriDesign" element={<VeriDesign />}/>
         <Route path="/DesignVerifed" element={<DesignVerifed />}/>
+        <Route path="/DesignBaseline" element={<DesignBaseline />}/>
+        <Route path="/CreateDesignbaseline" element={<CreateDesignbaseline />}/>
+      
       </Routes>
     </>
   );

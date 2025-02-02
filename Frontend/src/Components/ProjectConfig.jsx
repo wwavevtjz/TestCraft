@@ -7,14 +7,11 @@ const ProjectConfig = () => {
     const [newReqCriteria, setNewReqCriteria] = useState("");
     const [reqcriList, setReqcriList] = useState([]);
     const [loadingReq, setLoadingReq] = useState(true);
-
     const [newDesignCriteria, setNewDesignCriteria] = useState("");
     const [designCriList, setDesignCriList] = useState([]);
     const [loadingDesign, setLoadingDesign] = useState(true);
-
     const [editingId, setEditingId] = useState(null);
     const [editValue, setEditValue] = useState("");
-
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -35,19 +32,19 @@ const ProjectConfig = () => {
         }
     };
 
-    // Fetch Design Criteria List
-    const fetchDesignCriteria = async () => {
-        try {
-            setLoadingDesign(true);
-            const response = await axios.get("http://localhost:3001/designcriteria");
-            setDesignCriList(response.data);
-        } catch (error) {
-            console.error("Error fetching design criteria:", error);
-        } finally {
-            setLoadingDesign(false);
-        }
-    };
-
+        // Fetch Requirement Criteria List
+        const fetchDesignCriteria = async () => {
+            try {
+                setLoadingDesign(true);
+                const response = await axios.get("http://localhost:3001/designcriteria");
+                setDesignCriList(response.data);
+            } catch (error) {
+                console.error("Error fetching requirement criteria:", error);
+            } finally {
+                setLoadingDesign(false);
+            }
+        };
+    
     // Add New Requirement Criteria
     const handleAddReqCriteria = async () => {
         if (newReqCriteria.trim() === "") {
@@ -67,24 +64,15 @@ const ProjectConfig = () => {
 // Add New Design Criteria
 const handleAddDesignCriteria = async () => {
     if (newDesignCriteria.trim() === "") {
-        alert("กรุณากรอกชื่อ Design Criteria ก่อน");
+        alert("กรุณากรอกชื่อ esign Criteria ก่อน");
         return;
     }
     try {
-        // ตัวอย่าง: สมมุติ design_id และ member_id ได้มาจากสถานะของโปรเจกต์หรือผู้ใช้ที่ล็อกอิน
-        const design_id = 1; // แทนค่าด้วย ID จริง
-        const member_id = 2; // แทนค่าด้วย ID จริง
-
-        await axios.post("http://localhost:3001/designcriteria", {
-            designcri_name: newDesignCriteria,
-            design_id,
-            member_id,
-        });
-
+        await axios.post("http://localhost:3001/designcriteria", { design_cri_name: newDesignCriteria });
         setNewDesignCriteria("");
         fetchDesignCriteria();
     } catch (error) {
-        console.error("Error adding design criteria:", error);
+        console.error("Error adding requirement criteria:", error);
     }
 };
 
@@ -184,7 +172,7 @@ const handleAddDesignCriteria = async () => {
                                     <span>{criteria.design_cri_name}</span>
                                     <button
                                         className="project-config-delete-button"
-                                        onClick={() => handleDelete(criteria.designcri_id, true)}
+                                        onClick={() => handleDelete(criteria.design_cri_id, true)}
                                     >
                                         Delete
                                     </button>
