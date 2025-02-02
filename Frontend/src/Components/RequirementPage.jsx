@@ -8,14 +8,11 @@ import Modal from "react-modal";
 import UploadFile from "./Uploadfile";
 import "./CSS/RequirementPage.css";
 import checkmark from "../image/check_mark.png";
-import close from "../image/close.png";
-import verified from "../image/verified.png";
 import history from "../image/history.png";
 import createvervar from "../image/createvervar.png";
 import verificationlist from "../image/white_list.png";
 import validationlist from "../image/accepted_document.png";
 import version_control from "../image/version_control.png";
-import { jsPDF } from "jspdf"
 import "jspdf-autotable";
 import clearsearch from '../image/clearsearch.png'
 
@@ -34,10 +31,8 @@ const RequirementPage = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get("project_id");
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [filteredRequirements, setFilteredRequirements] = useState([]);
   const [alertMessage] = useState(""); // เก็บข้อความแจ้งเตือน
-  const [setRequirements] = useState([]);
 
 
   useEffect(() => {
@@ -116,38 +111,6 @@ const RequirementPage = () => {
     }
   };
 
-
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-
-    // สร้างหัวข้อใน PDF
-    doc.setFontSize(18);
-    doc.text("Verified Requirements", 14, 20);
-
-    // สร้างตารางข้อมูล
-    const verifiedRequirements = requirementList.filter(
-      (req) => req.requirement_status === "VERIFIED" || req.requirement_status === "VALIDATE"
-    );
-
-    const tableData = verifiedRequirements.map((req) => [
-      `REQ-0${req.requirement_id}`,
-      req.requirement_name,
-      req.requirement_description,
-      req.requirement_type,
-      req.requirement_status,
-    ]);
-
-    // ใส่ข้อมูลลงในตาราง PDF
-    doc.autoTable({
-      head: [["REQ-ID", "Name", "Description", "Type", "Status"]],
-      body: tableData,
-      startY: 30, // ตำแหน่งเริ่มต้นของตาราง
-    });
-
-    // ดาวน์โหลด PDF
-    doc.save(`${projectName}_verified_requirements.pdf`);
-  };
-
   const handleOpenModal = () => {
     setIsModalOpen(true); // Open the modal
   };
@@ -171,10 +134,6 @@ const RequirementPage = () => {
           setError("Failed to delete file. Please try again.");
         });
     }
-  };
-
-  const handleViewFile = (file) => {
-    navigate(`/ViewFile`, { state: { file } });
   };
 
   const handleVerivaliView = () => {
@@ -435,7 +394,10 @@ const RequirementPage = () => {
                         : "-"}
                     </td>
                     <td className="file-actions">
-                      <button className="view-requirement-button" onClick={() => handleViewFile(file)}>
+                      <button
+                        className="view-requirement-button"
+                        onClick={() => navigate(`/ViewFile?filereq_id=${file.filereq_id}`, { state: { file } })}
+                      >
                         <FontAwesomeIcon icon={faEye} />
                       </button>
 

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Select from "react-select"; // ✅ เพิ่มการ import
 import "./CSS/CreateRequirement.css";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const UpdateRequirement = () => {
   const [requirementStatement, setRequirementStatement] = useState("");
@@ -9,16 +12,12 @@ const UpdateRequirement = () => {
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [selectedFileId, setSelectedFileId] = useState("");
+  const [selectedFileIds, setSelectedFileIds] = useState([]); // ✅ แก้ไขให้มี useState
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(window.location.search);
   const projectId = queryParams.get("project_id");
   const requirementId = queryParams.get("requirement_id");
-
-  // ตรวจสอบค่าของ projectId และ requirementId
-  console.log('Project ID:', projectId);
-  console.log('Requirement ID:', requirementId);
 
   useEffect(() => {
     if (projectId) {
@@ -26,11 +25,13 @@ const UpdateRequirement = () => {
       fetchData(fetchCreatedRequirements);
     }
     if (requirementId) {
-      fetchRequirementData(); // ทำให้มั่นใจว่า fetchRequirementData ถูกเรียกเมื่อ requirementId มีค่า
+      fetchRequirementData();
     }
   }, [projectId, requirementId]);
 
-  // ฟังก์ชันทั่วไปสำหรับดึงข้อมูลจาก API
+
+
+
   const fetchData = async (callback) => {
     setIsLoading(true);
     try {
@@ -42,37 +43,36 @@ const UpdateRequirement = () => {
     }
   };
 
-  // ดึงไฟล์ที่อัปโหลด
   const fetchUploadedFiles = async () => {
     const res = await axios.get(`http://localhost:3001/files?project_id=${projectId}`);
     setUploadedFiles(res.data);
   };
 
-  // ดึงรายการความต้องการที่สร้างขึ้น
   const fetchCreatedRequirements = async () => {
-    const res = await axios.get(`http://localhost:3001/requirements?project_id=${projectId}`);
-    // console.log('Created Requirements:', res.data); // ตรวจสอบข้อมูล
+    await axios.get(`http://localhost:3001/requirements?project_id=${projectId}`);
   };
 
-  // ดึงข้อมูล Requirement ที่จะอัปเดต
   const fetchRequirementData = async () => {
     try {
       const res = await axios.get(`http://localhost:3001/requirement/${requirementId}`);
-      console.log('Requirement Data:', res.data); // ตรวจสอบข้อมูลที่ตอบกลับจาก API
-      const { requirement_name, requirement_type, requirement_description, filereq_id } = res.data;
-      setRequirementStatement(requirement_name); // ตั้งค่า requirement statement
-      setRequirementType(requirement_type); // ตั้งค่า requirement type
-      setDescription(requirement_description); // ตั้งค่า description
-      setSelectedFileId(filereq_id); // ตั้งค่า selected file ID
+      const { requirement_name, requirement_type, requirement_description, filereq_ids } = res.data;
+
+      setRequirementStatement(requirement_name);
+      setRequirementType(requirement_type);
+      setDescription(requirement_description);
+
+      // เปลี่ยนค่า selectedFileIds ให้เป็นอาเรย์จาก filereq_id ถ้ามี
+      // ตรวจสอบว่า filereq_id เป็นหลายไฟล์หรือไฟล์เดียว
+      setSelectedFileIds(filereq_ids ? filereq_ids : []);
     } catch (error) {
       console.error("Error fetching requirement data:", error);
     }
   };
 
-  // ฟังก์ชันส่งข้อมูลเมื่อกดปุ่มอัปเดต
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!requirementStatement || !requirementType || !description || !selectedFileId) {
+    if (!requirementStatement || !requirementType || !description || selectedFileIds.length === 0) {
       setError("Please fill in all fields.");
       return;
     }
@@ -82,7 +82,7 @@ const UpdateRequirement = () => {
       requirement_type: requirementType,
       requirement_description: description,
       project_id: projectId,
-      filereq_id: selectedFileId,
+      filereq_ids: selectedFileIds, // Send array of file IDs to the backend
     };
 
     try {
@@ -90,23 +90,29 @@ const UpdateRequirement = () => {
         `http://localhost:3001/requirement/${requirementId}`,
         updatedRequirement
       );
-
+    
       if (response.status === 200) {
-        alert("Requirement updated successfully");
-        navigate(`/Dashboard?project_id=${projectId}`, {
-          state: { selectedSection: "Requirement" },
+        toast.success("Requirement updated successfully", {
+          autoClose: 1300, // ปิด toast หลังจาก 1 วินาที
         });
+    
+        // รอให้ Toast แสดงก่อนเปลี่ยนหน้า
+        setTimeout(() => {
+          toast.dismiss(); // ปิด toast ก่อนที่จะทำการเปลี่ยนหน้า
+          navigate(`/Dashboard?project_id=${projectId}`, {
+            state: { selectedSection: "Requirement" },
+          });
+        }, 1300); 
       } else {
-        alert("Failed to update requirement");
+        toast.error("Failed to update requirement");
       }
     } catch (error) {
-      console.error("Error updating requirement:", error);
-      setError(error.response?.data?.message || "Network error. Please try again.");
+      const errorMessage = error.response?.data?.message || "Network error. Please try again.";
+      toast.error(`Error updating requirement: ${errorMessage}`);
+      setError(errorMessage);
     }
   };
 
-  // ฟังก์ชันล้างข้อผิดพลาด
-  const clearError = () => setError("");
 
   return (
     <div className="create-requirement-container">
@@ -115,7 +121,7 @@ const UpdateRequirement = () => {
       {error && (
         <div className="error-container">
           <p className="create-requirement-error">{error}</p>
-          <button onClick={clearError} className="clear-error-btn">Clear</button>
+          <button onClick={() => setError("")} className="clear-error-btn">Clear</button>
         </div>
       )}
       <form className="create-requirement-form" onSubmit={handleSubmit}>
@@ -140,18 +146,14 @@ const UpdateRequirement = () => {
             required
             className="create-requirement-select"
           >
-            <option value="" disabled>
-              Select Type
-            </option>
+            <option value="" disabled>Select Type</option>
             <option value="Functional">Functionality</option>
             <option value="User interface">User interface</option>
             <option value="External interfaces">External interfaces</option>
             <option value="Reliability">Reliability</option>
             <option value="Maintenance">Maintenance</option>
             <option value="Portability">Portability</option>
-            <option value="Limitations Design and construction">
-              Limitations Design and construction
-            </option>
+            <option value="Limitations Design and construction">Limitations Design and construction</option>
             <option value="Interoperability">Interoperability</option>
             <option value="Reusability">Reusability</option>
             <option value="Legal and regulative">Legal and regulative</option>
@@ -171,22 +173,25 @@ const UpdateRequirement = () => {
         </div>
         <div className="create-requirement-form-group">
           <label htmlFor="fileSelect">Attach File</label>
-          <select
-            id="fileSelect"
-            value={selectedFileId}
-            onChange={(e) => setSelectedFileId(e.target.value)}
-            required
-            className="create-requirement-select"
-          >
-            <option value="" disabled>
-              Select a file
-            </option>
-            {uploadedFiles.map((file) => (
-              <option key={file.filereq_id} value={file.filereq_id}>
-                {file.filereq_name}
-              </option>
-            ))}
-          </select>
+          <Select
+            isMulti
+            options={uploadedFiles.map((file) => ({
+              value: file.filereq_id,
+              label: `${file.filereq_id} - ${file.filereq_name}`,
+            }))}
+            value={uploadedFiles
+              .filter((file) => selectedFileIds.includes(file.filereq_id)) // แสดงเฉพาะไฟล์ที่มีอยู่ใน selectedFileIds
+              .map((file) => ({
+                value: file.filereq_id,
+                label: `${file.filereq_id} - ${file.filereq_name}`,
+              }))}
+            onChange={(selectedOptions) =>
+              setSelectedFileIds(selectedOptions.map((option) => option.value)) // อัพเดท selectedFileIds ตามที่เลือก
+            }
+            placeholder="Select files"
+            className="select-files"
+          />
+
         </div>
         <div className="create-requirement-form-buttons">
           <button

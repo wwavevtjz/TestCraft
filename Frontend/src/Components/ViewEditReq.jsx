@@ -116,14 +116,32 @@ const ViewEditReq = () => {
                         <strong className="view-requirement-label">Status:</strong> {requirement.requirement_status}
                     </p>
                     <p>
-                        <strong className="view-requirement-label">File IDs:</strong>
-                        <span className="file-id-highlight">
+                        <strong className="view-requirement-label">File ID:</strong>
+                        <span>
                             {requirement.filereq_ids && requirement.filereq_ids.length > 0 ? (
                                 <ul>
                                     {requirement.filereq_ids.map((filereq_id, index) => (
-                                        <li key={index}>{filereq_id}</li>
+                                        <li
+                                            key={index}
+                                            className="file-item"
+                                            onClick={() => {
+                                                const file = {
+                                                    filereq_id,  // จาก loop ที่คุณใช้ใน map
+                                                    filereq_name: requirement.filereq_name || "ชื่อไฟล์ไม่สามารถดึงข้อมูลได้", // ให้แน่ใจว่า requirement.filereq_name มีข้อมูล
+                                                    requirement_ids: requirement.requirement_id  // หรือข้อมูลที่จำเป็น
+                                                };
+                                                navigate(`/ViewFile?filereq_id=${file.filereq_id}`, { state: { file } });
+                                            }}
+
+
+                                        >
+                                            {filereq_id}
+                                        </li>
                                     ))}
                                 </ul>
+
+
+
                             ) : (
                                 <span>No File IDs available</span>
                             )}
