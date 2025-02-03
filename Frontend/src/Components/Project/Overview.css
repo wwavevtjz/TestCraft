@@ -1,0 +1,80 @@
+/* Dashboard.css */
+.dashboard-overview-container {
+    font-family: 'Arial', sans-serif;
+    margin: 20px;
+    padding: 20px;
+    background-color: #f9f9f9;
+  }
+  
+  .overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .overview-header h1 {
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .overview-profile {
+    display: flex;
+    align-items: center;
+  }
+  
+  .overview-profile-img {
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+  
+  .overview-cards {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+  }
+  
+  .overview-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    width: 30%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .overview-card h2 {
+    font-size: 18px;
+    color: #555;
+  }
+  
+  .overview-card p {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2e7d32;
+  }
+  
+  .overview-recent-activity {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .overview-recent-activity h2 {
+    font-size: 18px;
+    color: #555;
+  }
+  
+  .overview-recent-activity ul {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  .overview-recent-activity ul li {
+    font-size: 14px;
+    color: #777;
+    margin: 8px 0;
+  }
+  
+  

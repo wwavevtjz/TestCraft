@@ -19,6 +19,9 @@ import ProjectConfig from './Components/ProjectConfig';
 // Dashboard
 import Dashboard from './Components/Dashboard';
 
+// Overview
+import OverviewProject from './Components/Project/OverviewProject';
+
 // Requirement
 import RequirementPage from './Components/RequirementPage';
 import CreateRequirement from './Components/CreateRequirement';
@@ -52,6 +55,7 @@ import CreateDesignbaseline from './Components/CreateDesignbaseline';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+
 const App = () => {
   const [username, setUsername] = useState(null); // State เก็บชื่อผู้ใช้ที่ล็อกอิน
   const location = useLocation();
@@ -77,6 +81,10 @@ const App = () => {
 
         {/* Route สำหรับ Dashboard */}
         <Route path="/Dashboard" element={<Dashboard />} />
+
+        {/* Route สำหรับ Overview */}
+        <Route path="/Overview" element={<OverviewProject />} />
+
 
         {/* Routes สำหรับการตั้งค่า Project */}
         <Route path="/ProjectConfig" element={<ProjectConfig />} />
@@ -118,12 +126,12 @@ const App = () => {
         {/* ทำ Design */}
         <Route path="/DesignPage" element={<DesignPage />} />
         <Route path="/CreateDesign" element={<CreateDesign />} />
-        <Route path="/CreateVeriDesign" element={<CreateVeriDesign />}/>
-        <Route path="/VeriDesign" element={<VeriDesign />}/>
-        <Route path="/DesignVerifed" element={<DesignVerifed />}/>
-        <Route path="/DesignBaseline" element={<DesignBaseline />}/>
-        <Route path="/CreateDesignbaseline" element={<CreateDesignbaseline />}/>
-      
+        <Route path="/CreateVeriDesign" element={<CreateVeriDesign />} />
+        <Route path="/VeriDesign" element={<VeriDesign />} />
+        <Route path="/DesignVerifed" element={<DesignVerifed />} />
+        <Route path="/DesignBaseline" element={<DesignBaseline />} />
+        <Route path="/CreateDesignbaseline" element={<CreateDesignbaseline />} />
+
       </Routes>
     </>
   );
