@@ -4,11 +4,11 @@ import axios from "axios";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import "./Overview.css";
 
-
 const OverviewProject = () => {
   const [totalRequirements, setTotalRequirements] = useState(0);
   const [totalBaselineRequirements, setTotalBaselineRequirements] = useState(0);
   const [totalDesign, setTotalDesign] = useState(0);
+  const [totalBaselineDesign, setTotalBaselineDesign] = useState(0); // ✅ เพิ่ม State ใหม่
   const [totalDeadlines] = useState(2); // Placeholder for deadlines data
   
   // Get the project ID from the query params
@@ -26,6 +26,7 @@ const OverviewProject = () => {
           setTotalRequirements(data.total_requirements || 0);
           setTotalBaselineRequirements(data.total_baseline_requirements || 0);
           setTotalDesign(data.total_design || 0);
+          setTotalBaselineDesign(data.total_baseline_design || 0); // ✅ อัพเดตค่าที่ได้จาก API
         })
         .catch((error) => {
           console.error("Error fetching overview data:", error);
@@ -36,7 +37,7 @@ const OverviewProject = () => {
   // Data for the chart
   const chartData = [
     { category: "Requirements", totalRequirements, totalBaselineRequirements },
-    { category: "Design", totalDesign },
+    { category: "Design", totalDesign, totalBaselineDesign }, // ✅ เพิ่ม totalBaselineDesign
   ];
 
   return (
@@ -74,6 +75,7 @@ const OverviewProject = () => {
               barSize={50}
             />
             <Bar dataKey="totalDesign" name="Design" fill="#ffc658" barSize={50} />
+            <Bar dataKey="totalBaselineDesign" name="Baseline Design" fill="#ff8042" barSize={50} /> {/* ✅ เพิ่ม Bar ใหม่ */}
           </BarChart>
         </ResponsiveContainer>
       </div>
