@@ -16,6 +16,7 @@ import CreateProject from './Components/CreateProject';
 import UpdateProject from './Components/UpdateProject';
 import ProjectConfig from './Components/ProjectConfig';
 
+
 // Dashboard
 import Dashboard from './Components/Dashboard';
 
@@ -83,8 +84,7 @@ const App = () => {
         <Route path="/Dashboard" element={<Dashboard />} />
 
         {/* Route สำหรับ Overview */}
-        <Route path="/Overview" element={<OverviewProject />} />
-
+        <Route path="/OverviewProject" element={<OverviewProject />} />
 
         {/* Routes สำหรับการตั้งค่า Project */}
         <Route path="/ProjectConfig" element={<ProjectConfig />} />

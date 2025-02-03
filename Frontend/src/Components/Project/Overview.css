@@ -77,4 +77,39 @@
     margin: 8px 0;
   }
   
+  .dashboard-overview-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .overview-profile {
+    display: flex;
+    align-items: center;
+  }
+  
+  .overview-profile-img {
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+  
+  .overview-charts {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  
+  .chart-card {
+    flex: 1;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
   
