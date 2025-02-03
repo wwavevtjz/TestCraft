@@ -6,6 +6,7 @@ import './CSS/Dashboard.css';
 import RequirementPage from './RequirementPage';
 import ProjectConfig from './ProjectConfig';
 import DesignPage from './DesignPage';
+import OverviewProject from './Project/OverviewProject';
 
 const Dashboard = () => {
   const location = useLocation();
@@ -173,7 +174,7 @@ const Dashboard = () => {
           <h2>{error}</h2>
         ) : (
           <>
-            {selectedSection === 'Overview' && <h2>Overview Content</h2>}
+            {selectedSection === 'Overview' && <OverviewProject />}
             {selectedSection === 'Configuration' && <ProjectConfig />}
             {selectedSection === 'Requirement' && <RequirementPage />}
             {selectedSection === 'Design' && <DesignPage/>}
