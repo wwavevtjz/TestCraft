@@ -19,8 +19,8 @@ const CreateVeriDesign = () => {
   const projectId = queryParams.get("project_id");
   const navigate = useNavigate();
 
-// Fetch working designs
-useEffect(() => {
+  // Fetch working designs
+  useEffect(() => {
     if (projectId) {
       setLoading(true);
       axios
@@ -37,7 +37,7 @@ useEffect(() => {
         });
     }
   }, [projectId]);
-  
+
   // Fetch project members
   useEffect(() => {
     if (projectId) {
@@ -68,30 +68,30 @@ useEffect(() => {
     );
   };
 
-const handleCreateVerification = async () => {
+  const handleCreateVerification = async () => {
     const selectedReviewerNames = Object.keys(selectedReviewers).filter(
       (name) => selectedReviewers[name]
     );
-  
+
     if (!projectId) {
       toast.error("Invalid project ID.");
       return;
     }
-  
+
     if (selectedDesigns.length === 0 || selectedReviewerNames.length === 0) {
       toast.warning("Please select at least one design and one reviewer.");
       return;
     }
-  
+
     const storedUsername = localStorage.getItem("username");
     const createBy = storedUsername;
-  
+
     if (!createBy) {
       toast.error("No user found. Please login again.");
       return;
     }
-  
-    // Prepare the payload for veridesign creation
+
+    // Create veridesign payload
     const timestamp = new Date().toISOString();
     const payload = selectedDesigns.map((designId) => ({
       veridesign_id: null, // Auto-incremented in the database
@@ -100,23 +100,24 @@ const handleCreateVerification = async () => {
       design_id: designId,
       veridesign_at: timestamp,
       veridesign_status: "WAITING FOR VERIFICATION",
-      veridesign_by: selectedReviewerNames.map((reviewerName, index) => ({
-        reviewerName,
-      })),
+      veridesign_by: selectedReviewerNames.reduce((acc, reviewerName) => {
+        acc[reviewerName] = false;  // Set reviewer as false
+        return acc;
+      }, {}),
     }));
 
     try {
       setIsSubmitting(true); // Disable submit button
 
-      // Update the status of requirements to "WAITING FOR VERIFICATION"
+      // Update the status of designs to "WAITING FOR VERIFICATION"
       const updateResults = await Promise.allSettled(
         selectedDesigns.map((designId) =>
           axios.put(`http://localhost:3001/update-design-status-waitingfor-ver/${designId}`, {
             design_status: "WAITING FOR VERIFICATION",  // Set status as "WAITING FOR VERIFICATION"
-            
           })
         )
       );
+
       console.log(updateResults); // ใช้ตัวแปรเพื่อป้องกัน warning
 
       // Create veridesign records in the backend
@@ -217,7 +218,7 @@ const handleCreateVerification = async () => {
             </table>
           )}
         </div>
-  
+
         {/* Right Panel (Reviewers Section) */}
         <div className="createveridesign-right-panel">
           <h2>Reviewers</h2>
@@ -238,7 +239,7 @@ const handleCreateVerification = async () => {
                 console.error("Invalid JSON in member data:", e);
                 setMembersError("Invalid project member data.");
               }
-  
+
               return (
                 <div key={index}>
                   {memberInfo.map((info, roleIndex) => (
@@ -261,7 +262,7 @@ const handleCreateVerification = async () => {
           {members.length === 0 && <p>No reviewers are available for this project.</p>}
         </div>
       </div>
-  
+
       {/* Footer Section */}
       <div className="createveridesign-footer">
         <button
@@ -280,7 +281,7 @@ const handleCreateVerification = async () => {
         </button>
       </div>
     </div>
-  );  
+  );
 };
 
 export default CreateVeriDesign;

@@ -4,33 +4,50 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Comment from "./Comment";
 import "./CSS/DesignVerifed.css";
+import { Data } from "emoji-mart";
 
 const DesignVerifed = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get("project_id");
-  const designId = queryParams.get("design_id");
-  const { selectedDesign = [] } = location.state || {}; // ค่า default เป็น []
+  const veridesignId = queryParams.get("veridesign_id");
+  const { selectedDesign = [] } = location.state || {};
   const [designcriList, setDesigncriList] = useState([]);
   const [designDetails, setDesignDetails] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkboxState, setCheckboxState] = useState({});
+  const [veridesignBy, setVeridesignBy] = useState({});
+  const storedUsername = localStorage.getItem("username");
+  const designId = queryParams.get("design_id");
 
   useEffect(() => {
-    if (!projectId || !designId) {
-        console.error("Project ID or Verification ID is missing.");
-        navigate("/VeriDesign");
-        return;
-    }
-
-    const combinedDesignIds = [...selectedDesign, designId].filter(Boolean);
-    if (combinedDesignIds.length > 0) {
-        fetchDesignDetails(combinedDesignIds); // ส่งเฉพาะ design_id ที่เลือกมา
+    if (!projectId || !veridesignId) {
+      console.error("Project ID or Design ID is missing.");
+      navigate("/VeriDesign");
+      return;
     }
 
     fetchCriteria();
-}, [projectId, designId, selectedDesign, navigate]);
+    fetchDesignDetails(selectedDesign);
+    fetchVeridesignBy();
+  }, [projectId, veridesignId, selectedDesign, navigate]);
+
+  // ดึงข้อมูล veridesign_by
+  const fetchVeridesignBy = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/designveri", {
+        params: { project_id: projectId, veridesign_id: veridesignId, design_id: designId },
+      });
+      const veridesign = response.data.find(
+        (item) => item.id === veridesignId
+      );
+      setVeridesignBy(veridesign?.veridesign_by || {});
+    } catch (error) {
+      console.error("Error fetching veridesign_by:", error);
+    }
+  };
+
 
   const fetchCriteria = async () => {
     try {
@@ -42,10 +59,9 @@ const DesignVerifed = () => {
       }, {});
       setDesigncriList(response.data);
 
-      const storedUsername = localStorage.getItem("username");
       if (storedUsername) {
         const storedCheckboxState = localStorage.getItem(
-          `checkboxState_${storedUsername}_${projectId}_${designId}`
+          `checkboxState_${storedUsername}_${projectId}_${veridesignId}`
         );
         setCheckboxState(
           storedCheckboxState ? JSON.parse(storedCheckboxState) : initialCheckboxState
@@ -58,136 +74,112 @@ const DesignVerifed = () => {
     }
   };
 
-  const fetchDesignDetails = async (designIds) => {
-    if (!designIds.length) {
-        console.error("No Design IDs provided.");
-        return;
-    }
-
+  const fetchDesignDetails = async () => {
     try {
-        console.log("Fetching design details for design_id:", designIds);
-        const response = await axios.get("http://localhost:3001/verifydesign", {
-            params: { design_id: designIds.join(",") },
-        });
-        setDesignDetails(response.data);
+      const response = await axios.get("http://localhost:3001/verifydesign", {
+        params: { design_id: designId },
+      });
+      setDesignDetails(response.data);
     } catch (error) {
-        console.error("Error fetching design details:", error);
+      console.error("Error fetching design details:", error);
     }
-};
-
+  };
 
   const handleCheckboxChange = (id) => {
-    const updatedState = {
-      ...checkboxState,
-      [id]: !checkboxState[id],
-    };
-    setCheckboxState(updatedState);
+    setCheckboxState((prevState) => {
+      const updatedState = { ...prevState, [id]: !prevState[id] };
 
-    const storedUsername = localStorage.getItem("username");
-    if (storedUsername) {
       localStorage.setItem(
-        `checkboxState_${storedUsername}_${projectId}_${designId}`,
+        `checkboxState_${storedUsername}_${projectId}_${veridesignId}`,
         JSON.stringify(updatedState)
       );
-    }
+
+      return updatedState;
+    });
   };
 
   const handleSave = async () => {
-    // ตรวจสอบว่าผู้ใช้ทำเครื่องหมายครบทุกช่องหรือไม่
-    const allChecked = Object.values(checkboxState).every((value) => value);
-  
-    if (!allChecked) {
-      toast.success("Criteria Checklist Saved", {
-        position: "top-right",
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        onClose: () => navigate(`/VeriDesign?project_id=${projectId}`),
-      });
+
+    console.log("design_id", designId);
+    
+    if (!storedUsername) {
+      toast.warning("ข้อมูล reviewer ขาดหาย กรุณารีเฟรชหน้า");
       return;
     }
-  
+
+    // เช็คว่า checkbox ทั้งหมดถูกเลือกหรือไม่
+    const allChecked = designcriList.every((criteria) => checkboxState[criteria.design_cri_id]);
+
+    if (!allChecked) {
+      toast.warning("กรุณาเลือกทุกข้อก่อนกด Save");
+      return;
+    }
+
+    // อัปเดต veridesign_by โดยไม่ลบผู้ใช้คนอื่น
+    const updatedVeridesignBy = { ...veridesignBy, [storedUsername]: true };
+
     try {
-      // ดึงชื่อผู้ใช้จาก localStorage
-      const storedUsername = localStorage.getItem("username");
-      if (!storedUsername) {
-        alert("Please log in first.");
+      const response = await axios.put("http://localhost:3001/update-veridesign-by", {
+        veridesign_id: veridesignId,
+        veridesign_by: updatedVeridesignBy, // ส่งข้อมูลที่อัปเดต
+      });
+
+      if (response.data.message === "ไม่พบข้อมูล veridesign นี้ในฐานข้อมูล") {
+        toast.error("ไม่พบข้อมูล veridesign ID กรุณาตรวจสอบใหม่");
         return;
       }
-  
-      // แทนที่ 'your_veridesign_id_here' ด้วย ID ที่แท้จริง
-      const veriDesignId = 123; // ใช้ veridesign_id ที่แท้จริง (เช่นจากข้อมูลที่คุณมี)
-  
-      const updatedVerificationBy = ["Pasin Thonguran: true", "Phumipat Tomyim: false"]; // ตัวอย่างข้อมูลที่มีอยู่
-  
-  
-      // ตรวจสอบว่าทุกคนตรวจสอบครบหรือไม่
-      const allVerified = updatedVerificationBy.every((entry) => {
-        const [, status] = entry.split(":").map((item) => item.trim());
-        return status === "true";
-      });
-  
-      if (allVerified) {
-        // ดึงรายการ design_id ทั้งหมดที่เกี่ยวข้องกับโครงการ
-        const designIds = designDetails.map((req) => req.design_id);
-  
-        // อัปเดตสถานะของการออกแบบเป็น "VERIFIED"
-        await axios.put("http://localhost:3001/update-design-status-verified", {
-          design_ids: designIds,
-          design_status: "VERIFIED",
-        });
 
-        // บันทึกประวัติการเปลี่ยนแปลงของแต่ละการออกแบบ
-        for (const designId of designIds) {
-          const historyDesignData = {
-            design_id: designId,
-            design_status: "VERIFIED",
-          };
+      // ดึงข้อมูล veridesign_by ใหม่หลังจากอัปเดต
+      const updatedResponse = await axios.get("http://localhost:3001/designveri", {
+        params: { project_id: projectId, veridesign_id: veridesignId },
+      });
+
+      console.log("API Response Data:", updatedResponse.data);
+      const data = updatedResponse.data[0];
+
+const allReviewed = data.veridesign_by &&
+  Object.values(data.veridesign_by).every((status) => status === true);
+  console.log("DATA",data);
+  console.log("ALLREEVIEWED",allReviewed);
   
-          await axios.post("http://localhost:3001/addHistoryDesign", historyDesignData);
+
+      if (allReviewed) {
+        const designIdsArray = designId.split(",").map((id) => id.trim());
+        console.log("designIdsArray", designIdsArray);
+        
+        if (designIdsArray.length === 0) {
+          toast.error("ไม่พบข้อมูล design ID กรุณาตรวจสอบใหม่");
+          return;
         }
-  
-        // แจ้งเตือนและนำทางกลับไปยัง Dashboard
-        toast.success("All criteria verified! Status updated to VERIFIED.", {
-          position: "top-right",
-          autoClose: 1500,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          onClose: () => navigate(`/Dashboard?project_id=${projectId}`),
-        });
+
+        // ส่ง design_id ไปเพื่ออัปเดตสถานะ
+        const updateStatusResponse = await axios.put(
+          `http://localhost:3001/update-design-status-verified`,
+          { design_ids: designIdsArray, design_status: "VERIFIED" }
+        );
+
+
+        if (updateStatusResponse.data.message === "Design status updated to VERIFIED successfully.") {
+          toast.success("อัปเดตสถานะเป็น VERIFIED สำเร็จ", {
+            autoClose: 1500,
+            onClose: () => navigate(`/Dashboard?project_id=${projectId}`),
+          });
+        } else {
+          toast.error("ไม่สามารถอัปเดตสถานะ design ได้");
+        }
       } else {
-        // แจ้งเตือนว่าผู้ใช้บางคนยังไม่ได้ตรวจสอบ
-        toast.warning("Not all users have verified. Please wait for everyone to verify.", {
-          position: "top-right",
-          autoClose: 1800,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          onClose: () => navigate(`/VeriDesign?project_id=${projectId}`),
-        });
+        toast.warning("ยังมี reviewer ที่ยังไม่ได้ทำการตรวจสอบ");
       }
     } catch (error) {
       console.error("Error updating verification status:", error);
-      toast.error("Failed to update verification status. Please try again.", {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      toast.error("ไม่สามารถอัปเดตสถานะได้ กรุณาลองใหม่");
     }
   };
+
 
   return (
     <div className="container">
       <h1 className="title">Verification Requirement</h1>
-
       <div className="flex-container">
         <div className="box">
           <h2>Checklist</h2>
@@ -213,7 +205,7 @@ const DesignVerifed = () => {
         </div>
 
         <div className="box">
-          <Comment designId={designId} />
+          <Comment designId={veridesignId} />
         </div>
       </div>
 
@@ -237,12 +229,11 @@ const DesignVerifed = () => {
               </tr>
             )}
           </tbody>
-
         </table>
       </div>
 
       <div className="button-container">
-        <button className="save-button" onClick={handleSave}>Save</button>
+        <button onClick={handleSave} className="save-button">Save</button>
       </div>
     </div>
   );
