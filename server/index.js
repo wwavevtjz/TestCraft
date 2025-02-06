@@ -2746,10 +2746,11 @@ app.get("/overviewcount", (req, res) => {
         SELECT 
             (SELECT COUNT(*) FROM requirement WHERE project_id = ?) AS total_requirements,
             (SELECT COUNT(*) FROM requirement WHERE project_id = ? AND requirement_status = 'BASELINE') AS total_baseline_requirements,
-            (SELECT COUNT(*) FROM design WHERE project_id = ?) AS total_design
+            (SELECT COUNT(*) FROM design WHERE project_id = ?) AS total_design,
+            (SELECT COUNT(*) FROM design WHERE project_id = ? AND design_status = 'BASELINE') AS total_baseline_design
     `;
 
-    db.query(sql, [projectId, projectId, projectId], (err, result) => {
+    db.query(sql, [projectId, projectId, projectId, projectId], (err, result) => {
         if (err) {
             console.error("Database error:", err);
             return res.status(500).json({ error: "Server error" });
@@ -2759,9 +2760,11 @@ app.get("/overviewcount", (req, res) => {
             total_requirements: result[0]?.total_requirements || 0,
             total_baseline_requirements: result[0]?.total_baseline_requirements || 0,
             total_design: result[0]?.total_design || 0,
+            total_baseline_design: result[0]?.total_baseline_design || 0,
         });
     });
 });
+
 
 
 
