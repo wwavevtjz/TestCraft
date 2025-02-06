@@ -420,64 +420,92 @@ app.put("/statusrequirement/:id", (req, res) => {
 
 
 // Delete a requirement
+// Delete a requirement
 app.delete('/requirement/:id', (req, res) => {
     const id = req.params.id;
 
-    console.log(id);
+    console.log("Deleting requirement with ID:", id);
 
-
-    const deleteHistorySQL = "DELETE FROM historyreq WHERE requirement_id = ?";
-    const deleteReviewerSQL = "DELETE FROM reviewer WHERE requirement_id = ?";
-    const deleteRequirementSQL = "DELETE FROM requirement WHERE requirement_id = ?";
-    const deleteRequrementFromRelationSQL = "DELETE FROM file_requirement_relation WHERE requirement_id = ?"
-    const deleteBaselineSQL = "DELETE FROM baseline WHERE requirement_id = ?";
-    const updateFileRequirementSQL = "UPDATE file_requirement SET requirement_id = NULL WHERE requirement_id = ?"; // อัปเดตให้ requirement_id เป็น NULL
-
-    // ลบข้อมูลใน file_requirement ก่อน
-    db.query(updateFileRequirementSQL, [id], (err, data) => {
+    // ตรวจสอบว่ามี requirement_id อยู่จริงใน file_requirement
+    const checkRequirementSQL = "SELECT * FROM file_requirement WHERE requirement_id = ?";
+    
+    db.query(checkRequirementSQL, [id], (err, results) => {
         if (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Error updating file_requirement" });
+            console.error("Error checking requirement:", err);
+            return res.status(500).json({ message: "Error checking requirement" });
         }
 
-        // ลบข้อมูลใน baseline ก่อน
-        db.query(deleteBaselineSQL, [id], (err, data) => {
+        if (results.length === 0) {
+            return res.status(404).json({ message: "Requirement ID not found in file_requirement" });
+        }
+
+        const deleteHistorySQL = "DELETE FROM historyreq WHERE requirement_id = ?";
+        const deleteReviewerSQL = "DELETE FROM reviewer WHERE requirement_id = ?";
+        const deleteRequirementSQL = "DELETE FROM requirement WHERE requirement_id = ?";
+        const deleteRequrementFromRelationSQL = "DELETE FROM file_requirement_relation WHERE requirement_id = ?";
+        const deleteBaselineSQL = "DELETE FROM baseline WHERE requirement_id = ?";
+        const updateFileRequirementSQL = "UPDATE file_requirement SET requirement_id = NULL WHERE requirement_id = ?";
+        const deleteDesignSQL = "DELETE FROM design WHERE design_id = ?"; 
+
+        // อัปเดต file_requirement ก่อน
+        db.query(updateFileRequirementSQL, [id], (err, data) => {
             if (err) {
-                console.error(err);
-                return res.status(500).json({ message: "Error deleting baseline" });
+                console.error("Error updating file_requirement:", err);
+                return res.status(500).json({ message: "Error updating file_requirement" });
             }
 
-            // ลบข้อมูลใน historyreq
-            db.query(deleteHistorySQL, [id], (err, data) => {
+            // ลบ baseline
+            db.query(deleteBaselineSQL, [id], (err, data) => {
                 if (err) {
-                    console.error(err);
-                    return res.status(500).json({ message: "Error deleting history" });
+                    console.error("Error deleting baseline:", err);
+                    return res.status(500).json({ message: "Error deleting baseline" });
                 }
 
-                // ลบข้อมูลใน reviewer
-                db.query(deleteReviewerSQL, [id], (err, data) => {
+                // ลบ history
+                db.query(deleteHistorySQL, [id], (err, data) => {
                     if (err) {
-                        console.error(err);
-                        return res.status(500).json({ message: "Error deleting reviewers" });
+                        console.error("Error deleting history:", err);
+                        return res.status(500).json({ message: "Error deleting history" });
                     }
 
-                    // ลบข้อมูลใน requirement
-                    db.query(deleteRequrementFromRelationSQL, [id])
-                    db.query(deleteRequirementSQL, [id], (err, data) => {
+                    // ลบ reviewer
+                    db.query(deleteReviewerSQL, [id], (err, data) => {
                         if (err) {
-                            console.error(err);
-                            return res.status(500).json({ message: "Error deleting requirement" });
+                            console.error("Error deleting reviewers:", err);
+                            return res.status(500).json({ message: "Error deleting reviewers" });
                         }
 
-                        // Return success if all deletions are successful
-                        return res.status(200).json({ message: "Requirement and associated data deleted successfully" });
+                        // ลบ file_requirement_relation
+                        db.query(deleteRequrementFromRelationSQL, [id], (err, data) => {
+                            if (err) {
+                                console.error("Error deleting file_requirement_relation:", err);
+                                return res.status(500).json({ message: "Error deleting file_requirement_relation" });
+                            }
+
+                            // ลบ requirement
+                            db.query(deleteRequirementSQL, [id], (err, data) => {
+                                if (err) {
+                                    console.error("Error deleting requirement:", err);
+                                    return res.status(500).json({ message: "Error deleting requirement" });
+                                }
+
+                                // ลบ design (กรณีเชื่อมโยงกับ requirement)
+                                db.query(deleteDesignSQL, [id], (err, data) => {
+                                    if (err) {
+                                        console.error("Error deleting design:", err);
+                                        return res.status(500).json({ message: "Error deleting design" });
+                                    }
+
+                                    return res.status(200).json({ message: "Requirement and related data deleted successfully" });
+                                });
+                            });
+                        });
                     });
                 });
             });
         });
     });
 });
-
 
 
 // Get requirements by project ID
@@ -2584,94 +2612,66 @@ app.put('/update-veridesign-by', (req, res) => {
 app.post('/createdesignbaseline', (req, res) => {
     const { design_id } = req.body;
 
-    // Check if design_id is provided and not empty
-    if (!design_id || !design_id.length) {
-        return res.status(400).send({ error: "Design ID is required" });
+    if (!Array.isArray(design_id) || design_id.length === 0) {
+        return res.status(400).json({ message: "Design ID is required and should be a non-empty array" });
     }
 
-    // Query to find the latest baseline round for the given design_id(s)
+    // ดึงค่า baselinedesign_round ล่าสุดของทุก design_id ที่มีอยู่ในระบบ
     const findLatestBaselineRoundQuery = `
-        SELECT design_id, COALESCE(MAX(baselinedesign_round), 0) AS latest_baselinedesign_round
-        FROM baselinedesign
-        WHERE design_id IN (?)
-        GROUP BY design_id
+        SELECT COALESCE(MAX(baselinedesign_round), 0) AS latest_baselinedesign_round FROM baselinedesign
     `;
 
-    db.query(findLatestBaselineRoundQuery, [design_id], (err, results) => {
+    db.query(findLatestBaselineRoundQuery, (err, results) => {
         if (err) {
-            console.error("Database error during baselinedesign round check:", err);
-            return res.status(500).send({
-                error: "Failed to fetch the latest baselinedesign round",
-                details: err.sqlMessage || err.message,
-            });
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Failed to fetch latest baseline round", details: err.message });
         }
 
-        console.log("Results from findLatestBaselineRoundQuery:", results);
+        // ใช้ค่า baselinedesign_round ล่าสุด +1 (ใช้เลขเดียวกันทั้งหมด)
+        const nextRound = (results[0].latest_baselinedesign_round || 0) + 1;
+        console.log("Next baseline round:", nextRound);
 
-        // Create a map of design_id to the next baseline round number
-        const roundMap = {};
-        design_id.forEach(id => {
-            const latestEntry = results.find(row => row.design_id === id);
-            // If an entry exists, increment the round by 1
-            roundMap[id] = latestEntry ? latestEntry.latest_baselinedesign_round + 1 : 1;
-        });
-
-        console.log("Updated roundMap:", roundMap);
-
-        // Prepare the values to be inserted into the database
         const formattedDate = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+        // ใช้ round เดียวกันทั้งหมด
         const baselineValues = design_id.map(id => [
             id,
-            roundMap[id],
-            formattedDate,
+            nextRound, // ใช้เลขเดียวกันหมด
+            formattedDate
         ]);
 
-        console.log("baselineValues to be inserted:", baselineValues);
+        console.log("Baseline values to insert:", baselineValues); // Debugging
 
-        // Query to insert baseline values into the database
         const insertBaselineQuery = `
-            INSERT INTO baselinedesign (design_id, baselinedesign_round, baselinedesign_at)
-            VALUES ?
+            INSERT INTO baselinedesign (design_id, baselinedesign_round, baselinedesign_at) VALUES ?
         `;
 
         db.query(insertBaselineQuery, [baselineValues], (insertErr, insertResult) => {
             if (insertErr) {
-                console.error("Database error during baselinedesign insert:", insertErr);
-                return res.status(500).send({
-                    error: "Failed to create design baselinedesign",
-                    details: insertErr.sqlMessage || insertErr.message,
-                });
+                console.error("Insert error:", insertErr);
+                return res.status(500).json({ message: "Failed to insert baseline", details: insertErr.message });
             }
 
-            // Query to update design status to 'BASELINE'
-            const updateDesignQuery = `
-                UPDATE design
-                SET design_status = 'BASELINE'
-                WHERE design_id IN (?)
-            `;
+            // อัปเดตสถานะ design เป็น 'BASELINE'
+            const updateDesignQuery = `UPDATE design SET design_status = 'BASELINE' WHERE design_id IN (?)`;
 
             db.query(updateDesignQuery, [design_id], (updateErr, updateResult) => {
                 if (updateErr) {
-                    console.error("Database error during design update:", updateErr);
-                    return res.status(500).send({
-                        error: "Failed to update designs",
-                        details: updateErr.sqlMessage || updateErr.message,
-                    });
+                    console.error("Update error:", updateErr);
+                    return res.status(500).json({ message: "Failed to update design status", details: updateErr.message });
                 }
 
-                console.log("Inserted Design Baselines:", baselineValues);
-
-                // Send response with the result
-                res.status(201).send({
-                    message: "Design baseline created successfully",
-                    updatedDesigns: updateResult.affectedRows,
+                res.status(201).json({
+                    message: "Baseline created successfully",
                     insertedRows: insertResult.affectedRows,
-                    baselinedesign: baselineValues,
+                    updatedDesigns: updateResult.affectedRows,
+                    baselinedesign: baselineValues
                 });
             });
         });
     });
 });
+
 
 
 // ดึง Design ที่มีสถานะ VERIFIED สำหรับ Project ID

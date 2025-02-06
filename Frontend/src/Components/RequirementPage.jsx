@@ -282,7 +282,7 @@ const RequirementPage = () => {
                     }
                     style={{ cursor: "pointer", userSelect: "none" }}
                   >
-                    REQ-{data.requirement_id} {/* เพิ่มเลขให้เป็น 3 หลัก */}
+                    REQ-00{data.requirement_id} {/* เพิ่มเลขให้เป็น 3 หลัก */}
                   </td>
                   <td
                     onClick={() =>

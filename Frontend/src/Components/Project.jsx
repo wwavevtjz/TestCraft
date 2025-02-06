@@ -3,21 +3,21 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass, faPenToSquare, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Modal, Button } from 'react-bootstrap';  // นำเข้า Modal
+import { Modal, Button } from 'react-bootstrap';
 import './CSS/Project.css';
 import { toast } from 'react-toastify';
-import clearsearch from '../image/clearsearch.png'
+import clearsearch from '../image/clearsearch.png';
 
 const Project = () => {
   const [projectList, setProjectList] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false); // สถานะการแสดง modal
-  const [projectToDelete, setProjectToDelete] = useState(null); // โปรเจกต์ที่จะลบ
+  const [showModal, setShowModal] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(null);
   const navigate = useNavigate();
 
-  // ดึงข้อมูลโปรเจกต์
   useEffect(() => {
     axios
       .get('http://localhost:3001/project')
@@ -32,54 +32,42 @@ const Project = () => {
       });
   }, []);
 
-  // ค้นหาชื่อโปรเจกต์
   useEffect(() => {
     const filtered = searchQuery
       ? projectList.filter((project) =>
-        project.project_name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+          project.project_name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
       : projectList;
     setFilteredProjects(filtered);
   }, [searchQuery, projectList]);
 
-  // ไปที่หน้า Update Project
   const handleUpdateProject = (id) => {
     navigate(`/UpdateProject/${id}`);
   };
 
-  // เปิด modal สำหรับลบโปรเจกต์
   const handleDeleteConfirmation = (project) => {
-    setProjectToDelete(project);  // ตั้งโปรเจกต์ที่จะลบ
-    setShowModal(true);  // แสดง modal
+    setProjectToDelete(project);
+    setShowModal(true);
   };
 
-  // ลบโปรเจกต์
   const handleDeleteProject = async () => {
     if (!projectToDelete) return;
 
     try {
       await axios.delete(`http://localhost:3001/project/${projectToDelete.project_id}`);
       setProjectList(projectList.filter((project) => project.project_id !== projectToDelete.project_id));
-      setShowModal(false);  // ซ่อน modal หลังจากลบสำเร็จ
-      setProjectToDelete(null);  // รีเซ็ตโปรเจกต์ที่จะลบ
-      // แสดงข้อความเมื่อโปรเจกต์ถูกลบสำเร็จ
-      toast.success(`Delete Project "${projectToDelete.project_name}" Success`, {
-        position: "top-right", // กำหนดตำแหน่งของ toast
-      });
+      setShowModal(false);
+      setProjectToDelete(null);
+      toast.success(`Delete Project "${projectToDelete.project_name}" Success`, { position: "top-right" });
     } catch (err) {
       toast.error(`Error deleting project: ${err.message}`);
     }
   };
 
-
-  // ไปที่หน้า Dashboard ของโปรเจกต์
   const handleNavigateToDashboard = (id) => {
-    navigate(`/Dashboard?project_id=${id}`, {
-      state: { selectedSection: 'Requirement' },
-    });
+    navigate(`/Dashboard?project_id=${id}`, { state: { selectedSection: 'Requirement' } });
   };
 
-  // คำนวณวันที่เหลือ
   const calculateDaysRemaining = (endDate) => {
     const today = new Date();
     const end = new Date(endDate);
@@ -87,13 +75,15 @@ const Project = () => {
     return difference > 0 ? `${difference} days` : 'Expired';
   };
 
+  const handleShowDetails = (project) => {
+    setSelectedProject(project);
+  };
+
   return (
     <div className="topic-project">
       <div className="top-section">
         <h1 className="project-title">Project Information</h1>
-        <button onClick={() => navigate('/CreateProject')} className="create-project-btn">
-          Create Project
-        </button>
+        <button onClick={() => navigate('/CreateProject')} className="create-project-btn">Create Project</button>
       </div>
 
       <div className="content-container">
@@ -106,7 +96,6 @@ const Project = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-
             {searchQuery && (
               <img
                 src={clearsearch}
@@ -115,11 +104,8 @@ const Project = () => {
                 onClick={() => setSearchQuery('')}
               />
             )}
-
             <FontAwesomeIcon icon={faMagnifyingGlass} className="search-icon" />
           </div>
-
-
 
           {loading ? (
             <p>Loading projects...</p>
@@ -144,49 +130,25 @@ const Project = () => {
                 ) : (
                   filteredProjects.map((project) => (
                     <tr key={project.project_id}>
-                      <td
-                        className="project-name-link"
-                        onClick={() => handleNavigateToDashboard(project.project_id)}
-                      >
+                      <td className="project-name-link" onClick={() => handleNavigateToDashboard(project.project_id)}>
                         {project.project_name}
                       </td>
-                      <td>{project.project_description}</td>
                       <td>
-                        {new Date(project.start_date).toLocaleDateString('th-TH', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        })}
+                        {project.project_description.substring(0, 50)}...
+                        <button onClick={() => handleShowDetails(project)} className="view-more-btn">View More</button>
                       </td>
-                      <td>
-                        {new Date(project.end_date).toLocaleDateString('th-TH', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        })}
-                      </td>
+                      <td>{new Date(project.start_date).toLocaleDateString('th-TH')}</td>
+                      <td>{new Date(project.end_date).toLocaleDateString('th-TH')}</td>
                       <td>{calculateDaysRemaining(project.end_date)}</td>
                       <td>
-                        <button
-                          onClick={() => handleUpdateProject(project.project_id)}
-                          className="action-button edit-req"
-                        >
+                        <button onClick={() => handleUpdateProject(project.project_id)} className="action-button edit-req">
                           <FontAwesomeIcon icon={faPenToSquare} className="action-icon" />
                         </button>
-                        <button
-                          onClick={() => handleDeleteConfirmation(project)}
-                          className="action-button delete-req"
-                        >
+                        <button onClick={() => handleDeleteConfirmation(project)} className="action-button delete-req">
                           <FontAwesomeIcon icon={faTrash} className="action-icon" />
                         </button>
                       </td>
-                      <td>
-                        <span
-                          className={project.project_status === 'CLOSE' ? 'closed-status' : ''}
-                        >
-                          {project.project_status}
-                        </span>
-                      </td>
+                      <td><span className={project.project_status === 'CLOSE' ? 'closed-status' : ''}>{project.project_status}</span></td>
                     </tr>
                   ))
                 )}
@@ -196,25 +158,25 @@ const Project = () => {
         </div>
       </div>
 
-      {/* Modal สำหรับยืนยันการลบ */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered className="custom-modal">
-        <Modal.Header className="custom-modal-header">
-          <Modal.Title>Confirm Deletion</Modal.Title>
+      <Modal show={!!selectedProject} onHide={() => setSelectedProject(null)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Project Details</Modal.Title>
         </Modal.Header>
-        <Modal.Body className="custom-modal-body">
-          Are you sure you want to delete the project "{projectToDelete?.project_name}"?
+        <Modal.Body>
+          {selectedProject && (
+            <div>
+              <p><strong>Project Name:</strong> {selectedProject.project_name}</p>
+              <p><strong>Description:</strong> {selectedProject.project_description}</p>
+              <p><strong>Start Date:</strong> {new Date(selectedProject.start_date).toLocaleDateString('th-TH')}</p>
+              <p><strong>End Date:</strong> {new Date(selectedProject.end_date).toLocaleDateString('th-TH')}</p>
+              <p><strong>Status:</strong> {selectedProject.project_status}</p>
+            </div>
+          )}
         </Modal.Body>
-        <Modal.Footer className="custom-modal-footer">
-          <Button variant="secondary" onClick={() => setShowModal(false)} className="custom-btn-secondary">
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={handleDeleteProject} className="custom-btn-danger">
-            Delete
-          </Button>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setSelectedProject(null)}>Close</Button>
         </Modal.Footer>
       </Modal>
-
-
     </div>
   );
 };

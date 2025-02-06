@@ -6,7 +6,8 @@ import "./CSS/Baseline.css";
 
 const DesignBaseline = () => {
   const [designBaselines, setDesignBaselines] = useState([]);
-  const [selectedDesign, setSelectedDesign] = useState([]);
+  const [groupedBaselines, setGroupedBaselines] = useState(new Map());
+  const [selectedDesigns, setSelectedDesigns] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -30,13 +31,32 @@ const DesignBaseline = () => {
     fetchBaselines();
   }, [fetchBaselines]);
 
+  // จัดกลุ่ม Baseline ตาม baselinedesign_round
+  useEffect(() => {
+    const grouped = new Map();
+
+    designBaselines.forEach((baseline) => {
+      const key = baseline.baselinedesign_round;
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          round: key,
+          date: baseline.baselinedesign_at,
+          designs: [],
+        });
+      }
+      grouped.get(key).designs.push(baseline.design_id);
+    });
+
+    setGroupedBaselines(grouped);
+  }, [designBaselines]);
+
   // ฟังก์ชันลิงก์ไปหน้า Create Baseline
   const handleSetBaselineClick = () => {
     navigate(`/CreateDesignbaseline?project_id=${projectId}`);
   };
 
-  const handleViewDesign = (designId) => {
-    setSelectedDesign([designId]);
+  const handleViewDesign = (designs) => {
+    setSelectedDesigns(designs);
     setIsModalOpen(true);
   };
 
@@ -46,7 +66,7 @@ const DesignBaseline = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setSelectedDesign([]);
+    setSelectedDesigns([]);
   };
 
   return (
@@ -58,7 +78,7 @@ const DesignBaseline = () => {
         </button>
       </div>
       <div className="list-baseline">
-        {designBaselines.length === 0 ? (
+        {groupedBaselines.size === 0 ? (
           <p>No baselines available.</p>
         ) : (
           <table className="baseline-table">
@@ -70,14 +90,14 @@ const DesignBaseline = () => {
               </tr>
             </thead>
             <tbody>
-              {designBaselines.map((baseline) => (
-                <tr key={baseline.baselinedesign_id}>
-                  <td>{`BL${baseline.baselinedesign_round}`}</td>
-                  <td>{new Date(baseline.baselinedesign_at).toLocaleDateString()}</td>
+              {Array.from(groupedBaselines.values()).map((baseline) => (
+                <tr key={baseline.round}>
+                  <td>{`BL${baseline.round}`}</td>
+                  <td>{new Date(baseline.date).toLocaleDateString()}</td>
                   <td>
                     <button
                       className="view-details-button"
-                      onClick={() => handleViewDesign(baseline.design_id)}
+                      onClick={() => handleViewDesign(baseline.designs)}
                     >
                       View Design
                     </button>
@@ -94,12 +114,12 @@ const DesignBaseline = () => {
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2>Design</h2>
-            {selectedDesign.length === 0 ? (
+            <h2>Designs in this Baseline</h2>
+            {selectedDesigns.length === 0 ? (
               <p>No Design available.</p>
             ) : (
               <ul>
-                {selectedDesign.map((design, index) => (
+                {selectedDesigns.map((design, index) => (
                   <li key={index}>{design}</li>
                 ))}
               </ul>
