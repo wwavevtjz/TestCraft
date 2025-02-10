@@ -3,9 +3,9 @@ import './CSS/Login.css';
 import logo from '../image/testcraft-logo.png';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 
-const Login = ({ setUsername }) => { // รับ setUsername จาก props
+const Login = ({ setUsername }) => {
     const [formData, setFormData] = useState({
         username: '',
         password: '',
@@ -39,7 +39,7 @@ const Login = ({ setUsername }) => { // รับ setUsername จาก props
 
             if (response.ok) {
                 toast.success(`User ${formData.username} Login Success`);
-                localStorage.setItem('username', formData.username); // บันทึก username ลงใน Local Storage
+                localStorage.setItem('username', formData.username);
                 navigate('/Home');
             } else {
                 toast.error('Username or password is incorrect.');
@@ -49,40 +49,41 @@ const Login = ({ setUsername }) => { // รับ setUsername จาก props
         }
     };
 
-
     return (
-        <div className="login-page">
+        <div className="login-container">
             <div className="login-left">
-                <img src={logo} alt="TestCraft Logo" className="promo-image" />
+                <img src={logo} alt="TestCraft Logo" className="login-logo" />
             </div>
             <div className="login-right">
                 <form className="login-form" onSubmit={handleSubmit}>
-                    <h1 className='welcome-topic'>Welcome to TestCraft</h1>
-                    <p>
-                        Don't have an account yet? <a href="/Signup">Sign Up</a>
+                    <h1 className="login-title">Welcome to TestCraft</h1>
+                    <p className="login-subtext">
+                        Don't have an account yet? <a href="/Signup" className="login-link">Sign Up</a>
                     </p>
-                    <div className="form-group">
-                        <label htmlFor="username">Username</label>
+                    <div className="login-form-group">
+                        <label htmlFor="username" className="login-label">Username</label>
                         <input
                             type="text"
                             id="username"
                             name="username"
                             value={formData.username}
-                            onChange={handleChange} // ใช้ handleChange ที่เพิ่มมา
+                            onChange={handleChange}
                             placeholder="Enter your username"
                             required
+                            className="login-input"
                         />
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
+                    <div className="login-form-group">
+                        <label htmlFor="password" className="login-label">Password</label>
                         <input
                             type="password"
                             id="password"
                             name="password"
                             value={formData.password}
-                            onChange={handleChange} // ใช้ handleChange ที่เพิ่มมา
+                            onChange={handleChange}
                             placeholder="Enter your password"
                             required
+                            className="login-input"
                         />
                     </div>
                     <button type="submit" className="login-button">
@@ -90,8 +91,6 @@ const Login = ({ setUsername }) => { // รับ setUsername จาก props
                     </button>
                 </form>
             </div>
-
-            {/* เพิ่มการตั้งค่าตำแหน่งของ ToastContainer */}
             <ToastContainer />
         </div>
     );

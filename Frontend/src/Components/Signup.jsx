@@ -68,42 +68,44 @@ const Signup = () => {
     
 
     return (
-        <div className="login-page">
+        <div className="login-container">
             <div className="login-left">
-                <img src={logo} alt="TestCraft Logo" className="promo-image" />
+                <img src={logo} alt="TestCraft Logo" className="login-logo" />
             </div>
             <div className="login-right">
                 <form className="login-form" onSubmit={handleSubmit}>
-                    <h1>Sign Up</h1>
-                    <p>
-                        Already have an account? <a href="/">Log In</a>
+                    <h1 className="login-title">Sign Up</h1>
+                    <p className="login-subtext">
+                        Already have an account? <a href="/" className="login-link">Log In</a>
                     </p>
-                    <div className="form-group">
-                        <label htmlFor="Username">User Name</label>
+                    <div className="login-form-group">
+                        <label htmlFor="fullName" className="login-label">User Name</label>
                         <input
                             type="text"
                             id="fullName"
                             name="fullName"
+                            className="login-input"
                             value={formData.fullName}
                             onChange={handleChange}
                             placeholder="Enter your full name"
                             required
                         />
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
+                    <div className="login-form-group">
+                        <label htmlFor="password" className="login-label">Password</label>
                         <input
                             type="password"
                             id="password"
                             name="password"
+                            className="login-input"
                             value={formData.password}
                             onChange={handleChange}
                             placeholder="Enter your password"
                             required
                         />
                     </div>
-                    <div className="form-options">
-                        <label>
+                    <div className="login-form-options">
+                        <label className="login-checkbox-label">
                             <input
                                 type="checkbox"
                                 name="agreeToTerms"
@@ -120,6 +122,7 @@ const Signup = () => {
             </div>
         </div>
     );
+    
 };
 
 export default Signup;

@@ -5,18 +5,13 @@ body {
     background-color: #f0f2f5;
 }
 
-.welcome-topic {
-    margin-left: -40px;
-    white-space: nowrap;
-    font-weight: bolder;
-}
-
-
-.login-page {
+/* Login Page Layout */
+.login-container {
     display: flex;
     height: 100vh;
 }
 
+/* Left Side */
 .login-left {
     flex: 1;
     background: #f9f9f9;
@@ -25,12 +20,12 @@ body {
     align-items: center;
 }
 
-.illustration {
+.login-logo {
     width: 70%;
     height: auto;
-
 }
 
+/* Right Side */
 .login-right {
     flex: 1;
     background: #4267b2;
@@ -40,6 +35,7 @@ body {
     align-items: center;
 }
 
+/* Form Styling */
 .login-form {
     padding: 40px;
     border-radius: 10px;
@@ -47,65 +43,85 @@ body {
     max-width: 400px;
     text-align: center;
     color: #f9f9f9;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
 }
 
-.login-form h2 {
+.login-title {
     margin-bottom: 10px;
-    color: #f9f9f9;
+    font-weight: bold;
+    font-size: 24px;
+    color: #fff;
+    white-space: nowrap;
 }
 
-.login-form p {
+.login-subtext {
     color: #a9c2b6;
     font-size: 14px;
     margin-bottom: 20px;
-
 }
 
-.login-form a {
+.login-link {
     color: #f9f9f9;
     text-decoration: none;
 }
 
-.login-form a:hover {
+.login-link:hover {
     text-decoration: underline;
-
 }
 
-.form-group {
+/* Form Group */
+.login-form-group {
     margin-bottom: 20px;
     text-align: left;
 }
 
-.login-form .form-group label {
-    color: #f9f9f9;
-}
-
-.form-group label {
+.login-label {
     display: block;
     font-size: 14px;
     margin-bottom: 5px;
+    color: #f9f9f9;
 }
 
-.form-group input {
+.login-input {
     width: 100%;
     padding: 10px;
-    border: 1px solid #f9f9f9;
+    border: 1px solid #fff; /* ขอบสีขาว */
     border-radius: 5px;
     box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.8); /* เปลี่ยนพื้นหลังให้เป็นสีขาวโปร่ง */
+    color: #333; /* เปลี่ยนสีตัวอักษรให้เข้มขึ้น */
 }
 
-.form-options {
+.login-input::placeholder {
+    color: rgba(51, 51, 51, 0.6); /* เปลี่ยนสี placeholder ให้เป็นสีเทาเข้ม */
+}
+
+.login-input:focus {
+    outline: none;
+    border-color: #ddd; /* เปลี่ยนสีขอบเมื่อ focus */
+    background: #fff; /* เปลี่ยนพื้นหลังเป็นสีขาวล้วน */
+}
+
+
+/* Form Options */
+.login-form-options {
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 14px;
 }
 
-.forgot-password {
+.login-forgot-password {
     color: #f9f9f9;
     text-decoration: none;
 }
 
+.login-forgot-password:hover {
+    text-decoration: underline;
+}
+
+/* Button */
 .login-button {
     width: 100%;
     padding: 10px;
@@ -115,12 +131,15 @@ body {
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
+    transition: background 0.3s ease;
 }
 
 .login-button:hover {
     background: #365899;
 }
 
-.promo-image {
-    width: 100%;
+/* Toast Position */
+.Toastify__toast-container {
+    top: 20px;
+    right: 20px;
 }

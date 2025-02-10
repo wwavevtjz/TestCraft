@@ -178,53 +178,46 @@ const RequirementPage = () => {
         console.error("Error fetching updated files:", err);
       });
   };
+  
   return (
-    <div className="requirement-container">
-      <div className="req-top-section">
-        <h1 className="requirement-title">Project {projectName || projectId} Requirements</h1>
-        <div className="req-top-section">
-          <div className="req-action-buttons">
+    <div className=" ">
+<div className="requirement-container">
+  <div className="requirement-header">
+    <h1 className="requirement-title">{projectName || projectId} Requirements</h1>
+    <div className="req-action-buttons">
+      <button className="create-verification-button" onClick={handleCreateVeri}>
+        <img src={createvervar} alt="createver" className="createver" /> Create Verification
+      </button>
 
-            {/* Create Ver and Ver List */}
-            <div className="ver-section">
-              <button className="create-verification-button" onClick={handleCreateVeri}>
-                <img src={createvervar} alt="createver" className="createver" /> Create Verification
-              </button>
+      <button className="verifylist-button" onClick={handleVerilist}>
+        <img src={verificationlist} alt="verificationlist" className="verificationlist" /> Verification List
+      </button>
 
-              <button className="verifylist-button" onClick={handleVerilist}>
-                <img src={verificationlist} alt="verificationlist" className="verificationlist" /> Verification List
-              </button>
-            </div>
+      <button className="CreateVar-button" onClick={handleCreateVar}>
+        <img src={createvervar} alt="createvervar" className="createvervar" /> Create Validation
+      </button>
 
-            {/* Create Var and Var List */}
-            <div className="var-section">
-              <button className="CreateVar-button" onClick={handleCreateVar}>
-                <img src={createvervar} alt="createvervar" className="createvervar" /> Create Validation
-              </button>
+      <button className="validation-button" onClick={handleVarilist}>
+        <img src={validationlist} alt="validationlist" className="validationlist" /> Validation List
+      </button>
 
-              <button className="validation-button" onClick={handleVarilist}>
-                <img src={validationlist} alt="validationlist" className="validationlist" /> Validation List
-              </button>
-            </div>
+      <button className="viewvervar-button" onClick={handleVerivaliView}>
+        <img src={checkmark} alt="checkmark" className="checkmark" /> View Verification and Validation
+      </button>
 
-            {/* Other Action Buttons */}
-            <div className="other-buttons">
-              <button className="viewvervar-button" onClick={handleVerivaliView}>
-                <img src={checkmark} alt="checkmark" className="checkmark" /> View Verification and Validation
-              </button>
+      <button className="versioncontrol-button" onClick={handleVerControl}>
+        <img src={version_control} alt="version_control" className="version_control" /> Version Control
+      </button>
 
-              <button className="version-control-button" onClick={handleVerControl}>
-                <img src={version_control} alt="version_control" className="version_control" /> Version Control
-              </button>
+      <button className="baseline-button" onClick={handleBaseline}>
+        <img src={history} alt="history" className="history" /> Baseline
+      </button>
+    </div>
+  </div>
+</div>
 
-              <button className="version-control-button" onClick={handleBaseline}>
-                <img src={history} alt="history" className="history" /> Baseline
-              </button>
-            </div>
-          </div>
-        </div>
 
-      </div>
+
       {alertMessage && <p className="alert-message">{alertMessage}</p>}
       <div className="req-search">
         <input

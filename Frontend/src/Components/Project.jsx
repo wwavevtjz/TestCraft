@@ -80,13 +80,13 @@ const Project = () => {
   };
 
   return (
-    <div className="topic-project">
-      <div className="top-section">
+    <div className="project-container">
+      <div className="project-top-section">
         <h1 className="project-title">Project Information</h1>
-        <button onClick={() => navigate('/CreateProject')} className="create-project-btn">Create Project</button>
+        <button onClick={() => navigate('/CreateProject')} className="project-create-btn">Create Project</button>
       </div>
-
-      <div className="content-container">
+  
+      <div className="project-content-container">
         <div className="project-section">
           <div className="project-search">
             <input
@@ -100,15 +100,15 @@ const Project = () => {
               <img
                 src={clearsearch}
                 alt="clearsearch-project"
-                className="clearsearch-project"
+                className="project-clearsearch"
                 onClick={() => setSearchQuery('')}
               />
             )}
-            <FontAwesomeIcon icon={faMagnifyingGlass} className="search-icon" />
+            <FontAwesomeIcon icon={faMagnifyingGlass} className="project-search-icon" />
           </div>
-
+  
           {loading ? (
-            <p>Loading projects...</p>
+            <p className="project-loading">Loading projects...</p>
           ) : (
             <table className="project-table">
               <thead>
@@ -125,7 +125,7 @@ const Project = () => {
               <tbody>
                 {filteredProjects.length === 0 ? (
                   <tr>
-                    <td colSpan="7">No projects available</td>
+                    <td colSpan="7" className="project-no-data">No projects available</td>
                   </tr>
                 ) : (
                   filteredProjects.map((project) => (
@@ -135,20 +135,26 @@ const Project = () => {
                       </td>
                       <td>
                         {project.project_description.substring(0, 50)}...
-                        <button onClick={() => handleShowDetails(project)} className="view-more-btn">View More</button>
+                        <button onClick={() => handleShowDetails(project)} className="project-view-more-btn">
+                          View More
+                        </button>
                       </td>
                       <td>{new Date(project.start_date).toLocaleDateString('th-TH')}</td>
                       <td>{new Date(project.end_date).toLocaleDateString('th-TH')}</td>
                       <td>{calculateDaysRemaining(project.end_date)}</td>
                       <td>
-                        <button onClick={() => handleUpdateProject(project.project_id)} className="action-button edit-req">
-                          <FontAwesomeIcon icon={faPenToSquare} className="action-icon" />
+                        <button onClick={() => handleUpdateProject(project.project_id)} className="project-action-btn project-edit-btn">
+                          <FontAwesomeIcon icon={faPenToSquare} className="project-action-icon" />
                         </button>
-                        <button onClick={() => handleDeleteConfirmation(project)} className="action-button delete-req">
-                          <FontAwesomeIcon icon={faTrash} className="action-icon" />
+                        <button onClick={() => handleDeleteConfirmation(project)} className="project-action-btn project-delete-btn">
+                          <FontAwesomeIcon icon={faTrash} className="project-action-icon" />
                         </button>
                       </td>
-                      <td><span className={project.project_status === 'CLOSE' ? 'closed-status' : ''}>{project.project_status}</span></td>
+                      <td>
+                        <span className={project.project_status === 'CLOSE' ? 'project-closed-status' : ''}>
+                          {project.project_status}
+                        </span>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -157,19 +163,16 @@ const Project = () => {
           )}
         </div>
       </div>
-
+  
       <Modal show={!!selectedProject} onHide={() => setSelectedProject(null)}>
         <Modal.Header closeButton>
           <Modal.Title>Project Details</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedProject && (
-            <div>
-              <p><strong>Project Name:</strong> {selectedProject.project_name}</p>
+            <div className="project-details">
+
               <p><strong>Description:</strong> {selectedProject.project_description}</p>
-              <p><strong>Start Date:</strong> {new Date(selectedProject.start_date).toLocaleDateString('th-TH')}</p>
-              <p><strong>End Date:</strong> {new Date(selectedProject.end_date).toLocaleDateString('th-TH')}</p>
-              <p><strong>Status:</strong> {selectedProject.project_status}</p>
             </div>
           )}
         </Modal.Body>

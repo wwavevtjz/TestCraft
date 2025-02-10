@@ -102,33 +102,81 @@ const ReqValidation = () => {
 
   const handleFileUpload = async () => {
     if (!attachedFile) {
-      toast.warn("Please select a file to upload.");
-      return;
+        toast.warn("Please select a file to upload.");
+        return;
     }
 
     setFileUploading(true);
 
+    console.log("Selected Requirement ID:", selectedRequirements);
+    console.log("Project ID:", projectId);
+
+    if (!selectedRequirements || selectedRequirements.length === 0) {
+        toast.error("No requirement selected.");
+        setFileUploading(false);
+        return;
+    }
+
+    // ดึงค่าแรกของ array และแปลงเป็น integer
+    const requirementId = parseInt(selectedRequirements[0], 10);
+
+    if (isNaN(requirementId)) {
+        toast.error("Invalid requirement ID.");
+        setFileUploading(false);
+        return;
+    }
+
+    if (!projectId) {
+        toast.error("Project ID is missing.");
+        setFileUploading(false);
+        return;
+    }
+
     const formData = new FormData();
     formData.append("file", attachedFile);
-    formData.append("title", attachedFile.name);
+    formData.append("requirement_id", requirementId);
     formData.append("project_id", projectId);
-    formData.append("requirement_id", JSON.stringify(selectedRequirements));
+
+    console.log("FormData Sent:", Object.fromEntries(formData.entries())); // Debug
 
     try {
-      const response = await axios.post("http://localhost:3001/uploadfile-var", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        const response = await axios.post("http://localhost:3001/uploadfile-var", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        toast.success("File uploaded successfully.");
+        setAttachedFile(null);
+        setUploadedFiles((prevFiles) => [...prevFiles, response.data.insertId]);
+    } catch (error) {
+        console.error("Error uploading file:", error.response || error.message);
+        toast.error(`Failed to upload file: ${error.response?.data?.message || "Unknown error"}`);
+    } finally {
+        setFileUploading(false);
+    }
+};
+
+
+
+
+const handleFileDownload = async (fileId) => {
+  try {
+      const response = await axios.get(`http://localhost:3001/getfile/${fileId}`, {
+          responseType: "blob",
       });
 
-      toast.success("File uploaded successfully.");
-      setAttachedFile(null);
-      setUploadedFiles((prevFiles) => [...prevFiles, response.data]);
-    } catch (error) {
-      console.error("Error uploading file:", error.response || error.message);
-      toast.error("Failed to upload file.");
-    } finally {
-      setFileUploading(false);
-    }
-  };
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Requirement_${fileId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+  } catch (error) {
+      console.error("Error downloading file:", error);
+      toast.error("Failed to download file.");
+  }
+};
+
+
 
   const fetchComments = async () => {
     try {

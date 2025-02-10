@@ -1,103 +1,108 @@
 /* ReqVerification.css */
-
 .container {
-    padding: 20px;
-    font-family: Arial, sans-serif;
-  }
-  
-  .title {
-    text-align: center;
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
-  
-  .flex-container {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-  }
-  
-  .box {
-    flex: 1;
-    padding: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-  }
-  
-  .textarea {
-    width: 100%;
-    height: 150px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    resize: none;
-  }
-  
-  .requirements .table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-  
-  .requirements .table th,
-  .requirements .table td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-  }
-  
-  .button-container {
-    text-align: center;
-    margin-top: 20px;
-  }
-  
-  .save-button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .save-button:hover {
-    background-color: #0056b3;
-  }
-  
-/* Container for the checklist */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: #f8f9fa;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.flex-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 20px;
+}
+
+.box {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  width: 48%; /* Adjust width for responsive layout */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.box h2 {
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
 .checklist {
-    display: flex;
-    flex-wrap: wrap; 
-    gap: 10px;
-    
-  }
-  
-  /* Custom checkbox styling */
-  .checkbox {
-    margin-right: 10px;
-    width: 20px;
-    height: 20px;
-    border-radius: 5px;
-  }
-  
-  /* Checkbox on hover and when checked */
-  .checkbox:hover {
-    border-color: #007bff;
-  }
-  
-  .checkbox:checked {
-    background-color: #007bff;
-    border-color: #007bff;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.checklist li {
+  margin-bottom: 10px;
+}
+
+.checkbox {
+  margin-right: 10px;
+}
+
+.requirements {
+  width: 100%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.table th,
+.table td {
+  border: 1px solid #dee2e6;
+  padding: 10px;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f1f3f5;
+  font-weight: bold;
+}
+
+.button-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.save-button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.save-button:hover {
+  background-color: #0056b3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .box {
+    width: 100%;
   }
 
-  /* Label styling */
-  label {
-    font-size: 16px;
-    font-weight: normal;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .table {
+    font-size: 14px;
   }
-  
-  
+
+  .save-button {
+    width: 100%;
+  }
+}

@@ -18,10 +18,10 @@ const Home = () => {
   };
 
   return (
-    <div className="testcraft-home">
-      <div className="promo-banner">
-        <img src={logo} alt="TestCraft Logo" className="promo-image" />
-        <div className="promo-content">
+    <div className="home">
+      <div className="home__promo-banner">
+        <img src={logo} alt="TestCraft Logo" className="home__promo-image" />
+        <div className="home__promo-content">
           <h2>Welcome to TestCraft</h2>
           <p>Your all-in-one project management and testing tool, ISO/IEC 29110 compliant.</p>
           <p>
@@ -33,12 +33,13 @@ const Home = () => {
             Start your free trial now and elevate your workflow with TestCraft.
           </p>
         </div>
-        <div className='try-now'>
-          <Button onClick={handleTryNowClick} className="button-try">Try Now</Button>
+        <div className="home__try-now">
+          <Button onClick={handleTryNowClick} className="home__button-try">Try Now</Button>
         </div>
       </div>
     </div>
   );
+
 }
 
 export default Home;

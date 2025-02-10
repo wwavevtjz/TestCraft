@@ -1740,6 +1740,58 @@ app.post('/comments', (req, res) => {
     });
 });
 
+// 📌 **API อัปโหลดไฟล์ไปยังฐานข้อมูล**
+app.post('/uploadfile-var', upload.single('file'), (req, res) => {
+    const { file } = req;
+    let { requirement_id, project_id } = req.body;
+
+    console.log("Received Data:", req.body); // Debug log
+
+    requirement_id = parseInt(requirement_id, 10);
+    project_id = parseInt(project_id, 10);
+
+    if (isNaN(requirement_id) || isNaN(project_id)) {
+        return res.status(400).json({ message: "Invalid project_id or requirement_id." });
+    }
+
+    const sql = `
+        INSERT INTO file_validation (requirement_id, project_id, filereq_data, file_name, file_type, upload_at) 
+        VALUES (?, ?, ?, ?, ?, NOW())`;
+
+    db.query(sql, [requirement_id, project_id, file.buffer, file.originalname, file.mimetype], (err, result) => {
+        if (err) {
+            console.error("Error saving file:", err);
+            return res.status(500).json({ message: "Database error: " + err.message });
+        }
+
+        res.status(201).json({
+            message: "File uploaded successfully",
+            insertId: result.insertId,
+        });
+    });
+});
+
+  
+  // 📌 **API ดึงไฟล์จากฐานข้อมูล**
+  app.get("/getfile/:id", (req, res) => {
+    const fileId = req.params.id;
+  
+    const sql = "SELECT filereq_data FROM file_validation WHERE file_validation_id = ?";
+    db.query(sql, [fileId], (err, result) => {
+      if (err) {
+        console.error("Error fetching file:", err);
+        return res.status(500).json({ error: "Database error: " + err.message });
+      }
+  
+      if (result.length === 0) {
+        return res.status(404).json({ error: "File not found" });
+      }
+  
+      res.setHeader("Content-Type", "application/pdf"); // เปลี่ยนเป็น type อื่นได้ถ้าไม่ใช่ PDF
+      res.send(result[0].filereq_data);
+    });
+  });
+
 // ------------------------- REPLY VERIFICATION COMMENT -------------------------
 app.post('/replyvercomment', (req, res) => {
     const { member_name, ver_replies_text, verification_id, comment_id } = req.body;
@@ -2388,8 +2440,6 @@ app.put('/update-veridesign-by', (req, res) => {
         });
     });
 });
-
-
 
 
 // get ข้อมูลเฉพาะเมื่อกดที่ verify ในหน้า View Verification

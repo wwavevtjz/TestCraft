@@ -1,95 +1,143 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f8f9fa;
+/* General Styles */
+.design-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-family: "Arial", sans-serif;
+}
+
+/* Header Styles */
+.design-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.design-header h1 {
+  font-size: 24px;
+  color: #333;
+}
+
+.design-header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.design-btn {
+  background: #1e3a8a;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s ease-in-out;
+}
+
+.design-btn:hover {
+  background: #1e3a8a;
+}
+
+/* Table Styles */
+.design-summary-table, .design-diagram-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.design-summary-table th, .design-summary-table td,
+.design-diagram-table th, .design-diagram-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+.design-summary-table th, .design-diagram-table th {
+  background: #1e3a8a;
+  color: white;
+  font-weight: bold;
+}
+
+.design-diagram-table tbody tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+/* Action Buttons */
+.design-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  margin: 0 5px;
+  transition: transform 0.2s ease-in-out, opacity 0.3s;
+}
+
+.design-action-btn.view { color: #555; }
+.design-action-btn.edit { color: #4caf50; }
+.design-action-btn.delete { color: #f44336; }
+
+.design-action-btn:hover {
+  transform: scale(1.2);
+  opacity: 0.8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .design-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
-  
-  .designpage-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  .design-header-buttons {
+    flex-wrap: wrap;
+    gap: 5px;
   }
-  
-  .designpage-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  .designpage-header h1 {
-    font-size: 1.8rem;
-    color: #333;
-  }
-  
-  .designpage-header-buttons .btn {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    margin-left: 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-  }
-  
-  .designpage-header-buttons .btn:hover {
-    background-color: #0056b3;
-  }
-  
-  .designpage-summary h2 {
-    font-size: 1.4rem;
-    color: #333;
-    margin-bottom: 10px;
-  }
-  
-  .summary-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-  }
-  
-  .summary-table th,
-  .summary-table td {
-    border: 1px solid #ddd;
+  .design-summary-table th, .design-summary-table td,
+  .design-diagram-table th, .design-diagram-table td {
     padding: 10px;
-    text-align: left;
+    font-size: 14px;
   }
-  
-  .summary-table th {
-    background-color: #f1f1f1;
-    color: #333;
-  }
-  
-  .diagram-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .diagram-table th,
-  .diagram-table td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
-  }
-  
-  .diagram-table th {
-    background-color: #f1f1f1;
-    color: #333;
-  }
-  
-  .action-btn {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-  }
-  
-  .action-btn:hover {
-    color: #007bff;
-  }
-  
+}
+
+/* ปุ่มสถานะหลัก */
+.status-btn {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  border: 2px solid transparent;
+  background-color: white;
+  cursor: default;
+  min-width: 120px;
+}
+
+/* สีของแต่ละสถานะ */
+.waiting {
+  color: #e6a800;
+  border-color: #e6a800;
+}
+
+.validated {
+  color: #0088cc;
+  border-color: #0088cc;
+}
+
+.working {
+  color: #ff6600;
+  border-color: #ff6600;
+}
+
+.baseline {
+  color: #444;
+  border-color: #444;
+}
+
+.verified {
+  color: #009933;
+  border-color: #009933;
+}

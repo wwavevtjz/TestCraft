@@ -1,287 +1,129 @@
-.requirement-title {
-  text-align: center;
-}
-
 .requirement-container {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  grid-gap: 20px;
   width: 100%;
-  margin: 20px;
-  font-family: 'Arial', sans-serif;
-  color: #333;
-}
-
-/* ปุ่มใน top-section */
-.req-top-section .req-action-buttons {
-  justify-content: center;
-}
-
-.req-top-section .req-action-buttons button {
-  margin: 0 15px 13px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: space-around;
-  padding: 1rem;
-  justify-content: center;
-
-}
-
-.req-action-buttons {
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: space-around;
-  padding: 1rem;
-}
-
-.req-action-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  /* ให้ปุ่มห่อหุ้มเมื่อหน้าจอเล็ก */
-  gap: 15px;
-  /* เพิ่มช่องว่างระหว่างปุ่ม */
-  justify-content: flex-start;
-  /* จัดเรียงปุ่มจากซ้ายไปขวา */
-}
-
-.req-action-buttons button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  /* ช่องว่างระหว่างไอคอนและข้อความ */
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  /* ขอบบางๆ ที่ให้ความรู้สึก minimal */
-  background-color: white;
-  /* พื้นหลังสีขาว */
-  color: #333;
-  /* สีข้อความเข้ม */
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  /* เงาเล็กน้อยเพื่อเพิ่มมิติ */
-}
-
-.req-action-buttons button img {
-  width: 25px;
-  height: 25px;
-}
-
-/* สีสำหรับ Verification */
-/* สำหรับกลุ่ม Verification */
-.ver-section {
-  margin-bottom: 20px;
-  border: 1px solid #4CAF50;
-  padding: 15px;
-  border-radius: 5px;
-  background-color: #e8f5e9;
-  display: flex;
-  gap: 15px;
-  /* เพิ่มระยะห่างระหว่างปุ่ม */
-}
-
-/* สีสำหรับปุ่ม Create Verification */
-.create-verification-button {
-  background-color: #4CAF50;
-  /* สีเขียวสำหรับ Create Verification */
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.create-verification-button:hover {
-  background-color: #388e3c;
-  /* สีเข้มเมื่อ hover */
-}
-
-/* สีสำหรับปุ่ม Verification List */
-.verifylist-button {
-  background-color: #2196F3;
-  /* สีน้ำเงินสำหรับ Verification List */
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.verifylist-button:hover {
-  background-color: #1976D2;
-  /* สีน้ำเงินเข้มเมื่อ hover */
-}
-
-
-/* สำหรับกลุ่ม Validation */
-.var-section {
-  margin-bottom: 20px;
-  border: 1px solid #FF9800;
-  padding: 15px;
-  border-radius: 5px;
-  background-color: #fff3e0;
-  display: flex;
-  gap: 15px;
-  /* เพิ่มระยะห่างระหว่างปุ่ม */
-}
-
-/* สีสำหรับปุ่ม Create Validation */
-.CreateVar-button {
-  background-color: #FF9800;
-  /* สีส้มสดใสสำหรับ Create Validation */
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.CreateVar-button:hover {
-  background-color: #f57c00;
-  /* สีส้มเข้มเมื่อ hover */
-}
-
-/* สีสำหรับปุ่ม Validation List */
-.validation-button {
-  background-color: #FF5722;
-  /* สีส้มที่เข้มขึ้นสำหรับ Validation List */
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.validation-button:hover {
-  background-color: #e64a19;
-  /* สีส้มเข้มมากขึ้นเมื่อ hover */
-}
-
-
-.other-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  /* ปรับให้ปุ่มขึ้นแถวใหม่เมื่อขนาดหน้าจอลดลง */
-  gap: 20px;
-  /* เพิ่มช่องว่างระหว่างปุ่ม */
-  justify-content: flex-start;
-  /* จัดระเบียบปุ่มจากซ้ายไปขวา */
-  margin-top: 20px;
-}
-
-.other-buttons button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  /* ช่องว่างระหว่างไอคอนและข้อความ */
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  /* ขอบบางๆ เพื่อความ minimal */
-  background-color: white;
-  /* พื้นหลังสีขาว */
-  color: #333;
-  /* สีข้อความเข้ม */
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  /* เงาเล็กน้อย */
-}
-
-.other-buttons button img {
-  width: 25px;
-  height: 25px;
-}
-
-/* ปรับแต่งสำหรับ View Verification and Validation */
-.viewvervar-button {
-  background-color: #8BC34A;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  transition: background-color 0.3s ease;
-}
-
-.viewvervar-button:hover {
-  background-color: #7CB342;
-}
-
-/* สำหรับ Version Control */
-.version-control-button {
-  background-color: #9E9E9E;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  transition: background-color 0.3s ease;
-}
-
-.version-control-button:hover {
-  background-color: #757575;
-}
-
-/* สำหรับการปรับแต่งเมื่อ hover */
-.other-buttons button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  /* เพิ่มเงาหนาเมื่อ hover */
-}
-
-
-/* กล่องตาราง */
-.requirement-table-container {
-  background-color: #f9f9f9;
   padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  overflow-x: auto;
-  /* เพิ่มความสามารถในการเลื่อนตารางถ้าเกินขอบ */
+  background-color: #f4f4f9;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ปรับโครงสร้างให้ชื่อกับปุ่มอยู่ในแนวเดียวกัน */
+.requirement-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* ชื่ออยู่ซ้าย ปุ่มอยู่ขวา */
+  width: 100%;
+}
+
+.requirement-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+  margin: 0; /* เอา margin-bottom ออกเพื่อให้ align กับปุ่ม */
+}
+
+/* จัดปุ่มไปทางขวา */
+.req-action-buttons {
+  display: flex;
+  gap: 10px; /* เว้นระยะห่างระหว่างปุ่ม */
+}
+
+/* ปุ่มสำหรับการทำงานต่างๆ */
+.create-verification-button,
+.verifylist-button,
+.CreateVar-button,
+.validation-button,
+.viewvervar-button,
+.versioncontrol-button,
+.baseline-button {
+  color: #fff;
+  background-color: #1e3a8a;
+  border-radius: 25px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* เว้นระยะระหว่างไอคอนกับข้อความ */
+  transition: all 0.3s ease;
+}
+
+.create-verification-button:hover,
+.verifylist-button:hover,
+.CreateVar-button:hover,
+.validation-button:hover,
+.viewvervar-button:hover,
+.versioncontrol-button:hover,
+.baseline-button:hover {
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+/* ปรับขนาดไอคอนให้เหมาะสม */
+.createver, .verificationlist, .createvervar, .validationlist, 
+.checkmark, .version_control, .history {
+  width: 18px;
+  height: 18px;
+}
+
+
+.req-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.req-search-input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.search-icon-req {
+  color: #666;
+  font-size: 18px;
+}
+
+.add-requirement-button {
+  background-color: #ffffff;
+  border: 2px dashed #aaa;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-requirement-button:hover {
+  background-color: #f9f9f9;
 }
 
 /* ตาราง */
+.content-container {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
 .requirement-table {
   width: 100%;
-  padding: 20px;
   border-collapse: collapse;
-  margin: 0;
-  font-size: 0.9em;
-  border-radius: 5px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  overflow-x: auto;
+  margin-top: 15px;
 }
 
 .requirement-table th,
 .requirement-table td {
+  padding: 15px;
   border: 1px solid #ddd;
-  padding: 10px 15px;
-  text-align: center;
+  text-align: left;
 }
 
 .requirement-table th {
-  background-color: #f2f2f2;
-  color: #333;
+  background-color: #f7f7f7;
+  font-weight: bold;
 }
-
-.requirement-table tr:hover {
-  background-color: #f9f9f9;
-}
-
-
 
 
 /* ปุ่ม Action */
@@ -328,45 +170,6 @@
   padding: 10px 15px;
 }
 
-/* กล่องค้นหา */
-.req-search {
-  position: relative;
-  margin-top: 30px;
-  display: flex;
-  align-items: center;
-}
-
-.req-search-input {
-  margin-left: 1%;
-  width: 30%;
-  max-width: 500px;
-  padding: 10px 15px;
-  font-size: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  outline: none;
-  padding-left: 40px;
-  transition: border 0.3s;
-}
-
-.req-search-input:focus {
-  border-color: #007bff;
-  /* เปลี่ยนสีเส้นขอบเมื่อโฟกัส */
-}
-
-.search-icon-req {
-  position: absolute;
-  left: 25px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1.2rem;
-  color: #888;
-  /* สีของไอคอนค้นหา */
-}
-
-
-
-
 .history {
   width: 20px;
   height: 20px;
@@ -400,24 +203,7 @@
   height: 20px;
 }
 
-.add-requirement-button {
-  margin-left: 52%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border: 1px solid #ddd;
-  cursor: pointer;
-  border-radius: 5px;
-  background-color: #fff;
-  color: #333;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-}
 
-.add-requirement-button:hover {
-  background-color: #f5f5f5;
-  border-color: #ccc;
-}
 
 .add-req {
   font-size: 18px;
@@ -753,13 +539,7 @@ h3 {
   background-color: #45a049;
 }
 
-/* No requirements message */
-p {
-  font-size: 16px;
-  color: #777;
-  text-align: center;
-  margin-top: 20px;
-}
+
 
 .table-file td .download-file-button {
   background-color: #28a745;
@@ -873,8 +653,6 @@ p {
   /* สีเทาเข้ม */
   border-color: #424242;
 }
-
-
 
 .clearsearch-req {
   cursor: pointer;

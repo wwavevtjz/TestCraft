@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
 import "./CSS/DesignPage.css";
 
 const DesignPage = () => {
@@ -9,16 +11,15 @@ const DesignPage = () => {
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get("project_id");
 
-  const [designs, setDesigns] = useState([]); // State for designs
-  const [loading, setLoading] = useState(true); // Loading state
+  const [designs, setDesigns] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch designs from the backend
   const fetchDesigns = async () => {
     try {
       const response = await axios.get("http://localhost:3001/design", {
         params: { project_id: projectId },
       });
-      setDesigns(response.data); // Set the designs state
+      setDesigns(response.data);
     } catch (error) {
       console.error("Error fetching designs:", error);
     } finally {
@@ -27,44 +28,24 @@ const DesignPage = () => {
   };
 
   useEffect(() => {
-    fetchDesigns(); // Fetch designs when the component loads
+    fetchDesigns();
   }, [projectId]);
 
-  // Navigate to the CreateDesign page
-  const handleCreateDesign = () => {
-    navigate(`/CreateDesign?project_id=${projectId}`);
-  };
-
-    // Navigate to the CreateVeriDesign page
-    const handleCreateVeriDesign = () => {
-      navigate(`/CreateVeriDesign?project_id=${projectId}`);
-    };
-  
-    // Navigate to the CreateVeriDesign page
-    const handleViewVeriDesign = () => {
-      navigate(`/VeriDesign?project_id=${projectId}`);
-    };
-
-    // Navigate to the CreateVeriDesign page
-    const handleViewBaseline = () => {
-      navigate(`/DesignBaseline?project_id=${projectId}`);
-    };
-
   return (
-    <div className="designpage-container">
-      <header className="designpage-header">
+    <div className="design-container">
+      <header className="design-header">
         <h1>Software Diagram</h1>
-        <div className="designpage-header-buttons">
-          <button className="create-design-button" onClick={handleCreateDesign}> Create Design </button>
-          <button className="create-design-button" onClick={handleCreateVeriDesign}> CreateVeriDesign </button>
-          <button className="create-design-button" onClick={handleViewVeriDesign}> View Verification </button>
-          <button className="create-design-button" onClick={handleViewBaseline}> Baseline </button>
+        <div className="design-header-buttons">
+          <button className="design-btn" onClick={() => navigate(`/CreateDesign?project_id=${projectId}`)}>Create Design</button>
+          <button className="design-btn" onClick={() => navigate(`/CreateVeriDesign?project_id=${projectId}`)}>Create Verification</button>
+          <button className="design-btn" onClick={() => navigate(`/VeriDesign?project_id=${projectId}`)}>View Verification</button>
+          <button className="design-btn" onClick={() => navigate(`/DesignBaseline?project_id=${projectId}`)}>Baseline</button>
         </div>
       </header>
 
-      <section className="designpage-summary">
+      <section className="design-summary">
         <h2>Overview Summary</h2>
-        <table className="summary-table">
+        <table className="design-summary-table">
           <thead>
             <tr>
               <th>Design Type</th>
@@ -75,9 +56,7 @@ const DesignPage = () => {
           </thead>
           <tbody>
             {["High-Level Design", "Low-Level Design"].map((type) => {
-              const filteredDesigns = designs.filter(
-                (design) => design.design_type === type
-              );
+              const filteredDesigns = designs.filter(design => design.design_type === type);
               return (
                 <tr key={type}>
                   <td>{type}</td>
@@ -91,12 +70,12 @@ const DesignPage = () => {
         </table>
       </section>
 
-      <section className="designpage-diagrams">
+      <section className="design-diagrams">
         <h2>Diagrams</h2>
         {loading ? (
           <p>Loading diagrams...</p>
         ) : (
-          <table className="diagram-table">
+          <table className="design-diagram-table">
             <thead>
               <tr>
                 <th>Design ID</th>
@@ -115,11 +94,22 @@ const DesignPage = () => {
                   <td>{design.diagram_type}</td>
                   <td>{design.design_type}</td>
                   <td>
-                    <button className="btn action-btn">👁️</button>
-                    <button className="btn action-btn">✏️</button>
-                    <button className="btn action-btn">🗑️</button>
+                    <button className="design-action-btn view">
+                      <FontAwesomeIcon icon={faEye} />
+                    </button>
+                    <button className="design-action-btn edit">
+                      <FontAwesomeIcon icon={faPen} />
+                    </button>
+                    <button className="design-action-btn delete">
+                      <FontAwesomeIcon icon={faTrash} />
+                    </button>
                   </td>
-                  <td>{design.design_status}</td>
+                  <td>
+                    <span className={`status-btn ${design.design_status.toLowerCase()}`}>
+                      {design.design_status}
+                    </span>
+                  </td>
+
                 </tr>
               ))}
             </tbody>

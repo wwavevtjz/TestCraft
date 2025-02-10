@@ -209,7 +209,7 @@ const CreateDesign = () => {
           isMulti
           options={baselineRequirements.map((req) => ({
             value: req.requirement_id,
-            label: `REQ-${req.requirement_id}: ${req.requirement_name}`,
+            label: `REQ-00${req.requirement_id}: ${req.requirement_name}`,
           }))}
           onChange={(selectedOptions) =>
             setRequirementsId(selectedOptions.map((option) => option.value))
