@@ -33,6 +33,8 @@ const RequirementPage = () => {
   const projectId = queryParams.get("project_id");
   const [filteredRequirements, setFilteredRequirements] = useState([]);
   const [alertMessage] = useState(""); // เก็บข้อความแจ้งเตือน
+  const [statusFilter, setStatusFilter] = useState(""); // State สำหรับการกรองสถานะ
+  const [typeFilter, setTypeFilter] = useState(""); // State สำหรับการกรองสถานะ
 
 
   useEffect(() => {
@@ -83,17 +85,28 @@ const RequirementPage = () => {
   }, [projectId]);
 
   useEffect(() => {
-    if (searchQuery) {
-      const filtered = requirementList.filter((requirement) =>
-        requirement.requirement_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        requirement.requirement_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        `REQ-${requirement.requirement_id.toString()}`.toLowerCase().includes(searchQuery.toLowerCase())
+    let filtered = requirementList.filter((requirement) =>
+      requirement.requirement_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      requirement.requirement_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      `REQ-${requirement.requirement_id.toString()}`.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // กรองตาม status ที่เลือก
+    if (statusFilter) {
+      filtered = filtered.filter((requirement) =>
+        requirement.requirement_status === statusFilter
       );
-      setFilteredRequirements(filtered);
-    } else {
-      setFilteredRequirements(requirementList); // Show all if searchQuery is empty
     }
-  }, [searchQuery, requirementList]);
+
+    // กรองตาม type ที่เลือก
+    if (typeFilter) {
+      filtered = filtered.filter((requirement) =>
+        requirement.requirement_type === typeFilter
+      );
+    }
+
+    setFilteredRequirements(filtered);
+  }, [searchQuery, requirementList, statusFilter, typeFilter]); // เพิ่ม statusFilter และ typeFilter ใน dependencies
 
   const handleDelete = (requirementId) => {
     if (window.confirm("Are you sure you want to delete this requirement?")) {
@@ -178,64 +191,107 @@ const RequirementPage = () => {
         console.error("Error fetching updated files:", err);
       });
   };
-  
+
   return (
     <div className=" ">
-<div className="requirement-container">
-  <div className="requirement-header">
-    <h1 className="requirement-title">{projectName || projectId} Requirements</h1>
-    <div className="req-action-buttons">
-      <button className="create-verification-button" onClick={handleCreateVeri}>
-        <img src={createvervar} alt="createver" className="createver" /> Create Verification
-      </button>
+      <div className="requirement-container">
+        <div className="requirement-header">
+          <h1 className="requirement-title">{projectName || projectId} Requirements</h1>
+          <div className="req-action-buttons">
+            <button className="create-verification-button" onClick={handleCreateVeri}>
+              <img src={createvervar} alt="createver" className="createver" /> Create Verification
+            </button>
 
-      <button className="verifylist-button" onClick={handleVerilist}>
-        <img src={verificationlist} alt="verificationlist" className="verificationlist" /> Verification List
-      </button>
+            <button className="verifylist-button" onClick={handleVerilist}>
+              <img src={verificationlist} alt="verificationlist" className="verificationlist" /> Verification List
+            </button>
 
-      <button className="CreateVar-button" onClick={handleCreateVar}>
-        <img src={createvervar} alt="createvervar" className="createvervar" /> Create Validation
-      </button>
+            <button className="CreateVar-button" onClick={handleCreateVar}>
+              <img src={createvervar} alt="createvervar" className="createvervar" /> Create Validation
+            </button>
 
-      <button className="validation-button" onClick={handleVarilist}>
-        <img src={validationlist} alt="validationlist" className="validationlist" /> Validation List
-      </button>
+            <button className="validation-button" onClick={handleVarilist}>
+              <img src={validationlist} alt="validationlist" className="validationlist" /> Validation List
+            </button>
 
-      <button className="viewvervar-button" onClick={handleVerivaliView}>
-        <img src={checkmark} alt="checkmark" className="checkmark" /> View Verification and Validation
-      </button>
+            <button className="viewvervar-button" onClick={handleVerivaliView}>
+              <img src={checkmark} alt="checkmark" className="checkmark" /> View Verification and Validation
+            </button>
 
-      <button className="versioncontrol-button" onClick={handleVerControl}>
-        <img src={version_control} alt="version_control" className="version_control" /> Version Control
-      </button>
+            <button className="versioncontrol-button" onClick={handleVerControl}>
+              <img src={version_control} alt="version_control" className="version_control" /> Version Control
+            </button>
 
-      <button className="baseline-button" onClick={handleBaseline}>
-        <img src={history} alt="history" className="history" /> Baseline
-      </button>
-    </div>
-  </div>
-</div>
+            <button className="baseline-button" onClick={handleBaseline}>
+              <img src={history} alt="history" className="history" /> Baseline
+            </button>
+          </div>
+        </div>
+      </div>
 
 
 
       {alertMessage && <p className="alert-message">{alertMessage}</p>}
       <div className="req-search">
-        <input
-          type="text"
-          className="req-search-input"
-          placeholder="Search Requirement"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        {searchQuery && (
-          <img
-            src={clearsearch}
-            alt="clearsearch-req"
-            className="clearsearch-req"
-            onClick={() => setSearchQuery('')}
+        <div className="search-container">
+          <input
+            type="text"
+            className="req-search-input"
+            placeholder="Search Requirement"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-        )}
-        <FontAwesomeIcon icon={faMagnifyingGlass} className="search-icon-req" />
+          {searchQuery && (
+            <img
+              src={clearsearch}
+              alt="clearsearch-req"
+              className="clearsearch-req"
+              onClick={() => setSearchQuery('')}
+            />
+          )}
+          {/* <FontAwesomeIcon icon={faMagnifyingGlass} className="search-icon-req" /> */}
+        </div>
+        <div className="requirement_filterstatus">
+          <label className="requirement_filterstatus-label">
+            Filter by Status:
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="requirement_filterstatus-select"
+          >
+            <option value="">All</option>
+            <option value="WORKING">Working</option>
+            <option value="VERIFIED">Verified</option>
+            <option value="VALIDATED">Validated</option>
+            <option value="WAITING FOR VERIFICATION">Waiting for Verification</option>
+            <option value="WAITING FOR VALIDATION">Waiting for Validation</option>
+            <option value="BASELINE">Baseline</option>
+          </select>
+        </div>
+
+        <div className="requirement_filtertype">
+          <label className="requirement_filtertype-label">
+            Filter by Type:
+          </label>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)} // setTypeFilter สำหรับ type
+            className="requirement_filtertype-select"
+          >
+            <option value="">All</option>
+            <option value="Functional">Functionality</option>
+            <option value="User interface">User interface</option>
+            <option value="External interfaces">External interfaces</option>
+            <option value="Reliability">Reliability</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Portability">Portability</option>
+            <option value="Limitations Design and construction">Limitations Design and construction</option>
+            <option value="Interoperability">Interoperability</option>
+            <option value="Reusability">Reusability</option>
+            <option value="Legal and regulative">Legal and regulative</option>
+          </select>
+        </div>
 
         <button
           onClick={() => navigate(`/CreateRequirement?project_id=${projectId}`)}

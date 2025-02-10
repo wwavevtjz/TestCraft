@@ -166,7 +166,7 @@ const Project = () => {
   
       <Modal show={!!selectedProject} onHide={() => setSelectedProject(null)}>
         <Modal.Header closeButton>
-          <Modal.Title>Project Details</Modal.Title>
+          <Modal.Title className='title-project-detail'>Project Details</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedProject && (

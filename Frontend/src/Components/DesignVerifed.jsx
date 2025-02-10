@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import Comment from "./Comment";
 import "./CSS/DesignVerifed.css";
 import { Data } from "emoji-mart";
+import trash_comment from "../image/trash_comment.png";  // ไอคอนลบคอมเมนต์
 
 const DesignVerifed = () => {
   const location = useLocation();
@@ -20,6 +20,10 @@ const DesignVerifed = () => {
   const [veridesignBy, setVeridesignBy] = useState({});
   const storedUsername = localStorage.getItem("username");
   const designId = queryParams.get("design_id");
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [error, setError] = useState(null);
+
 
   useEffect(() => {
     if (!projectId || !veridesignId) {
@@ -32,6 +36,11 @@ const DesignVerifed = () => {
     fetchDesignDetails(selectedDesign);
     fetchVeridesignBy();
   }, [projectId, veridesignId, selectedDesign, navigate]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [veridesignId]);
+
 
   // ดึงข้อมูล veridesign_by
   const fetchVeridesignBy = async () => {
@@ -85,6 +94,17 @@ const DesignVerifed = () => {
     }
   };
 
+  const fetchComments = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/get-commentveridesign", {
+        params: { veridesign_id: veridesignId },
+      });
+      setComments(response.data);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  };
+
   const handleCheckboxChange = (id) => {
     setCheckboxState((prevState) => {
       const updatedState = { ...prevState, [id]: !prevState[id] };
@@ -101,7 +121,7 @@ const DesignVerifed = () => {
   const handleSave = async () => {
 
     console.log("design_id", designId);
-    
+
     if (!storedUsername) {
       toast.warning("ข้อมูล reviewer ขาดหาย กรุณารีเฟรชหน้า");
       return;
@@ -137,16 +157,16 @@ const DesignVerifed = () => {
       console.log("API Response Data:", updatedResponse.data);
       const data = updatedResponse.data[0];
 
-const allReviewed = data.veridesign_by &&
-  Object.values(data.veridesign_by).every((status) => status === true);
-  console.log("DATA",data);
-  console.log("ALLREEVIEWED",allReviewed);
-  
+      const allReviewed = data.veridesign_by &&
+        Object.values(data.veridesign_by).every((status) => status === true);
+      console.log("DATA", data);
+      console.log("ALLREEVIEWED", allReviewed);
+
 
       if (allReviewed) {
         const designIdsArray = designId.split(",").map((id) => id.trim());
         console.log("designIdsArray", designIdsArray);
-        
+
         if (designIdsArray.length === 0) {
           toast.error("ไม่พบข้อมูล design ID กรุณาตรวจสอบใหม่");
           return;
@@ -176,23 +196,78 @@ const allReviewed = data.veridesign_by &&
     }
   };
 
+  const handleSubmit = async () => {
+    if (!newComment.trim()) {
+      setError("กรุณาใส่ข้อความก่อนโพสต์");
+      return;
+    }
+
+    try {
+      const response = await axios.post("http://localhost:3001/commentveridesign", {
+        member_name: storedUsername,
+        comverdesign_text: newComment,
+        veridesign_id: veridesignId
+      });
+
+      if (response.status === 201) {
+        setNewComment("");  // เคลียร์ช่องคอมเมนต์หลังจากโพสต์สำเร็จ
+        fetchComments(); // โหลดคอมเมนต์ใหม่
+        toast.success("The comment has been successfully added.",{
+          autoClose: 2000,
+        });
+      }
+    } catch (error) {
+      console.error("Error posting comment:", error);
+      toast.error("เกิดข้อผิดพลาดในการโพสต์คอมเมนต์");
+    }
+  };
+
+  const handleDelete = async (comverdesign_id) => {
+    if (!window.confirm("Are you sure you want to delete this comment?")) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`http://localhost:3001/delete-commentveridesign/${comverdesign_id}`);
+
+      if (response.status !== 200) {
+        throw new Error(response.data.error || "Failed to delete comment");
+      }
+
+      toast.success("Comment deleted successfully", {
+        autoClose: 2000,
+      });
+
+      // อัปเดตรายการคอมเมนต์หลังจากลบ
+      setComments((prevComments) =>
+        prevComments.filter((comment) => comment.comverdesign_id !== comverdesign_id)
+      );
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      toast.error("Error deleting comment: " + error.message);
+    }
+  };
+
+
+
 
   return (
-    <div className="container">
-      <h1 className="title">Verification Requirement</h1>
-      <div className="flex-container">
-        <div className="box">
-          <h2>Checklist</h2>
+    <div className="designveri-container">
+      <h1 className="title-designver">Verification Requirement</h1>
+      <div className="design-verified-container">
+        {/* Checklist Section */}
+        <div className="checklistveri-design-box">
+          <h2 className="checklistveri-design-title">Software Design Verification Checklist</h2>
           {loading ? (
-            <p>Loading...</p>
+            <p className="checklistveri-design-loading">Loading...</p>
           ) : (
-            <ul className="checklist">
+            <ul className="checklistveri-design-list">
               {designcriList.map((criteria) => (
-                <li key={criteria.design_cri_id}>
-                  <label>
+                <li key={criteria.design_cri_id} className="checklistveri-design-item">
+                  <label className="checklistveri-design-label">
                     <input
                       type="checkbox"
-                      className="checkbox"
+                      className="checklistveri-design-checkbox"
                       checked={checkboxState[criteria.design_cri_id] || false}
                       onChange={() => handleCheckboxChange(criteria.design_cri_id)}
                     />
@@ -204,13 +279,57 @@ const allReviewed = data.veridesign_by &&
           )}
         </div>
 
-        <div className="box">
-          <Comment designId={veridesignId} />
+        {/* Comment Section */}
+        <div className="commentveridesign-box">
+          <div className="commentveridesign-section">
+            <h2 className="commentveridesign-title">Comments ({comments.length})</h2>
+
+            {/* Post a new comment */}
+            <div className="commentveridesign-input-container">
+              <textarea
+                placeholder={`Add comment as ${storedUsername}...`}
+                className="commentveridesign-textarea"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+              />
+              <button className="commentveridesign-submit-button" onClick={handleSubmit}>
+                Submit
+              </button>
+            </div>
+
+            {/* Error Message */}
+            {error && <p className="commentveridesign-error-message">{error}</p>}
+
+            {/* Display comments */}
+            {comments.length === 0 ? (
+              <p className="commentveridesign-no-comments">No comments available at the moment.</p>
+            ) : (
+              comments.map((comment) => (
+                <div key={comment.comverdesign_id} className="commentveridesign-item">
+                  <div className="commentveridesign-header">
+                    <span className="commentveridesign-name">{comment.member_name}</span>
+                    <span className="commentveridesign-time">{new Date(comment.comverdesign_at).toLocaleString()}</span>
+                  </div>
+                  <p className="commentveridesign-text">{comment.comverdesign_text}</p>
+                  <div className="commentveridesign-footer">
+                    <button
+                      className="commentveridesign-delete-button"
+                      onClick={() => handleDelete(comment.comverdesign_id)}
+                    >
+                      <img src={trash_comment} alt="Delete" className="commentveridesign-trash" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="box requirements">
-        <table className="table">
+
+      <div className="boxrequirement-designveri">
+        <h1 className="title-softwaredesign">Software Design</h1>
+        <table className="table-req-designveri">
           <thead>
             <tr><th>ID</th><th>Design Name</th><th>Type</th></tr>
           </thead>
@@ -233,7 +352,7 @@ const allReviewed = data.veridesign_by &&
       </div>
 
       <div className="button-container">
-        <button onClick={handleSave} className="save-button">Save</button>
+        <button onClick={handleSave} className="savedesignveri-button">Save</button>
       </div>
     </div>
   );

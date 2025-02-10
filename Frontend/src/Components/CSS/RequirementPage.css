@@ -4,13 +4,15 @@
   background-color: #f4f4f9;
   border-radius: 10px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
 }
 
 /* ปรับโครงสร้างให้ชื่อกับปุ่มอยู่ในแนวเดียวกัน */
 .requirement-header {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* ชื่ออยู่ซ้าย ปุ่มอยู่ขวา */
+  justify-content: space-between;
+  /* ชื่ออยู่ซ้าย ปุ่มอยู่ขวา */
   width: 100%;
 }
 
@@ -18,13 +20,15 @@
   font-size: 28px;
   font-weight: bold;
   color: #333;
-  margin: 0; /* เอา margin-bottom ออกเพื่อให้ align กับปุ่ม */
+  margin: 0;
+  /* เอา margin-bottom ออกเพื่อให้ align กับปุ่ม */
 }
 
 /* จัดปุ่มไปทางขวา */
 .req-action-buttons {
   display: flex;
-  gap: 10px; /* เว้นระยะห่างระหว่างปุ่ม */
+  gap: 10px;
+  /* เว้นระยะห่างระหว่างปุ่ม */
 }
 
 /* ปุ่มสำหรับการทำงานต่างๆ */
@@ -43,7 +47,8 @@
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 8px; /* เว้นระยะระหว่างไอคอนกับข้อความ */
+  gap: 8px;
+  /* เว้นระยะระหว่างไอคอนกับข้อความ */
   transition: all 0.3s ease;
 }
 
@@ -59,8 +64,13 @@
 }
 
 /* ปรับขนาดไอคอนให้เหมาะสม */
-.createver, .verificationlist, .createvervar, .validationlist, 
-.checkmark, .version_control, .history {
+.createver,
+.verificationlist,
+.createvervar,
+.validationlist,
+.checkmark,
+.version_control,
+.history {
   width: 18px;
   height: 18px;
 }
@@ -73,20 +83,10 @@
   margin-bottom: 20px;
 }
 
-.req-search-input {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 16px;
-}
-
-.search-icon-req {
-  color: #666;
-  font-size: 18px;
-}
 
 .add-requirement-button {
+  margin-top: 120px;
+  margin-left: 12%;
   background-color: #ffffff;
   border: 2px dashed #aaa;
   padding: 10px 15px;
@@ -117,7 +117,7 @@
 .requirement-table td {
   padding: 15px;
   border: 1px solid #ddd;
-  text-align: left;
+  text-align: center;
 }
 
 .requirement-table th {
@@ -591,6 +591,7 @@ h3 {
 
 /* สีพื้นฐานสำหรับปุ่ม */
 .status-button {
+  text-align: center;
   padding: 10px 20px;
   font-size: 16px;
   border: 2px solid transparent;
@@ -654,11 +655,6 @@ h3 {
   border-color: #424242;
 }
 
-.clearsearch-req {
-  cursor: pointer;
-  width: 25px;
-}
-
 button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
@@ -673,4 +669,128 @@ input[type="checkbox"]:disabled {
   color: red;
   margin-top: 10px;
   font-size: 16px;
+}
+
+/* สไตล์ของ requirement-header */
+.requirement-header {
+  background-color: #f4f4f4;
+  /* พื้นหลังสีอ่อน */
+  color: #333;
+  /* สีข้อความ */
+  text-align: center;
+  /* จัดตำแหน่งข้อความใน <th> ให้อยู่กลาง */
+  font-weight: bold;
+  /* ทำให้ข้อความใน <th> ตัวหนา */
+}
+
+/* สไตล์ของ <th> */
+.requirement-header th {
+  padding: 12px 15px;
+  /* เพิ่มพื้นที่ให้แต่ละ cell ใน th */
+  border-bottom: 1px solid #ddd;
+  /* ขอบล่างของ <th> */
+  font-size: 14px;
+  /* ขนาดฟอนต์ */
+}
+
+/* ทำให้แถวของหัวข้อมีความหรูหรานิดๆ */
+.requirement-header th:first-child {
+  border-left: 2px solid #ddd;
+  /* ขอบซ้ายที่หนากว่า */
+}
+
+.requirement-header th:last-child {
+  border-right: 2px solid #ddd;
+  /* ขอบขวาที่หนากว่า */
+}
+
+/* Wrapper container สำหรับ input และ icon */
+.search-container {
+  margin-top: 32px;
+  width: 40%;
+  padding: 0.75rem;
+}
+
+/* ปรับแต่ง input */
+.req-search-input {
+  width: 100%;
+  padding: 10px 30px 10px 10px;
+  /* เพิ่มพื้นที่ด้านขวาให้พอมีที่สำหรับไอคอน */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.req-search-input:hover {
+  border-color: #007bff;
+}
+
+/* ไอคอนค้นหาจะไปอยู่ใน input */
+.search-icon-req {
+  position: absolute;
+  top: 50%;
+  left: 22%;
+  transform: translateY(-50%);
+  color: #666;
+  font-size: 18px;
+}
+
+/* ไอคอนลบการค้นหาจะอยู่ที่ขวา */
+.clearsearch-req {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.requirement_filterstatus,
+.requirement_filtertype {
+  /* เพิ่มระยะห่างระหว่างฟอร์ม */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.requirement_filterstatus-label,
+.requirement_filtertype-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  /* สีที่อ่านง่าย */
+  margin-bottom: 0.5rem;
+}
+
+.requirement_filterstatus-select,
+.requirement_filtertype-select {
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 300px;
+  transition: border-color 0.3s ease-in-out;
+}
+
+.requirement_filterstatus-select:focus,
+.requirement_filtertype-select:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.requirement_filterstatus-select option,
+.requirement_filtertype-select option {
+  background-color: #fff;
+  color: #333;
+}
+
+.requirement_filterstatus-select:hover,
+.requirement_filtertype-select:hover {
+  border-color: #007bff;
+}
+
+.requirement_filterstatus,
+.requirement_filtertype {
+  padding: 10px;
+  box-sizing: border-box;
 }

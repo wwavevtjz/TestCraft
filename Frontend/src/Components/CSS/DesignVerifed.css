@@ -1,96 +1,334 @@
-/* design-verified.css */
+/* Container สำหรับ Checklist และ Comment */
+.designveri-container {
+    margin-bottom: 50px;
+}
 
 .design-verified-container {
-    padding: 20px;
-    font-family: Arial, sans-serif;
-}
-
-.design-verified-title {
-    text-align: center;
-    font-size: 24px;
-    margin-bottom: 20px;
-}
-
-.design-verified-flex-container {
     display: flex;
     justify-content: space-between;
     gap: 20px;
-}
-
-.design-verified-box {
-    flex: 1;
-    padding: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-}
-
-.design-verified-checklist {
-    display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    margin: 20px;
 }
 
-/* Custom checkbox styling */
-.design-verified-checkbox {
-    margin-right: 10px;
-    width: 20px;
-    height: 20px;
-    border-radius: 5px;
+/* Checklist Section */
+.checklistveri-design-box {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    /* ให้กล่องนี้ยืดตามขนาด */
+    max-width: 48%;
+    /* ควบคุมขนาด */
+    min-width: 300px;
+    /* กำหนดขนาดขั้นต่ำ */
+    height: 100%;
+    /* ความสูงเต็มที่ */
 }
 
-/* Checkbox hover and checked styling */
-.design-verified-checkbox:hover {
-    border-color: #007bff;
+/* Comment Section */
+.commentveridesign-box {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    /* ให้กล่องนี้ยืดตามขนาด */
+    max-width: 48%;
+    /* ควบคุมขนาด */
+    min-width: 300px;
+    /* กำหนดขนาดขั้นต่ำ */
+    height: 100%;
+    /* ความสูงเต็มที่ */
 }
 
-.design-verified-checkbox:checked {
-    background-color: #007bff;
-    border-color: #007bff;
-}
-
-/* Label styling */
-label {
-    font-size: 16px;
-    font-weight: normal;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Table for design details */
-.design-verified-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-
-.design-verified-table th,
-.design-verified-table td {
-    border: 1px solid #ccc;
-    padding: 8px;
+/* Styling ของ Checklist */
+.checklistveri-design-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-family: 'Arial', sans-serif;
+    letter-spacing: 0.5px;
     text-align: left;
 }
 
-.design-verified-button-container {
-    text-align: center;
-    margin-top: 20px;
+.checklistveri-design-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
 }
 
-.design-verified-save-button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
+.checklistveri-design-item {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.checklistveri-design-checkbox {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
-.design-verified-save-button:hover {
+/* Hover effect for checkbox label */
+.checklistveri-design-label:hover {
+    color: #1abc9c;
+}
+
+/* Focus state on checkbox */
+
+/* Checked state for checkbox */
+.checklistveri-design-checkbox:checked {
+    background-color: #1abc9c;
+    border-color: #1abc9c;
+}
+
+.checklistveri-design-loading {
+    color: #7f8c8d;
+    font-style: italic;
+    text-align: center;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.checklistveri-design-label {
+    font-size: 20px;
+    color: #34495e;
+    font-weight: 500;
+    margin-left: 10px;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Styling ของ Comment Section */
+.commentveridesign-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    color: #2c3e50;
+    font-family: 'Arial', sans-serif;
+    letter-spacing: 0.5px;
+    text-align: left;
+}
+
+.commentveridesign-input-container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.commentveridesign-textarea {
+    padding: 10px;
+    font-size: 16px;
+    resize: none;
+    height: 120px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+}
+
+.commentveridesign-submit-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: white;
+    background-color: #1e3a56;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    align-self: flex-end;
+}
+
+.commentveridesign-submit-button:hover {
     background-color: #0056b3;
 }
 
-/* Custom styling for the design details table */
-.design-verified-designs {
+/* Error Message */
+.commentveridesign-error-message {
+    color: red;
+    font-size: 14px;
+}
+
+/* No Comments */
+.commentveridesign-no-comments {
+    font-size: 16px;
+    color: #777;
+}
+
+/* Displaying Comments */
+.commentveridesign-item {
+    background-color: #f9f9f9;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.commentveridesign-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.commentveridesign-name {
+    font-weight: bold;
+    color: #333;
+}
+
+.commentveridesign-time {
+    font-size: 14px;
+    color: #777;
+}
+
+.commentveridesign-text {
+    font-size: 16px;
+    color: #555;
     margin-top: 20px;
+}
+
+.commentveridesign-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.commentveridesign-edit-button,
+.commentveridesign-delete-button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #007bff;
+    cursor: pointer;
+}
+
+.commentveridesign-delete-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  
+  .commentveridesign-delete-button:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  
+  .commentveridesign-trash {
+    width: 22px;
+    height: 22px;
+  }
+  
+
+.commentveridesign-edit-button:hover,
+.commentveridesign-delete-button:hover {
+    color: #0056b3;
+}
+
+/* Container สำหรับ Table */
+.boxrequirement-designveri {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+/* Styling ของ Table */
+.table-req-designveri {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 16px;
+}
+
+.table-req-designveri th,
+.table-req-designveri td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.table-req-designveri th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.table-req-designveri tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.table-req-designveri tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Message when no data is found */
+.table-req-designveri td[colSpan="3"] {
+    text-align: center;
+    font-size: 16px;
+    color: #777;
+    padding: 20px;
+}
+
+/* Button container */
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+/* Save button */
+.savedesignveri-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.savedesignveri-button:hover {
+    background-color: #0056b3;
+}
+
+/* Title - Verification Requirement */
+.title-designver {
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+    margin-top: 30px;
+    font-family: 'Roboto', sans-serif;
+    letter-spacing: 1px;
+    text-transform: capitalize;
+}
+
+/* Title - Software Design */
+.title-softwaredesign {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 30px;
+    font-family: 'Arial', sans-serif;
+    letter-spacing: 0.5px;
+    position: relative;
+}
+
+/* Optional: Add a subtle line underneath for emphasis */
+.title-softwaredesign::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 4px;
+    background-color: #2c3e50;
+    margin: 10px auto;
+    border-radius: 2px;
+
 }
