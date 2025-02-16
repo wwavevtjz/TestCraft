@@ -1,0 +1,98 @@
+.create-testcase {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.create-testcase h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.create-testcase-form-group {
+  margin-bottom: 15px;
+}
+
+.create-testcase-form-group label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.create-testcase-form-group input,
+.create-testcase-form-group select {
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  transition: border 0.3s ease-in-out;
+}
+
+.create-testcase-form-group input:focus,
+.create-testcase-form-group select:focus {
+  border: 1px solid #007bff;
+  outline: none;
+}
+
+.create-testcase-button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.create-testcase-save-button,
+.create-testcase-cancel-button {
+  padding: 10px 15px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out;
+}
+
+.create-testcase-save-button {
+  background: #28a745;
+  color: white;
+}
+
+.create-testcase-save-button:hover {
+  background: #218838;
+}
+
+.create-testcase-cancel-button {
+  background: #dc3545;
+  color: white;
+}
+
+.create-testcase-cancel-button:hover {
+  background: #c82333;
+}
+
+/* ✅ Dropdown Fix */
+.create-testcase-form-group select {
+  appearance: none;
+  background: white;
+  cursor: pointer;
+}
+
+/* ✅ Fix Dropdown Overflow */
+.create-testcase-form-group select:focus {
+  position: relative;
+  z-index: 10;
+}
+
+/* ✅ Error & No Data Messages */
+.error-message {
+  color: red;
+  font-size: 14px;
+}
+
+.no-data-message {
+  color: gray;
+  font-size: 14px;
+}

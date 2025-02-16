@@ -1,0 +1,111 @@
+/* Container หลัก */
+.testcase-detail-container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 30px auto;
+  font-family: "Arial", sans-serif;
+  color: #222; /* เปลี่ยนจาก #333 เป็น #222 ให้สีเข้มขึ้น */
+  line-height: 1.6; /* เพิ่มความโปร่งของตัวหนังสือ */
+}
+
+/* กล่องข้อมูลแต่ละส่วน */
+.testcase-detail-section {
+  background: linear-gradient(135deg, #ffffff, #f1f3f5);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Hover Effect ให้กล่องดูมีมิติ */
+.testcase-detail-section:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* หัวข้อหลัก */
+.testcase-detail-header {
+  text-align: center;
+  font-size: 26px; /* เพิ่มขนาด */
+  font-weight: bold;
+  color: #007bff;
+}
+
+/* Grid Layout สำหรับข้อมูล Test Case */
+.testcase-detail-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.testcase-detail-info-grid div {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  font-size: 16px; /* เพิ่มขนาดฟอนต์ */
+  font-weight: 500; /* ทำให้หนาขึ้นเล็กน้อย */
+}
+
+/* ปรับสีให้กับ Status */
+.testcase-detail-status {
+  font-weight: bold;
+  font-size: 15px;
+  padding: 6px 12px;
+  border-radius: 5px;
+}
+
+.testcase-detail-status-passed {
+  color: #155724;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+.testcase-detail-status-failed {
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+}
+
+.testcase-detail-status-working {
+  color: #856404;
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+}
+
+/* Attachments */
+.testcase-detail-attachments {
+  list-style: none;
+  padding-left: 0;
+}
+
+.testcase-detail-attachments li {
+  display: flex;
+  align-items: center;
+  font-size: 18px; /* เพิ่มขนาด */
+  font-weight: 500; /* ทำให้หนาขึ้น */
+  padding: 10px 0;
+}
+
+.testcase-detail-attachments li svg {
+  margin-right: 10px;
+  color: #007bff;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.back-icon {
+  margin-right: 8px;
+}

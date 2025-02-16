@@ -420,7 +420,6 @@ app.put("/statusrequirement/:id", (req, res) => {
 
 
 // Delete a requirement
-// Delete a requirement
 app.delete('/requirement/:id', (req, res) => {
     const id = req.params.id;
 
@@ -1138,12 +1137,9 @@ app.post("/upload", upload.single("file"), (req, res) => {
             console.error("Error inserting file:", err);
             return res.status(500).json({ message: "Failed to save file." });
         }
-
         res.status(200).json({ message: "File uploaded successfully.", fileId: result.insertId });
     });
 });
-
-
 
 
 app.get('/files', (req, res) => {
@@ -1649,8 +1645,6 @@ app.delete('/deletecomment/:commentId', (req, res) => {
     });
 });
 
-
-
 //-------------------------- VALIDATION COMMENT ----------------------
 // Get all comments
 // ดึงคอมเมนต์จาก validation_id
@@ -1669,7 +1663,6 @@ app.get('/showvalicomment', (req, res) => {
     });
 });
 
-
 app.post('/createvarcomment', (req, res) => {
     const { member_name, comment_var_text, validation_id } = req.body;
     console.log('Received data:', req.body); // ตรวจสอบข้อมูลที่รับมา
@@ -1686,9 +1679,6 @@ app.post('/createvarcomment', (req, res) => {
         }
     });
 });
-
-
-
 
 // Update comment
 app.put('/var_comment', (req, res) => {
@@ -1721,8 +1711,6 @@ app.delete('/deletecomment/:commentId', (req, res) => {
     });
 });
 
-
-
 app.post('/comments', (req, res) => {
     const { member_name, comment_var_text } = req.body;
 
@@ -1739,14 +1727,15 @@ app.post('/comments', (req, res) => {
         }
     });
 });
+ 
+app.post("/uploadfile-var", upload.single("file"), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+    }
 
-// 📌 **API อัปโหลดไฟล์ไปยังฐานข้อมูล**
-app.post('/uploadfile-var', upload.single('file'), (req, res) => {
-    const { file } = req;
     let { requirement_id, project_id } = req.body;
 
-    console.log("Received Data:", req.body); // Debug log
-
+    // ✅ แปลงค่าให้เป็นตัวเลขและตรวจสอบให้แน่ใจว่าไม่ใช่ NaN
     requirement_id = parseInt(requirement_id, 10);
     project_id = parseInt(project_id, 10);
 
@@ -1754,43 +1743,52 @@ app.post('/uploadfile-var', upload.single('file'), (req, res) => {
         return res.status(400).json({ message: "Invalid project_id or requirement_id." });
     }
 
-    const sql = `
-        INSERT INTO file_validation (requirement_id, project_id, filereq_data, file_name, file_type, upload_at) 
-        VALUES (?, ?, ?, ?, ?, NOW())`;
+    const fileBuffer = fs.readFileSync(req.file.path);
 
-    db.query(sql, [requirement_id, project_id, file.buffer, file.originalname, file.mimetype], (err, result) => {
+    const sql = `INSERT INTO file_validation (requirement_id, project_id, filereq_data, upload_at) VALUES (?, ?, ?, NOW())`;
+
+    db.query(sql, [requirement_id, project_id, fileBuffer], (err, result) => {
         if (err) {
-            console.error("Error saving file:", err);
+            console.error("Database error:", err);
             return res.status(500).json({ message: "Database error: " + err.message });
         }
 
-        res.status(201).json({
-            message: "File uploaded successfully",
-            insertId: result.insertId,
-        });
+        fs.unlinkSync(req.file.path);
+        res.status(201).json({ message: "File uploaded successfully", insertId: result.insertId });
     });
 });
 
+
+  // 📌 API ดาวน์โหลดไฟล์
+  app.get("/getfile/:fileId", (req, res) => {
+    const fileId = parseInt(req.params.fileId, 10);
+    
+    if (isNaN(fileId)) {
+      return res.status(400).json({ message: "Invalid file ID" });
+    }
   
-  // 📌 **API ดึงไฟล์จากฐานข้อมูล**
-  app.get("/getfile/:id", (req, res) => {
-    const fileId = req.params.id;
-  
-    const sql = "SELECT filereq_data FROM file_validation WHERE file_validation_id = ?";
+    const sql = "SELECT filereq_data FROM file_validation WHERE id = ?";
     db.query(sql, [fileId], (err, result) => {
       if (err) {
         console.error("Error fetching file:", err);
-        return res.status(500).json({ error: "Database error: " + err.message });
+        return res.status(500).json({ message: "Database error" });
       }
   
       if (result.length === 0) {
-        return res.status(404).json({ error: "File not found" });
+        return res.status(404).json({ message: "File not found" });
       }
   
-      res.setHeader("Content-Type", "application/pdf"); // เปลี่ยนเป็น type อื่นได้ถ้าไม่ใช่ PDF
-      res.send(result[0].filereq_data);
+      const fileName = result[0].filereq_data;
+      const filePath = path.join(__dirname, "uploads", fileName);
+  
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found on server" });
+      }
+  
+      res.download(filePath, fileName);
     });
   });
+  
 
 // ------------------------- REPLY VERIFICATION COMMENT -------------------------
 app.post('/replyvercomment', (req, res) => {
@@ -2127,7 +2125,6 @@ app.put("/statusdesign", (req, res) => {
     });
 });
 
-
 //----------------------------------------- DESIGN HISTORY -----------------------------------------------------
 // Add History Design
 app.post("/addHistoryDesign", (req, res) => {
@@ -2304,9 +2301,6 @@ app.post("/createveridesign", (req, res) => {
         });
     });
 });
-
-
-
 
 // ดึงข้อมูล req_design ที่มี status working
 app.get("/veridesign", (req, res) => {
@@ -2540,12 +2534,6 @@ app.get('/designveri', (req, res) => {
 });
 
 
-
-
-
-
-
-
 // Update status waitingforveri ของ design
 app.put('/update-design-status-waitingfor-ver/:id', (req, res) => {
     const { id } = req.params;
@@ -2651,8 +2639,96 @@ app.put('/update-veridesign-by', (req, res) => {
 });
 
 
+// ------------------------- Comment VeriDesign --------------------------------
 
+// Fetch comments for a specific veriDesign
+app.get('/get-commentveridesign', (req, res) => {
+    const { veridesign_id } = req.query;
 
+    // Check if veridesign_id is provided
+    if (!veridesign_id) {
+        return res.status(400).json({ error: "veridesign_id is required" });
+    }
+
+    console.log('Fetching comments for veridesign_id:', veridesign_id);
+
+    // SQL query to fetch comments based on veridesign_id
+    const sql = `
+        SELECT 
+            comverdesign_id,
+            member_name,
+            comverdesign_text,
+            comverdesign_at
+        FROM 
+            comment_veridesign
+        WHERE 
+            veridesign_id = ?
+        ORDER BY 
+            comverdesign_at DESC
+    `;
+
+    db.query(sql, [veridesign_id], (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Error fetching comments", details: err.message });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: "No comments found" });
+        }
+
+        // Return comments in the response
+        res.status(200).json(results);
+    });
+});
+
+// Add a comment to a specific veriDesign
+app.post('/commentveridesign', (req, res) => {
+    const { member_name, comverdesign_text, veridesign_id } = req.body;
+    console.log('Received data:', req.body);
+
+    // SQL query to insert a new comment
+    const sql = 'INSERT INTO comment_veridesign (member_name, comverdesign_text, veridesign_id) VALUES (?, ?, ?)';
+
+    db.query(sql, [member_name, comverdesign_text, veridesign_id], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Error adding comment');
+        }
+
+        res.status(201).send('Comment added successfully');
+    });
+});
+
+// Delete a specific comment by comverdesign_id
+app.delete("/delete-commentveridesign/:comverdesign_id", (req, res) => {
+    const { comverdesign_id } = req.params;
+
+    // Check if comverdesign_id is provided
+    if (!comverdesign_id) {
+        return res.status(400).json({ error: "comverdesign_id is required" });
+    }
+
+    console.log(`Deleting comment with ID: ${comverdesign_id}`);
+
+    // SQL query to delete the comment
+    const sql = "DELETE FROM comment_veridesign WHERE comverdesign_id = ?";
+    
+    db.query(sql, [comverdesign_id], (err, result) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Error deleting comment", details: err.message });
+        }
+
+        // Check if the comment was found and deleted
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Comment not found" });
+        }
+
+        // Return success message
+        res.status(200).json({ message: "Comment deleted successfully" });
+    });
+});
 
 
 
@@ -2751,7 +2827,6 @@ app.get("/designbaseline", (req, res) => {
     if (!project_id) {
         return res.status(400).json({ error: "Project ID is required" });
     }
-
     const sql = `
         SELECT 
             b.baselinedesign_id, 
@@ -2782,6 +2857,248 @@ app.get("/designbaseline", (req, res) => {
         res.json(formattedResults);
     });
 });
+
+// ------------------------- TEST CASE -------------------------------
+app.get("/project/:projectId/attachments", (req, res) => {
+    const { projectId } = req.params;
+
+    const queryRequirements = `
+        SELECT requirement_id, requirement_name, requirement_status 
+        FROM requirement 
+        WHERE project_id = ? AND requirement_status = 'BASELINE'
+        LIMIT 25;
+    `;
+
+    const queryDesigns = `
+        SELECT design_id, diagram_name, design_status 
+        FROM design 
+        WHERE project_id = ? AND design_status = 'BASELINE'
+        LIMIT 25;
+    `;
+
+    db.query(queryRequirements, [projectId], (err, reqResults) => {
+        if (err) {
+            console.error("Error fetching requirements:", err);
+            return res.status(500).json({ message: "Failed to fetch requirements." });
+        }
+
+        db.query(queryDesigns, [projectId], (err, designResults) => {
+            if (err) {
+                console.error("Error fetching designs:", err);
+                return res.status(500).json({ message: "Failed to fetch designs." });
+            }
+
+            res.json({
+                requirements: reqResults,
+                designs: designResults
+            });
+        });
+    });
+});
+
+app.post("/testcases", (req, res) => {
+    const { testcase_name, testcase_des, testcase_type, testcase_priority, testcase_by, testcase_at, testcase_attach } = req.body;
+    let { testcase_status } = req.body;
+
+    if (!testcase_status) {
+        testcase_status = "WORKING"; // ✅ กำหนดค่าเริ่มต้นถ้าไม่มีค่า
+    }
+
+    const sql = `INSERT INTO testcase (testcase_name, testcase_des, testcase_type, testcase_priority, testcase_by, testcase_at, testcase_attach, testcase_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    db.query(sql, [testcase_name, testcase_des, testcase_type, testcase_priority, testcase_by, testcase_at, testcase_attach, testcase_status], (err, result) => {
+        if (err) {
+            console.error("❌ Error inserting test case:", err);
+            res.status(500).json({ error: "Failed to insert test case" });
+        } else {
+            console.log("✅ Test Case Inserted:", result);
+            res.status(201).json({ message: "Test Case created successfully", testcase_id: result.insertId });
+        }
+    });
+});
+
+app.get("/testcases", (req, res) => {
+    const sql = "SELECT * FROM testcase";
+    db.query(sql, (err, results) => {
+      if (err) return res.status(500).json({ error: "Database query failed" });
+      res.json(results);
+    });
+  });
+  
+
+
+
+
+// --------------------------- TestProcedures -------------------------------
+
+// ✅ ดึง test_procedures ตาม testcase_id
+app.get("/api/test-procedures", (req, res) => {
+    const { testcase_id } = req.query;
+
+    const sql = `SELECT * FROM test_procedures WHERE testcase_id = ?`;  // ✅ ต้องแน่ใจว่า SELECT เอา test_procedures_id มาด้วย
+    db.query(sql, [testcase_id], (err, result) => {
+        if (err) {
+            console.error("Error fetching test procedures:", err);
+            res.status(500).json({ error: "Failed to fetch test procedures" });
+        } else {
+            console.log("Fetched Test Procedures:", result);  // ✅ Debug
+            res.status(200).json(result);
+        }
+    });
+});
+
+
+// ✅ เพิ่ม test_procedure ใหม่
+app.post("/api/test-procedures", (req, res) => {
+  const {
+    testcase_id,
+    test_objective,
+    test_condition,
+    test_step,
+    expected_result,
+    test_data,
+    test_status,
+    tested_by,
+  } = req.body;
+
+  const insertSql = `INSERT INTO test_procedures 
+    (testcase_id, test_objective, test_condition, test_step, expected_result, test_data, test_status, tested_by) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+
+  db.query(
+    insertSql,
+    [testcase_id, test_objective, test_condition, test_step, expected_result, test_data, test_status, tested_by],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: "Insert failed" });
+      }
+
+      const newId = result.insertId; // ดึง ID ของข้อมูลที่เพิ่งถูกเพิ่ม
+      const selectSql = `SELECT * FROM test_procedures WHERE test_procedures_id = ?`;
+
+      db.query(selectSql, [newId], (err, rows) => {
+        if (err) {
+          return res.status(500).json({ error: "Failed to fetch new test procedure" });
+        }
+        res.status(201).json(rows[0]); // ส่งข้อมูลที่เพิ่มกลับไป
+      });
+    }
+  );
+});
+  
+  
+// ✅ อัปเดต test_procedure
+app.put("/api/test-procedures/:id", (req, res) => {
+    console.log("Request Body:", req.body); // ✅ ตรวจสอบค่าที่ส่งมา
+    const { id } = req.params;
+    const { test_objective, test_condition, test_step, expected_result, test_data, test_status, tested_by } = req.body;
+
+    const sql = `UPDATE test_procedures 
+                 SET test_objective = ?, test_condition = ?, test_step = ?, expected_result = ?, test_data = ?, test_status = ?, tested_by = ? 
+                 WHERE test_procedures_id = ?`;
+
+    db.query(sql, [test_objective, test_condition, test_step, expected_result, test_data, test_status, tested_by, id], (err, result) => {
+        if (err) {
+            console.error("Error updating test procedure:", err);
+            res.status(500).json({ error: "Failed to update test procedure" });
+        } else {
+            res.status(200).json({ message: "Test procedure updated successfully" });
+        }
+    });
+});
+
+
+  
+  // ✅ ลบ test_procedure
+  app.delete("/api/test-procedures/:id", (req, res) => {
+    const { id } = req.params;
+    console.log("Received DELETE request for ID:", id); // ✅ Debug ID
+  
+    const sql = "DELETE FROM test_procedures WHERE test_procedures_id = ?";
+    db.query(sql, [id], (err, result) => {
+      if (err) {
+        console.error("Delete Error:", err);
+        return res.status(500).json({ error: "Delete failed", details: err });
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Test procedure not found" });
+      }
+      res.json({ message: "Test procedure deleted successfully!" });
+    });
+  });
+  
+// --------------------------- TestExecution -------------------------------
+
+app.get("/testexecution", (req, res) => {
+    const query = `
+      SELECT 
+        t.testcase_id AS id,
+        tp.test_objective AS objective,
+        t.testcase_priority AS priority,
+        tp.test_status AS status
+      FROM testcase t
+      JOIN test_procedures tp ON t.testcase_id = tp.testcase_id;
+    `;
+    
+    db.query(query, (err, results) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+      } else {
+        res.json(results);
+      }
+    });
+  });
+  
+
+  app.get("/testexecution/testcase/:testcaseId", (req, res) => {
+    const { testcaseId } = req.params;
+    console.log(`🔍 Fetching test procedures for testcaseId: ${testcaseId}`);
+
+    const sql = "SELECT * FROM test_procedures WHERE testcase_id = ?";
+    
+    db.query(sql, [testcaseId], (err, results) => {
+        if (err) {
+            console.error("❌ Database Error:", err);
+            res.status(500).json({ error: "Database error" });
+        } else {
+            console.log(`✅ SQL Query Executed: SELECT * FROM test_procedures WHERE testcase_id = '${testcaseId}'`);
+            console.log("✅ Data Retrieved:", results);
+            res.json(results);
+        }
+    });
+});
+
+app.get("/testexecution/testcase/:testcaseId/procedures", (req, res) => {
+    const { testcaseId } = req.params;
+    console.log(`🔍 Fetching test procedures for testcaseId: ${testcaseId}`);
+
+    const sql = `
+        SELECT 
+            tp.test_procedures_id, 
+            tp.testcase_id, 
+            tp.test_objective, 
+            tp.test_condition, 
+            tp.test_step, 
+            tp.expected_result, 
+            tp.test_data, 
+            tp.test_status, 
+            tp.tested_by
+        FROM test_procedures tp
+        WHERE tp.testcase_id = ?
+    `;
+    
+    db.query(sql, [testcaseId], (err, results) => {
+        if (err) {
+            console.error("❌ Database Error:", err);
+            res.status(500).json({ error: "Database error" });
+        } else {
+            console.log(`✅ SQL Query Executed: SELECT * FROM test_procedures WHERE testcase_id = '${testcaseId}'`);
+            console.log("✅ Data Retrieved:", results);
+            res.json(results);
+        }
+    });
+});
+
 
 // ------------------------- OVERVIEW --------------------------------
 // API รวม Requirements, Baseline Requirements และ Design

@@ -1,0 +1,145 @@
+/* Header */
+.testcase-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* กลุ่มชื่อ + ปุ่มหลัก */
+.testcase-title-group {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.testcase-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+/* ปุ่ม Create TestCase และ Test Execution */
+.testcase-main-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* ปุ่มอื่น ๆ */
+.testcase-other-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* ปุ่ม */
+.testcase-create-button,
+.testcase-execution-button,
+.testcase-verification-button,
+.testcase-create-verification-button,
+.testcase-view-verification-button,
+.testcase-baseline-button {
+  color: #fff;
+  background-color: #1e3a8a;
+  border-radius: 25px;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.testcase-create-button:hover,
+.testcase-execution-button:hover,
+.testcase-verification-button:hover,
+.testcase-create-verification-button:hover,
+.testcase-view-verification-button:hover,
+.testcase-baseline-button:hover {
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+
+
+.testcase-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+/* Container */
+.testcase-container {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Table */
+.testcase-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.testcase-table th,
+.testcase-table td {
+  padding: 15px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+.testcase-table th {
+  background-color: #f7f7f7;
+  font-weight: bold;
+}
+
+/* Action Buttons */
+.testcase-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.testcase-actions button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.testcase-icon {
+  font-size: 18px;
+  color: #555;
+}
+
+/* ปรับสีปุ่มแต่ละตัว */
+.testcase-view .testcase-icon {
+  color: #555; /* สีฟ้าสำหรับ View */
+}
+
+.testcase-edit .testcase-icon {
+  color: #4caf50; /* สีเขียวสำหรับ Edit */
+}
+
+.testcase-delete .testcase-icon {
+  color: #f44336; /* สีแดงสำหรับ Delete */
+}
+
+/* Hover & Active Effects */
+.testcase-actions button:hover {
+  background-color: #f0f0f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.testcase-actions button:active {
+  transform: scale(0.98);
+}

@@ -52,10 +52,18 @@ import DesignVerifed from './Components/DesignVerifed';
 import DesignBaseline from './Components/DesignBaseline';
 import CreateDesignbaseline from './Components/CreateDesignbaseline';
 
+// Testcase
+import CreateTestcase from './Components/Testcase/CreateTestcase';
+import TestcasePage from './Components/Testcase/TestcasePage';
+import TestcaseDetail from './Components/Testcase/TestcaseDetail';
+import TestProcedures from './Components/Testcase/TestProcedures';
+import UpdateTestcase from './Components/Testcase/UpdateTestcase';
+import ExecutionList from './Components/Testcase/ExecutionList';
+import TestExecution from './Components/Testcase/TestExecution';
+
 // Notify
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
 
 const App = () => {
   const [username, setUsername] = useState(null); // State เก็บชื่อผู้ใช้ที่ล็อกอิน
@@ -132,6 +140,14 @@ const App = () => {
         <Route path="/DesignBaseline" element={<DesignBaseline />} />
         <Route path="/CreateDesignbaseline" element={<CreateDesignbaseline />} />
 
+        {/* ทำ Testcase */}
+        <Route path="/CreateTestcase" element={<CreateTestcase />} />
+        <Route path="/TestcasePage" element={<TestcasePage />} />
+        <Route path="/TestcaseDetail" element={<TestcaseDetail />} />
+        <Route path="/TestProcedures" element={<TestProcedures />} />
+        <Route path="/UpdateTestcase" element={<UpdateTestcase />} />
+        <Route path="/TestExecution/:testcaseId" element={<TestExecution />} />
+        <Route path="/ExecutionList" element={<ExecutionList />} />
       </Routes>
     </>
   );

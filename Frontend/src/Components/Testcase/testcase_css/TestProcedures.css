@@ -1,0 +1,153 @@
+.test-procedures-container {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 25px;
+    transition: all 0.3s ease-in-out;
+}
+
+.test-procedures-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.test-procedures-header h3 {
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+}
+
+.add-test-step-btn {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: #fff;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease-in-out;
+}
+
+.add-test-step-btn:hover {
+    background: linear-gradient(135deg, #0056b3, #004095);
+    transform: scale(1.05);
+}
+
+/* Table Styling */
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.test-procedures-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 10px;
+    background: #f9f9f9;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.test-procedures-table th,
+.test-procedures-table td {
+    padding: 14px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.test-procedures-table th {
+    background: #f3f3f3;
+    font-weight: bold;
+    text-align: center;
+    color: #444;
+    font-size: 16px;
+}
+
+.test-procedures-table tr:nth-child(even) {
+    background: #f5f5f5;
+}
+
+/* Hover and active effects */
+.test-procedures-table tr:hover {
+    background-color: #e8f0fe;
+    transition: background 0.3s ease-in-out;
+}
+
+.test-procedures-table tr.active-row {
+    background-color: #cfe2ff !important;
+    transition: background 0.3s ease-in-out;
+}
+
+/* Input Fields */
+.test-procedures-table input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+}
+
+.test-procedures-table input:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+/* Action Buttons */
+.save-btn,
+.delete-btn {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 2px;
+    transition: all 0.2s ease-in-out;
+}
+
+.save-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+}
+
+.save-btn:hover {
+    background: #218838;
+    transform: scale(1.05);
+}
+
+.delete-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+}
+
+.delete-btn:hover {
+    background: #a71d2a;
+    transform: scale(1.05);
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .test-procedures-container {
+        padding: 15px;
+    }
+
+    .test-procedures-header {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .add-test-step-btn {
+        margin-top: 10px;
+        width: 100%;
+    }
+
+    .test-procedures-table th,
+    .test-procedures-table td {
+        padding: 8px;
+        font-size: 14px;
+    }
+}

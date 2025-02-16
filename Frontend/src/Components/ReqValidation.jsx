@@ -108,36 +108,32 @@ const ReqValidation = () => {
 
     setFileUploading(true);
 
-    console.log("Selected Requirement ID:", selectedRequirements);
-    console.log("Project ID:", projectId);
-
     if (!selectedRequirements || selectedRequirements.length === 0) {
         toast.error("No requirement selected.");
         setFileUploading(false);
         return;
     }
 
-    // ดึงค่าแรกของ array และแปลงเป็น integer
+    // ✅ แปลงค่าให้เป็น number แน่นอน
     const requirementId = parseInt(selectedRequirements[0], 10);
+    const projectIdNum = parseInt(projectId, 10);
 
-    if (isNaN(requirementId)) {
-        toast.error("Invalid requirement ID.");
-        setFileUploading(false);
-        return;
-    }
-
-    if (!projectId) {
-        toast.error("Project ID is missing.");
+    if (isNaN(requirementId) || isNaN(projectIdNum)) {
+        toast.error("Invalid requirement ID or Project ID.");
         setFileUploading(false);
         return;
     }
 
     const formData = new FormData();
     formData.append("file", attachedFile);
-    formData.append("requirement_id", requirementId);
-    formData.append("project_id", projectId);
+    formData.append("requirement_id", requirementId); // ✅ ส่งเป็น number
+    formData.append("project_id", projectIdNum);
 
-    console.log("FormData Sent:", Object.fromEntries(formData.entries())); // Debug
+    console.log("FormData:", {
+        file: attachedFile.name,
+        requirement_id: requirementId,
+        project_id: projectIdNum,
+    });
 
     try {
         const response = await axios.post("http://localhost:3001/uploadfile-var", formData, {
@@ -158,26 +154,24 @@ const ReqValidation = () => {
 
 
 
-const handleFileDownload = async (fileId) => {
-  try {
+  const handleFileDownload = async (fileId) => {
+    try {
       const response = await axios.get(`http://localhost:3001/getfile/${fileId}`, {
-          responseType: "blob",
+        responseType: "blob",
       });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+  
+      const fileURL = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
-      link.href = url;
+      link.href = fileURL;
       link.setAttribute("download", `Requirement_${fileId}.pdf`);
       document.body.appendChild(link);
       link.click();
-  } catch (error) {
+    } catch (error) {
       console.error("Error downloading file:", error);
       toast.error("Failed to download file.");
-  }
-};
-
-
-
+    }
+  };
+  
   const fetchComments = async () => {
     try {
       setLoading(true);
