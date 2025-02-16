@@ -98,12 +98,6 @@
 }
 
 /* Action Buttons */
-.testcase-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
 .testcase-actions button {
   background: none;
   border: none;
