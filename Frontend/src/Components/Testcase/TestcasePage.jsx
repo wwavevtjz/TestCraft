@@ -56,6 +56,14 @@ const TestcasePage = () => {
     navigate(`/ExecutionList?project_id=${projectId}`);
   };
 
+  const handleCreateVeri = () => {
+    navigate(`/CreateVeriTest?project_id=${projectId}`);
+  };
+
+  const handleVerilist = () => {
+    navigate(`/VeriTestcase?project_id=${projectId}`);
+  };
+
   return (
     <div className="testcase-container">
       <div className="testcase-header">
@@ -71,8 +79,13 @@ const TestcasePage = () => {
           </div>
         </div>
         <div className="testcase-other-buttons">
-          <button className="testcase-view-verification-button">View Verification</button>
-          <button className="testcase-create-verification-button">Create Verification</button>
+        <button className="testcase-create-verification-button" onClick={handleCreateVeri}>
+            Create Verification
+          </button>
+          <button className="testcase-view-verification-button"onClick={handleVerilist}> 
+            View Verification
+            </button>
+
           <button className="testcase-verification-button">Verification</button>
           <button className="testcase-baseline-button">Baselined</button>
         </div>

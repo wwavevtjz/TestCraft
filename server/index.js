@@ -2592,13 +2592,6 @@ app.put('/update-design-status-verified', (req, res) => {
     });
 });
 
-
-
-
-
-
-
-
 app.put('/update-veridesign-by', (req, res) => {
     const { veridesign_id, veridesign_by } = req.body;
 
@@ -3099,6 +3092,373 @@ app.get("/testexecution/testcase/:testcaseId/procedures", (req, res) => {
     });
 });
 
+//----------------------------------------- TESTCASE HISTORY -----------------------------------------------------
+// Add History Testcase
+app.post("/addHistoryTestcase", (req, res) => {
+    const { testcase_id, testcase_status } = req.body;
+
+    if (!testcase_id || !testcase_status) {
+        return res.status(400).json({ message: "กรุณาระบุ 'testcase_id' และ 'testcase_status'" });
+    }
+
+    const sql = `
+        INSERT INTO historytestcase (testcase_id, testcase_status, testcase_at)
+        VALUES (?, ?, NOW())
+    `;
+
+    db.query(sql, [testcase_id, testcase_status], (err, result) => {
+        if (err) {
+            console.error("❌ Database Error:", err);
+            return res.status(500).json({ message: "ไม่สามารถเพิ่มข้อมูลประวัติการออกแบบได้", error: err });
+        }
+
+        console.log(`📜 History added for testcase ID: ${testcase_id} with status: ${testcase_status}`);
+        return res.status(201).json({ message: "บันทึกประวัติการออกแบบสำเร็จ!", insertedId: result.insertId });
+    });
+});
+
+// Get History by Testcase ID
+app.get('/getHistoryByTestcaseId', (req, res) => {
+    const testcase_id = req.query.testcase_id;
+    if (!testcase_id) return res.status(400).json({ message: "กรุณาระบุ 'testcase_id'" });
+
+    const sql = `
+        SELECT * FROM historytestcase
+        WHERE testcase_id = ?
+        ORDER BY testcase_at ASC
+    `;
+
+    db.query(sql, [testcase_id], (err, results) => {
+        if (err) {
+            console.error('Database Error:', err);
+            return res.status(500).json({ message: "ไม่สามารถดึงข้อมูลประวัติการออกแบบได้" });
+        }
+
+        return res.status(200).json({ message: "ดึงข้อมูลสำเร็จ!", data: results });
+    });
+});
+
+
+// ------------------------- VERITESTCASE -------------------------
+app.post("/createveritestcase", (req, res) => {
+    const veritestcaseData = req.body;
+    if (!Array.isArray(veritestcaseData) || veritestcaseData.length === 0) {
+        return res.status(400).json({ message: "Invalid data format or empty array." });
+    }
+
+    const projectId = veritestcaseData[0].project_id;
+    const getLatestRoundQuery = `SELECT MAX(veritestcase_round) AS latestRound FROM veritestcase WHERE project_id = ?`;
+
+    db.query(getLatestRoundQuery, [projectId], (err, results) => {
+        if (err) {
+            console.error("Error fetching latest veritestcase_round:", err);
+            return res.status(500).json({ message: "Failed to fetch latest veritestcase_round." });
+        }
+
+        const latestRound = results[0].latestRound || 0;
+        let nextRound = latestRound + 1;
+
+        const query =
+            `INSERT INTO veritestcase (project_id, veritestcase_round, create_by, testcase_id, veritestcase_at, veritestcase_by) VALUES ?`;
+
+        const formatDateTime = (date) => {
+            const d = new Date(date);
+            return d.toISOString().slice(0, 19).replace("T", " ");
+        };
+
+        const values = veritestcaseData.map((item) => [
+            item.project_id,
+            nextRound,  
+            item.create_by,
+            item.testcase_id,
+            formatDateTime(item.veritestcase_at),
+            JSON.stringify(item.veritestcase_by),
+        ]);
+
+        db.query(query, [values], (err, result) => {
+            if (err) {
+                console.error("Error inserting data:", err);
+                return res.status(500).json({ message: "Failed to create veritestcase records." });
+            }
+
+            res.status(201).json({
+                message: "Veritestcase records created successfully.",
+                affectedRows: result.affectedRows,
+            });
+        });
+    });
+});
+
+// ดึงข้อมูล req_testcase ที่มี status working
+app.get("/veritestcase", (req, res) => {
+    const { project_id } = req.query;
+
+    if (!project_id) {
+        return res.status(400).json({ error: "Project ID is required." });
+    }
+
+    const query = `
+      SELECT * 
+      FROM testcase 
+      WHERE project_id = ? AND BINARY testcase_status = 'WORKING';
+    `;
+
+    db.query(query, [Number(project_id)], (err, results) => {
+        if (err) {
+            console.error("Error fetching testcase:", err);
+            return res.status(500).json({ error: "Failed to fetch testcase" });
+        }
+        console.log("Fetched TestCases:", results);
+        res.status(200).json(results);
+    });
+});
+
+app.get("/verilisttestcase", (req, res) => {
+    const { project_id } = req.query;
+  
+    if (!project_id) {
+      return res.status(400).json({ error: "Project ID is required." });
+    }
+  
+    let query = `
+      SELECT 
+          vt.veritestcase_id,  
+          vt.veritestcase_round,
+          vt.create_by,
+          vt.veritestcase_at,
+          vt.testcase_id,
+          vt.veritestcase_by,
+          tc.testcase_status
+      FROM 
+          veritestcase vt
+      LEFT JOIN 
+          testcase tc ON vt.testcase_id = tc.testcase_id
+      WHERE 
+          vt.project_id = ? AND tc.testcase_status = "WAITING FOR VERIFICATION"
+      ORDER BY 
+          vt.veritestcase_round ASC
+      LIMIT 25;
+    `;
+  
+    db.query(query, [project_id], (err, results) => {
+      if (err) {
+        console.error("❌ Error fetching testcases:", err);
+        res.status(500).json({ error: "Failed to fetch testcases" });
+      } else {
+        const processedResults = results.map((testcase) => {
+          let veritestcaseByObject = {};
+  
+          try {
+            veritestcaseByObject = JSON.parse(testcase.veritestcase_by || "{}");
+          } catch (error) {
+            console.error("Error parsing veritestcase_by:", error);
+            veritestcaseByObject = {};
+          }
+  
+          return {
+            ...testcase,
+            veritestcase_by: veritestcaseByObject
+          };
+        });
+  
+        console.log("✅ VeriTestcase Response:", processedResults);
+        res.status(200).json(processedResults);
+      }
+    });
+  });
+
+  app.get('/testcaseveri', (req, res) => {
+    const { project_id, veritestcaseId, testcase_id } = req.query;
+
+    let sql = `
+      SELECT DISTINCT
+        vd.veritestcase_id AS id,
+        vd.create_by,
+        vd.veritestcase_at,
+        vd.veritestcase_by,
+        d.testcase_id,
+        d.testcase_type,
+        d.testcase_name,
+        d.testcase_des,
+        d.testcase_status,
+        d.requirement_id
+      FROM veritestcase vd
+      LEFT JOIN testcase d 
+        ON vd.testcase_id = d.testcase_id
+      WHERE vd.project_id = ?
+    `;
+
+    const params = [project_id];
+
+    if (veritestcase_id) {
+        sql += ` AND vd.veritestcase_id = ?`;
+        params.push(veritestcase_id);
+    }
+
+    if (testcase_id) {
+        // แยก string "90,91" เป็น Array ["90", "91"]
+        const testcaseIds = testcase_id.split(',').map(item => item.trim());
+        if (testcaseIds.length > 0) {
+            sql += ` AND d.testcase_id IN (${testcaseIds.map(() => '?').join(',')})`;
+            params.push(...testcaseIds);
+        }
+    }
+
+    db.query(sql, params, (err, result) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Error fetching testcase verification data.", error: err });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({ message: "No testcase verification data found." });
+        }
+
+        // Grouping ผลลัพธ์ตาม veritestcase_id (ที่เรา alias เป็น id)
+        const grouped = {};
+
+        result.forEach((row) => {
+            const veritestcase_Id = row.id; // ใช้เป็น key ในการ grouping
+            if (!grouped[veritestcaseId]) {
+                grouped[veritestcaseId] = {
+                    id: veritestcaseId,
+                    create_by: row.create_by,
+                    veritestcase_at: row.veritestcase_at,
+                    veritestcase_by: row.veritestcase_by ? JSON.parse(row.veritestcase_by) : [],
+                    testcase_ids: [], // จะเก็บลิสต์ของ testcase_id ที่เกี่ยวข้อง
+                    testcase_type: row.testcase_type,
+                    testcase_name: row.testcase_name,
+                    testcase_type: row.testcase_type,
+                    testcase_description: row.testcase_description,
+                    testcase_status: row.testcase_status,
+                    requirements: row.requirement_id ? JSON.parse(row.requirement_id) : [],
+                };
+            }
+            // เพิ่ม testcase_id ลงใน array ถ้ายังไม่มีและมีค่า
+            if (row.testcase_id && !grouped[veritestcase_Id].testcase_ids.includes(row.testcase_id)) {
+                grouped[veritestcase_Id].testcase_ids.push(row.testcase_id);
+            }
+        });
+
+        // แปลง object ที่ grouped เป็น array
+        const testcaseVerifications = Object.values(grouped);
+
+        return res.status(200).json(testcaseVerifications);
+    });
+});
+
+// Update status waitingforveri ของ testcase
+app.put('/update-testcase-status-waitingfor-ver/:id', (req, res) => {
+    const { id } = req.params;
+    const { testcase_status } = req.body;
+
+    if (!testcase_status) {
+        return res.status(400).json({ message: "Missing testcase_status field." });
+    }
+
+    const query = `
+      UPDATE testcase
+      SET testcase_status = ?
+      WHERE testcase_id = ?
+    `;
+
+    db.query(query, [testcase_status, id], (err, result) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Database error." });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Testcase not found." });
+        }
+
+        res.status(200).json({ message: "Testcase status updated successfully." });
+    });
+});
+
+app.put('/update-testcase-status-verified', (req, res) => {
+    const { testcase_ids, testcase_status } = req.body; // testcase_ids ควรเป็น Array
+    if (!Array.isArray(testcase_ids) || testcase_ids.length === 0) {
+        return res.status(400).json({ message: "testcase_ids is required and should be a non-empty array." });
+    }
+
+    // สร้าง placeholders สำหรับ Array
+    const placeholders = testcase_ids.map(() => '?').join(',');
+    const sql = `
+      UPDATE testcase
+      SET testcase_status = ?
+      WHERE testcase_id IN (${placeholders})
+    `;
+
+    // พารามิเตอร์จะเป็น testcase_status ตามด้วย testcase_ids ทั้งหมด
+    const params = [testcase_status, ...testcase_ids];
+
+    db.query(sql, params, (err, result) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Database error." });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "No testcase found with the provided testcase_ids." });
+        }
+        res.status(200).json({ message: "testcase status updated to VERIFIED successfully." });
+    });
+});
+
+app.put('/update-veritestcase-by', (req, res) => {
+    const { veritestcase_id, veritestcase_by } = req.body;
+
+    if (!veritestcase_id || typeof veritestcase_by !== 'object') {
+        return res.status(400).json({ message: "ข้อมูลไม่ถูกต้อง" });
+    }
+
+    // ตรวจสอบว่า veritestcase_id มีอยู่ในฐานข้อมูลหรือไม่
+    const checkSql = 'SELECT veritestcase_id FROM veritestcase_id WHERE veritestcase_id = ?';
+    db.query(checkSql, [veritestcase_id], (checkErr, checkResult) => {
+        if (checkErr) {
+            console.error("Error checking veritestcase_id:", checkErr);
+            return res.status(500).json({ message: "ข้อผิดพลาดในการตรวจสอบข้อมูล" });
+        }
+
+        if (checkResult.length === 0) {
+            return res.status(404).json({ message: "ไม่พบข้อมูล veritestcase นี้ในฐานข้อมูล" });
+        }
+
+        // อัปเดตข้อมูล veritestcase_by
+        const sql = `
+          UPDATE veritestcase
+          SET veritestcase_by = ?
+          WHERE veritestcase_id = ?`;
+
+        db.query(sql, [JSON.stringify(veritestcase_by), veritestcase_id], (err, result) => {
+            if (err) {
+                console.error("Database error:", err);
+                return res.status(500).json({ message: "ไม่สามารถอัปเดตข้อมูล veritestcase_by ได้" });
+            }
+
+            res.status(200).json({
+                message: "อัปเดตข้อมูล veritestcase_id สำเร็จ",
+                veritestcase_id: veritestcase_id
+            });
+        });
+    });
+});
+
+// get ข้อมูลเฉพาะเมื่อกดที่ verify ในหน้า View Verification
+app.get("/verifytestcase", (req, res) => {
+    const { testcase_id } = req.query;
+    const testcaseIdsArray = testcase_id.split(",");
+    let query = `SELECT * FROM testcase WHERE testcase_id IN (?)`;
+
+    db.query(query, [testcaseIdsArray], (err, results) => {
+        if (err) {
+            console.error("Error fetching testcase:", err);
+            res.status(500).json({ error: "Failed to fetch testcase" });
+        } else {
+            res.status(200).json(results);
+        }
+    });
+});
 
 // ------------------------- OVERVIEW --------------------------------
 // API รวม Requirements, Baseline Requirements และ Design
@@ -3133,9 +3493,82 @@ app.get("/overviewcount", (req, res) => {
 });
 
 
+// ------------------------- Testcase Criteria -------------------------
+// Fetch all Testcase Verification Criteria
+app.get('/testcasecriteria', (req, res) => {
+    const sql = "SELECT * FROM testcasecriteria";
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.error('Error fetching Testcase Criteria:', err);
+            return res.status(500).send('Error fetching Testcase Criteria');
+        }
+        res.json(result);
+    });
+});
 
+// Add new Testcase Verification Criteria
+app.post('/testcasecriteria', (req, res) => {
+    const { testcasecri_name } = req.body;
 
+    if (!testcasecri_name || testcasecri_name.trim() === "") {
+        return res.status(400).json({ message: "Criteria name is required" });
+    }
 
+    const sql = "INSERT INTO testcasecriteria (testcasecri_name) VALUES (?)";
+    db.query(sql, [testcasecri_name], (err, result) => {
+        if (err) {
+            console.error('Error adding Testcase Criteria:', err);
+            return res.status(500).json({ message: "Error adding Testcase Criteria" });
+        }
+        res.status(201).json({ message: "Testcase Criteria added successfully", data: result });
+    });
+});
+
+// Update Testcase Verification Criteria
+app.put('/testcasecriteria/:id', (req, res) => {
+    const { testcasecri_name } = req.body;
+    const { id } = req.params;
+
+    if (!testcasecri_name || testcasecri_name.trim() === "") {
+        return res.status(400).json({ message: "Criteria name is required" });
+    }
+
+    const sql = "UPDATE testcasecriteria SET testcasecri_name = ? WHERE testcasecri_id = ?";
+    db.query(sql, [testcasecri_name, id], (err, result) => {
+        if (err) {
+            console.error('Error updating Testcase Criteria:', err);
+            return res.status(500).json({ message: "Error updating Testcase Criteria" });
+        }
+        res.status(200).json({ message: "Testcase Criteria updated successfully", data: result });
+    });
+});
+
+// Delete Testcase Verification Criteria
+app.delete('/testcasecriteria/:id', (req, res) => {
+    const { id } = req.params;
+
+    const checkSql = "SELECT * FROM testcasecriteria WHERE testcasecri_id = ?";
+    const deleteSql = "DELETE FROM testcasecriteria WHERE testcasecri_id = ?";
+
+    db.query(checkSql, [id], (err, result) => {
+        if (err) {
+            console.error('Error checking Testcase Criteria:', err);
+            return res.status(500).json({ message: "Error checking Testcase Criteria" });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({ message: "Testcase Criteria not found" });
+        }
+
+        db.query(deleteSql, [id], (err, result) => {
+            if (err) {
+                console.error('Error deleting Testcase Criteria:', err);
+                return res.status(500).json({ message: "Error deleting Testcase Criteria" });
+            }
+            res.status(200).json({ message: "Testcase Criteria deleted successfully" });
+        });
+    });
+});
 
 // ------------------------- SERVER LISTENER -------------------------
 const PORT = 3001;

@@ -60,6 +60,9 @@ import TestProcedures from './Components/Testcase/TestProcedures';
 import UpdateTestcase from './Components/Testcase/UpdateTestcase';
 import ExecutionList from './Components/Testcase/ExecutionList';
 import TestExecution from './Components/Testcase/TestExecution';
+import CreateVeriTest from './Components/Testcase/CreateVeriTest';
+import VeriTestcase from './Components/Testcase/VeriTestcase';
+import TestcaseVerifed from './Components/Testcase/TestcaseVerifed';
 
 // Notify
 import { ToastContainer } from 'react-toastify';
@@ -148,6 +151,9 @@ const App = () => {
         <Route path="/UpdateTestcase" element={<UpdateTestcase />} />
         <Route path="/TestExecution/:testcaseId" element={<TestExecution />} />
         <Route path="/ExecutionList" element={<ExecutionList />} />
+        <Route path="/CreateVeriTest" element={<CreateVeriTest />} />
+        <Route path="/VeriTestcase" element={<VeriTestcase />} /> 
+        <Route path="/TestcaseVerifed" element={<TestcaseVerifed />} /> 
       </Routes>
     </>
   );

@@ -7,16 +7,21 @@ const ProjectConfig = () => {
     const [newReqCriteria, setNewReqCriteria] = useState("");
     const [reqcriList, setReqcriList] = useState([]);
     const [loadingReq, setLoadingReq] = useState(true);
+
     const [newDesignCriteria, setNewDesignCriteria] = useState("");
     const [designCriList, setDesignCriList] = useState([]);
     const [loadingDesign, setLoadingDesign] = useState(true);
-    const [editingId, setEditingId] = useState(null);
-    const [editValue, setEditValue] = useState("");
+
+    const [newTestcaseCriteria, setNewTestcaseCriteria] = useState("");
+    const [testcaseCriList, setTestcaseCriList] = useState([]);
+    const [loadingTestcase, setLoadingTestcase] = useState(true);
+
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchReqCriteria();
         fetchDesignCriteria();
+        fetchTestcaseCriteria();
     }, []);
 
     // Fetch Requirement Criteria List
@@ -32,19 +37,32 @@ const ProjectConfig = () => {
         }
     };
 
-        // Fetch Requirement Criteria List
-        const fetchDesignCriteria = async () => {
-            try {
-                setLoadingDesign(true);
-                const response = await axios.get("http://localhost:3001/designcriteria");
-                setDesignCriList(response.data);
-            } catch (error) {
-                console.error("Error fetching requirement criteria:", error);
-            } finally {
-                setLoadingDesign(false);
-            }
-        };
-    
+    // Fetch Design Criteria List
+    const fetchDesignCriteria = async () => {
+        try {
+            setLoadingDesign(true);
+            const response = await axios.get("http://localhost:3001/designcriteria");
+            setDesignCriList(response.data);
+        } catch (error) {
+            console.error("Error fetching design criteria:", error);
+        } finally {
+            setLoadingDesign(false);
+        }
+    };
+
+    // Fetch Testcase Criteria List
+    const fetchTestcaseCriteria = async () => {
+        try {
+            setLoadingTestcase(true);
+            const response = await axios.get("http://localhost:3001/testcasecriteria");
+            setTestcaseCriList(response.data);
+        } catch (error) {
+            console.error("Error fetching testcase criteria:", error);
+        } finally {
+            setLoadingTestcase(false);
+        }
+    };
+
     // Add New Requirement Criteria
     const handleAddReqCriteria = async () => {
         if (newReqCriteria.trim() === "") {
@@ -60,47 +78,50 @@ const ProjectConfig = () => {
         }
     };
 
-
-// Add New Design Criteria
-const handleAddDesignCriteria = async () => {
-    if (newDesignCriteria.trim() === "") {
-        alert("กรุณากรอกชื่อ esign Criteria ก่อน");
-        return;
-    }
-    try {
-        await axios.post("http://localhost:3001/designcriteria", { design_cri_name: newDesignCriteria });
-        setNewDesignCriteria("");
-        fetchDesignCriteria();
-    } catch (error) {
-        console.error("Error adding requirement criteria:", error);
-    }
-};
-
-    // Edit Criteria
-    const handleUpdate = async () => {
-        if (editValue.trim() === "") {
-            alert("กรุณากรอกค่าที่ต้องการแก้ไข");
+    // Add New Design Criteria
+    const handleAddDesignCriteria = async () => {
+        if (newDesignCriteria.trim() === "") {
+            alert("กรุณากรอกชื่อ Design Criteria ก่อน");
             return;
         }
         try {
-            await axios.put(`http://localhost:3001/reqcriteria/${editingId}`, { reqcri_name: editValue });
-            setEditingId(null);
-            setEditValue("");
-            fetchReqCriteria();
+            await axios.post("http://localhost:3001/designcriteria", { design_cri_name: newDesignCriteria });
+            setNewDesignCriteria("");
+            fetchDesignCriteria();
         } catch (error) {
-            console.error("Error updating criteria:", error);
+            console.error("Error adding design criteria:", error);
+        }
+    };
+
+    // Add New Testcase Criteria
+    const handleAddTestcaseCriteria = async () => {
+        if (newTestcaseCriteria.trim() === "") {
+            alert("กรุณากรอกชื่อ Testcase Criteria ก่อน");
+            return;
+        }
+        try {
+            await axios.post("http://localhost:3001/testcasecriteria", { testcasecri_name: newTestcaseCriteria });
+            setNewTestcaseCriteria("");
+            fetchTestcaseCriteria();
+        } catch (error) {
+            console.error("Error adding testcase criteria:", error);
         }
     };
 
     // Delete Criteria
-    const handleDelete = async (id, isDesign) => {
+    const handleDelete = async (id, type) => {
         if (!window.confirm("คุณแน่ใจหรือว่าต้องการลบ Criteria นี้?")) return;
         try {
-            const endpoint = isDesign
-                ? `http://localhost:3001/designcriteria/${id}`
-                : `http://localhost:3001/reqcriteria/${id}`;
+            let endpoint = "";
+            if (type === "requirement") endpoint = `http://localhost:3001/reqcriteria/${id}`;
+            else if (type === "design") endpoint = `http://localhost:3001/designcriteria/${id}`;
+            else if (type === "testcase") endpoint = `http://localhost:3001/testcasecriteria/${id}`;
+
             await axios.delete(endpoint);
-            isDesign ? fetchDesignCriteria() : fetchReqCriteria();
+
+            if (type === "requirement") fetchReqCriteria();
+            else if (type === "design") fetchDesignCriteria();
+            else if (type === "testcase") fetchTestcaseCriteria();
         } catch (error) {
             console.error("Error deleting criteria:", error);
         }
@@ -113,7 +134,6 @@ const handleAddDesignCriteria = async () => {
             </div>
 
             <div className="project-config-content">
-
                 {/* Software Requirement Specification Verification Criteria */}
                 <div className="project-config-checklist-section">
                     <h2>Software Requirement Specification Verification Criteria</h2>
@@ -129,17 +149,12 @@ const handleAddDesignCriteria = async () => {
                             Add
                         </button>
                     </div>
-                    {loadingReq ? (
-                        <p>Loading...</p>
-                    ) : (
+                    {loadingReq ? <p>Loading...</p> : (
                         <ul className="project-config-criteria-list">
                             {reqcriList.map((criteria) => (
                                 <li key={criteria.reqcri_id} className="project-config-criteria-item">
                                     <span>{criteria.reqcri_name}</span>
-                                    <button
-                                        className="project-config-delete-button"
-                                        onClick={() => handleDelete(criteria.reqcri_id, false)}
-                                    >
+                                    <button className="project-config-delete-button" onClick={() => handleDelete(criteria.reqcri_id, "requirement")}>
                                         Delete
                                     </button>
                                 </li>
@@ -163,17 +178,41 @@ const handleAddDesignCriteria = async () => {
                             Add
                         </button>
                     </div>
-                    {loadingDesign ? (
-                        <p>Loading...</p>
-                    ) : (
+                    {loadingDesign ? <p>Loading...</p> : (
                         <ul className="project-config-criteria-list">
                             {designCriList.map((criteria) => (
                                 <li key={criteria.designcri_id} className="project-config-criteria-item">
                                     <span>{criteria.design_cri_name}</span>
-                                    <button
-                                        className="project-config-delete-button"
-                                        onClick={() => handleDelete(criteria.design_cri_id, true)}
-                                    >
+                                    <button className="project-config-delete-button" onClick={() => handleDelete(criteria.designcri_id, "design")}>
+                                        Delete
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
+                {/* Testcase Verification Criteria */}
+                <div className="project-config-checklist-section">
+                    <h2>Testcase Verification Criteria</h2>
+                    <div className="project-config-input-container">
+                        <input
+                            type="text"
+                            value={newTestcaseCriteria}
+                            onChange={(e) => setNewTestcaseCriteria(e.target.value)}
+                            placeholder="Add New Criteria"
+                            className="project-config-input"
+                        />
+                        <button className="project-config-add-button" onClick={handleAddTestcaseCriteria}>
+                            Add
+                        </button>
+                    </div>
+                    {loadingTestcase ? <p>Loading...</p> : (
+                        <ul className="project-config-criteria-list">
+                            {testcaseCriList.map((criteria) => (
+                                <li key={criteria.testcasecri_id} className="project-config-criteria-item">
+                                    <span>{criteria.testcasecri_name}</span>
+                                    <button className="project-config-delete-button" onClick={() => handleDelete(criteria.testcasecri_id, "testcase")}>
                                         Delete
                                     </button>
                                 </li>

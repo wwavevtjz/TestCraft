@@ -1,0 +1,77 @@
+.createveritestcase-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.createveritestcase-container h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.createveritestcase-content {
+    display: flex;
+    justify-content: space-between;
+}
+
+.createveritestcase-left-panel,
+.createveritestcase-right-panel {
+    width: 48%;
+    background: #f9f9f9;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.createveritestcase-testcase-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.createveritestcase-testcase-table th,
+.createveritestcase-testcase-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.createveritestcase-testcase-table th {
+    background: #f4f4f4;
+}
+
+.createveritestcase-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.createveritestcase-button.create-button {
+    background: #4caf50;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-left: 10px;
+    border-radius: 4px;
+}
+
+.createveritestcase-button.cancel-button {
+    background: #f44336;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.createveritestcase-button.create-button:hover {
+    background: #45a049;
+}
+
+.createveritestcase-button.cancel-button:hover {
+    background: #e53935;
+}
+
+.createveritestcase-error-message {
+    color: #ff0000;
+    font-weight: bold;
+}

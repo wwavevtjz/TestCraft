@@ -68,12 +68,23 @@ const CreateTestcase = () => {
     };
   
     try {
-      await axios.post("http://localhost:3001/testcases", testCaseData);
-      alert("Test Case created successfully!");
-      
-      // Redirect กลับไปที่ TestcasePage
-      navigate(`/Dashboard?project_id=${projectId}`);
+      // ส่งข้อมูลไปยัง API testcases และเก็บ response
+      const testcaseResponse = await axios.post("http://localhost:3001/testcases", testCaseData);
+  
+      if (testcaseResponse.status === 201) {
+        const testcase_id = testcaseResponse.data.testcase_id;
+  
+        // ส่ง testcase_id ไปที่ API addHistoryTestcase
+        await axios.post("http://localhost:3001/addHistoryTestcase", {
+          testcase_id: testcase_id,
+          testcase_status: "WORKING",
+        });
+  
+        alert("Test Case created successfully!");
+        navigate(`/Dashboard?project_id=${projectId}`);
+      }
     } catch (error) {
+      console.error("Error creating test case:", error);
       alert("Failed to create test case. Please try again.");
     }
   };
