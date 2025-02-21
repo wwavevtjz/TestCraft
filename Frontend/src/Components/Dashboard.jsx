@@ -8,6 +8,7 @@ import ProjectConfig from './ProjectConfig';
 import DesignPage from './DesignPage';
 import TestcasePage from './Testcase/TestcasePage';
 import OverviewProject from './Project/OverviewProject';
+import ImplementPage from './Implement/implementPage';
 
 
 const Dashboard = () => {
@@ -179,8 +180,8 @@ const Dashboard = () => {
             {selectedSection === 'Overview' && <OverviewProject />}
             {selectedSection === 'Configuration' && <ProjectConfig />}
             {selectedSection === 'Requirement' && <RequirementPage />}
-            {selectedSection === 'Design' && <DesignPage/>}
-            {selectedSection === 'Implementation' && <h2>Implementation Content</h2>}
+            {selectedSection === 'Design' && <DesignPage />}
+            {selectedSection === 'Implementation' && <ImplementPage />}
             {selectedSection === 'Testcase' && <TestcasePage />}
             {selectedSection === 'Review' && <h2>Review Content</h2>}
             {selectedSection === 'Baseline' && <h2>Baseline Content</h2>}

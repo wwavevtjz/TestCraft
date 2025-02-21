@@ -52,6 +52,9 @@ import DesignVerifed from './Components/DesignVerifed';
 import DesignBaseline from './Components/DesignBaseline';
 import CreateDesignbaseline from './Components/CreateDesignbaseline';
 
+//Implement
+import ImplementPage from './Components/Implement/implementPage';
+
 // Testcase
 import CreateTestcase from './Components/Testcase/CreateTestcase';
 import TestcasePage from './Components/Testcase/TestcasePage';
@@ -152,8 +155,11 @@ const App = () => {
         <Route path="/TestExecution/:testcaseId" element={<TestExecution />} />
         <Route path="/ExecutionList" element={<ExecutionList />} />
         <Route path="/CreateVeriTest" element={<CreateVeriTest />} />
-        <Route path="/VeriTestcase" element={<VeriTestcase />} /> 
-        <Route path="/TestcaseVerifed" element={<TestcaseVerifed />} /> 
+        <Route path="/VeriTestcase" element={<VeriTestcase />} />
+        <Route path="/TestcaseVerifed" element={<TestcaseVerifed />} />
+
+        {/* ทำ Testcase */}
+        <Route path="/implementPage" element={<ImplementPage />} />
       </Routes>
     </>
   );

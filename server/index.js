@@ -427,7 +427,7 @@ app.delete('/requirement/:id', (req, res) => {
 
     // ตรวจสอบว่ามี requirement_id อยู่จริงใน file_requirement
     const checkRequirementSQL = "SELECT * FROM file_requirement WHERE requirement_id = ?";
-    
+
     db.query(checkRequirementSQL, [id], (err, results) => {
         if (err) {
             console.error("Error checking requirement:", err);
@@ -444,7 +444,7 @@ app.delete('/requirement/:id', (req, res) => {
         const deleteRequrementFromRelationSQL = "DELETE FROM file_requirement_relation WHERE requirement_id = ?";
         const deleteBaselineSQL = "DELETE FROM baseline WHERE requirement_id = ?";
         const updateFileRequirementSQL = "UPDATE file_requirement SET requirement_id = NULL WHERE requirement_id = ?";
-        const deleteDesignSQL = "DELETE FROM design WHERE design_id = ?"; 
+        const deleteDesignSQL = "DELETE FROM design WHERE design_id = ?";
 
         // อัปเดต file_requirement ก่อน
         db.query(updateFileRequirementSQL, [id], (err, data) => {
@@ -1727,7 +1727,7 @@ app.post('/comments', (req, res) => {
         }
     });
 });
- 
+
 app.post("/uploadfile-var", upload.single("file"), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
@@ -1759,36 +1759,36 @@ app.post("/uploadfile-var", upload.single("file"), (req, res) => {
 });
 
 
-  // 📌 API ดาวน์โหลดไฟล์
-  app.get("/getfile/:fileId", (req, res) => {
+// 📌 API ดาวน์โหลดไฟล์
+app.get("/getfile/:fileId", (req, res) => {
     const fileId = parseInt(req.params.fileId, 10);
-    
+
     if (isNaN(fileId)) {
-      return res.status(400).json({ message: "Invalid file ID" });
+        return res.status(400).json({ message: "Invalid file ID" });
     }
-  
+
     const sql = "SELECT filereq_data FROM file_validation WHERE id = ?";
     db.query(sql, [fileId], (err, result) => {
-      if (err) {
-        console.error("Error fetching file:", err);
-        return res.status(500).json({ message: "Database error" });
-      }
-  
-      if (result.length === 0) {
-        return res.status(404).json({ message: "File not found" });
-      }
-  
-      const fileName = result[0].filereq_data;
-      const filePath = path.join(__dirname, "uploads", fileName);
-  
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ message: "File not found on server" });
-      }
-  
-      res.download(filePath, fileName);
+        if (err) {
+            console.error("Error fetching file:", err);
+            return res.status(500).json({ message: "Database error" });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({ message: "File not found" });
+        }
+
+        const fileName = result[0].filereq_data;
+        const filePath = path.join(__dirname, "uploads", fileName);
+
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ message: "File not found on server" });
+        }
+
+        res.download(filePath, fileName);
     });
-  });
-  
+});
+
 
 // ------------------------- REPLY VERIFICATION COMMENT -------------------------
 app.post('/replyvercomment', (req, res) => {
@@ -2706,7 +2706,7 @@ app.delete("/delete-commentveridesign/:comverdesign_id", (req, res) => {
 
     // SQL query to delete the comment
     const sql = "DELETE FROM comment_veridesign WHERE comverdesign_id = ?";
-    
+
     db.query(sql, [comverdesign_id], (err, result) => {
         if (err) {
             console.error("Database error:", err);
@@ -2851,6 +2851,55 @@ app.get("/designbaseline", (req, res) => {
     });
 });
 
+//--------------------------IMPLEMENT----------------------------------
+app.post('/implementrelation', (req, res) => {
+    const { data } = req.body; // รับข้อมูลเป็น array
+
+    console.log('Request body:', JSON.stringify(data, null, 2));
+
+    if (!Array.isArray(data) || data.length === 0) {
+        return res.status(400).json({ error: 'Invalid data format' });
+    }
+
+    const query = `INSERT INTO implementation (implement_filename, design_id) VALUES (?, ?)`;
+
+    const promises = data.flatMap(({ implement_filename, design_ids }) => {
+        if (!implement_filename || !Array.isArray(design_ids) || design_ids.length === 0) {
+            console.error('Invalid input:', implement_filename, design_ids);
+            return [];
+        }
+
+        return design_ids.map(design_id => {
+            const parsedId = Number(design_id); // 🔹 แปลงเป็นตัวเลข
+            if (!Number.isInteger(parsedId)) {
+                console.error(`Invalid design_id: ${design_id}`);
+                return Promise.reject(new Error('Invalid design_id'));
+            }
+
+            return new Promise((resolve, reject) => {
+                db.query(query, [implement_filename, parsedId], (err, result) => {
+                    if (err) {
+                        console.error('Error inserting data:', err.sqlMessage || err);
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            });
+        });
+    });
+
+    Promise.all(promises)
+        .then(() => {
+            res.status(201).json({ message: 'Implementations added successfully' });
+        })
+        .catch((err) => {
+            console.error('Error with database operation:', err);
+            res.status(500).json({ error: 'Database error' });
+        });
+});
+
+
 // ------------------------- TEST CASE -------------------------------
 app.get("/project/:projectId/attachments", (req, res) => {
     const { projectId } = req.params;
@@ -2913,11 +2962,11 @@ app.post("/testcases", (req, res) => {
 app.get("/testcases", (req, res) => {
     const sql = "SELECT * FROM testcase";
     db.query(sql, (err, results) => {
-      if (err) return res.status(500).json({ error: "Database query failed" });
-      res.json(results);
+        if (err) return res.status(500).json({ error: "Database query failed" });
+        res.json(results);
     });
-  });
-  
+});
+
 
 
 
@@ -2943,43 +2992,43 @@ app.get("/api/test-procedures", (req, res) => {
 
 // ✅ เพิ่ม test_procedure ใหม่
 app.post("/api/test-procedures", (req, res) => {
-  const {
-    testcase_id,
-    test_objective,
-    test_condition,
-    test_step,
-    expected_result,
-    test_data,
-    test_status,
-    tested_by,
-  } = req.body;
+    const {
+        testcase_id,
+        test_objective,
+        test_condition,
+        test_step,
+        expected_result,
+        test_data,
+        test_status,
+        tested_by,
+    } = req.body;
 
-  const insertSql = `INSERT INTO test_procedures 
+    const insertSql = `INSERT INTO test_procedures 
     (testcase_id, test_objective, test_condition, test_step, expected_result, test_data, test_status, tested_by) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  db.query(
-    insertSql,
-    [testcase_id, test_objective, test_condition, test_step, expected_result, test_data, test_status, tested_by],
-    (err, result) => {
-      if (err) {
-        return res.status(500).json({ error: "Insert failed" });
-      }
+    db.query(
+        insertSql,
+        [testcase_id, test_objective, test_condition, test_step, expected_result, test_data, test_status, tested_by],
+        (err, result) => {
+            if (err) {
+                return res.status(500).json({ error: "Insert failed" });
+            }
 
-      const newId = result.insertId; // ดึง ID ของข้อมูลที่เพิ่งถูกเพิ่ม
-      const selectSql = `SELECT * FROM test_procedures WHERE test_procedures_id = ?`;
+            const newId = result.insertId; // ดึง ID ของข้อมูลที่เพิ่งถูกเพิ่ม
+            const selectSql = `SELECT * FROM test_procedures WHERE test_procedures_id = ?`;
 
-      db.query(selectSql, [newId], (err, rows) => {
-        if (err) {
-          return res.status(500).json({ error: "Failed to fetch new test procedure" });
+            db.query(selectSql, [newId], (err, rows) => {
+                if (err) {
+                    return res.status(500).json({ error: "Failed to fetch new test procedure" });
+                }
+                res.status(201).json(rows[0]); // ส่งข้อมูลที่เพิ่มกลับไป
+            });
         }
-        res.status(201).json(rows[0]); // ส่งข้อมูลที่เพิ่มกลับไป
-      });
-    }
-  );
+    );
 });
-  
-  
+
+
 // ✅ อัปเดต test_procedure
 app.put("/api/test-procedures/:id", (req, res) => {
     console.log("Request Body:", req.body); // ✅ ตรวจสอบค่าที่ส่งมา
@@ -3001,25 +3050,25 @@ app.put("/api/test-procedures/:id", (req, res) => {
 });
 
 
-  
-  // ✅ ลบ test_procedure
-  app.delete("/api/test-procedures/:id", (req, res) => {
+
+// ✅ ลบ test_procedure
+app.delete("/api/test-procedures/:id", (req, res) => {
     const { id } = req.params;
     console.log("Received DELETE request for ID:", id); // ✅ Debug ID
-  
+
     const sql = "DELETE FROM test_procedures WHERE test_procedures_id = ?";
     db.query(sql, [id], (err, result) => {
-      if (err) {
-        console.error("Delete Error:", err);
-        return res.status(500).json({ error: "Delete failed", details: err });
-      }
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: "Test procedure not found" });
-      }
-      res.json({ message: "Test procedure deleted successfully!" });
+        if (err) {
+            console.error("Delete Error:", err);
+            return res.status(500).json({ error: "Delete failed", details: err });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Test procedure not found" });
+        }
+        res.json({ message: "Test procedure deleted successfully!" });
     });
-  });
-  
+});
+
 // --------------------------- TestExecution -------------------------------
 
 app.get("/testexecution", (req, res) => {
@@ -3032,23 +3081,23 @@ app.get("/testexecution", (req, res) => {
       FROM testcase t
       JOIN test_procedures tp ON t.testcase_id = tp.testcase_id;
     `;
-    
-    db.query(query, (err, results) => {
-      if (err) {
-        res.status(500).json({ error: err.message });
-      } else {
-        res.json(results);
-      }
-    });
-  });
-  
 
-  app.get("/testexecution/testcase/:testcaseId", (req, res) => {
+    db.query(query, (err, results) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+
+app.get("/testexecution/testcase/:testcaseId", (req, res) => {
     const { testcaseId } = req.params;
     console.log(`🔍 Fetching test procedures for testcaseId: ${testcaseId}`);
 
     const sql = "SELECT * FROM test_procedures WHERE testcase_id = ?";
-    
+
     db.query(sql, [testcaseId], (err, results) => {
         if (err) {
             console.error("❌ Database Error:", err);
@@ -3079,7 +3128,7 @@ app.get("/testexecution/testcase/:testcaseId/procedures", (req, res) => {
         FROM test_procedures tp
         WHERE tp.testcase_id = ?
     `;
-    
+
     db.query(sql, [testcaseId], (err, results) => {
         if (err) {
             console.error("❌ Database Error:", err);
@@ -3168,7 +3217,7 @@ app.post("/createveritestcase", (req, res) => {
 
         const values = veritestcaseData.map((item) => [
             item.project_id,
-            nextRound,  
+            nextRound,
             item.create_by,
             item.testcase_id,
             formatDateTime(item.veritestcase_at),
@@ -3215,11 +3264,11 @@ app.get("/veritestcase", (req, res) => {
 
 app.get("/verilisttestcase", (req, res) => {
     const { project_id } = req.query;
-  
+
     if (!project_id) {
-      return res.status(400).json({ error: "Project ID is required." });
+        return res.status(400).json({ error: "Project ID is required." });
     }
-  
+
     let query = `
       SELECT 
           vt.veritestcase_id,  
@@ -3239,35 +3288,35 @@ app.get("/verilisttestcase", (req, res) => {
           vt.veritestcase_round ASC
       LIMIT 25;
     `;
-  
-    db.query(query, [project_id], (err, results) => {
-      if (err) {
-        console.error("❌ Error fetching testcases:", err);
-        res.status(500).json({ error: "Failed to fetch testcases" });
-      } else {
-        const processedResults = results.map((testcase) => {
-          let veritestcaseByObject = {};
-  
-          try {
-            veritestcaseByObject = JSON.parse(testcase.veritestcase_by || "{}");
-          } catch (error) {
-            console.error("Error parsing veritestcase_by:", error);
-            veritestcaseByObject = {};
-          }
-  
-          return {
-            ...testcase,
-            veritestcase_by: veritestcaseByObject
-          };
-        });
-  
-        console.log("✅ VeriTestcase Response:", processedResults);
-        res.status(200).json(processedResults);
-      }
-    });
-  });
 
-  app.get('/testcaseveri', (req, res) => {
+    db.query(query, [project_id], (err, results) => {
+        if (err) {
+            console.error("❌ Error fetching testcases:", err);
+            res.status(500).json({ error: "Failed to fetch testcases" });
+        } else {
+            const processedResults = results.map((testcase) => {
+                let veritestcaseByObject = {};
+
+                try {
+                    veritestcaseByObject = JSON.parse(testcase.veritestcase_by || "{}");
+                } catch (error) {
+                    console.error("Error parsing veritestcase_by:", error);
+                    veritestcaseByObject = {};
+                }
+
+                return {
+                    ...testcase,
+                    veritestcase_by: veritestcaseByObject
+                };
+            });
+
+            console.log("✅ VeriTestcase Response:", processedResults);
+            res.status(200).json(processedResults);
+        }
+    });
+});
+
+app.get('/testcaseveri', (req, res) => {
     const { project_id, veritestcaseId, testcase_id } = req.query;
 
     let sql = `
