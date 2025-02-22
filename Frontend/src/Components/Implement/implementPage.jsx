@@ -11,7 +11,8 @@ const ImplementPage = () => {
   const [designs, setDesigns] = useState([]);
   const [selectedDesigns, setSelectedDesigns] = useState([]);
   const [fileDesigns, setFileDesigns] = useState({}); // เก็บข้อมูลที่จับคู่ไฟล์กับ design_id
-
+  const [expandedFolders, setExpandedFolders] = useState([]);
+  
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const projectId = queryParams.get("project_id");
@@ -33,93 +34,91 @@ const ImplementPage = () => {
     setRepoLink(event.target.value);
   };
 
-  const fetchFilesFromRepo = async () => {
-    if (!repoLink) return;
-
-    const repoName = repoLink.replace('https://github.com/', '').replace('.git', '');
-    const apiUrl = `https://api.github.com/repos/${repoName}/contents`;
-
-    const token = '';
-
-    try {
-      setLoading(true);
-      const response = await fetch(apiUrl, {
-        headers: {
-          'Authorization': `token ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-
-        if (Array.isArray(data)) {
-          const files = [];
-          for (const item of data) {
-            if (item.type === 'file' && isSourceCodeFile(item.name)) {
-              // ถ้าเป็นไฟล์และเป็นไฟล์ source code ให้เพิ่มแค่ชื่อไฟล์
-              files.push({ name: item.name, path: item.path });
-            } else if (item.type === 'dir') {
-              // ถ้าเป็นโฟลเดอร์ ให้ดึงข้อมูลไฟล์ในโฟลเดอร์นั้นๆ
-              const folderContents = await fetchFolderContents(repoName, item.path);
-              files.push(...folderContents);
-            }
-          }
-          setFileNames(files);
-        }
+  const toggleFolder = (folderPath) => {
+    setExpandedFolders((prev) => {
+      if (prev.includes(folderPath)) {
+        return prev.filter((path) => path !== folderPath); // ปิดโฟลเดอร์ที่ถูกกดซ้ำ
+      } else {
+        return [...prev, folderPath]; // เปิดโฟลเดอร์ที่ถูกกด
       }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
+  
 
-  const fetchFolderContents = async (repoName, folderPath) => {
-    const folderApiUrl = `https://api.github.com/repos/${repoName}/contents/${folderPath}`;
+const isSourceCodeFile = (fileName) => {
+  const allowedExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.html', '.css'];
+  return allowedExtensions.some(ext => fileName.endsWith(ext));
+};
 
-    try {
-      const response = await fetch(folderApiUrl, {
-        headers: {
-          'Authorization': `token ${''}`,
-        },
-      });
+const isIgnoredFolder = (folderName) => {
+  const ignoredFolders = ['node_modules', '.git', '.github', 'dist', 'build', '__pycache__'];
+  return ignoredFolders.includes(folderName);
+};
 
+const isIgnoredFile = (fileName) => {
+  const ignoredFiles = ['package.json', 'package-lock.json', 'yarn.lock', '.gitignore', 'README.md'];
+  return ignoredFiles.includes(fileName);
+};
+
+const fetchFilesFromRepo = async () => {
+  if (!repoLink) return;
+
+  const repoName = repoLink.replace('https://github.com/', '').replace('.git', '');
+  const apiUrl = `https://api.github.com/repos/${repoName}/contents`;
+
+  try {
+    setLoading(true);
+    const response = await fetch(apiUrl, {
+      headers: { 'Authorization': `token ${''}` },
+    });
+
+    if (response.ok) {
       const data = await response.json();
-
       if (Array.isArray(data)) {
-        let files = [];
-
-        // กรองเฉพาะไฟล์ source code โดยตรวจสอบนามสกุลของไฟล์
-        for (const item of data) {
-          if (item.type === 'file' && isSourceCodeFile(item.name)) {
-            // ถ้าเป็นไฟล์ที่มีนามสกุล source code ให้เพิ่มแค่ชื่อไฟล์
-            files.push({ name: item.name, path: item.path });
-          } else if (item.type === 'dir') {
-            // ถ้าเป็นโฟลเดอร์ ให้ดึงข้อมูลของโฟลเดอร์นั้นๆ
-            const subfolderFiles = await fetchFolderContents(repoName, item.path);
-            files = files.concat(subfolderFiles);  // รวมไฟล์จากโฟลเดอร์ย่อย
-          }
-        }
-
-        return files;
+        const fileTree = await buildFileTree(repoName, data);
+        setFileNames(fileTree);
       }
-      return [];
-    } catch (error) {
-      console.error('Error fetching folder contents:', error);
-      return [];
     }
-  };
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  // ฟังก์ชันสำหรับตรวจสอบนามสกุลของไฟล์ว่าเป็น source code หรือไม่
-  const isSourceCodeFile = (fileName) => {
-    const sourceCodeExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.go', '.php'];  // เพิ่มนามสกุลที่ต้องการกรอง
-    const fileExtension = fileName.slice(((fileName.lastIndexOf(".") - 1) >>> 0) + 2);  // หานามสกุลของไฟล์
+const buildFileTree = async (repoName, items, parentPath = '') => {
+  const tree = [];
 
-    return sourceCodeExtensions.includes(`.${fileExtension}`);
-  };
+  for (const item of items) {
+    if (item.type === 'file' && isSourceCodeFile(item.name) && !isIgnoredFile(item.name)) {
+      tree.push({ name: item.name, type: 'file', path: item.path });
+    } else if (item.type === 'dir' && !isIgnoredFolder(item.name)) {
+      const folderContents = await fetchFolderContents(repoName, item.path);
+      tree.push({ name: item.name, type: 'folder', children: folderContents });
+    }
+  }
 
+  return tree;
+};
 
+const fetchFolderContents = async (repoName, folderPath) => {
+  const folderApiUrl = `https://api.github.com/repos/${repoName}/contents/${folderPath}`;
 
+  try {
+    const response = await fetch(folderApiUrl, {
+      headers: { 'Authorization': `token ${''}` },
+    });
+
+    const data = await response.json();
+    if (Array.isArray(data)) {
+      return await buildFileTree(repoName, data, folderPath);
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching folder contents:', error);
+    return [];
+  }
+};
 
   const handleFileSelection = (filePath) => {
     setSelectedFiles((prevSelected) => {
@@ -203,82 +202,117 @@ const ImplementPage = () => {
     }
   };
 
-  return (
-    <div className="implement-page">
-      <label className="implement-label">
-        Link Github Repository:
-        <input
-          type="text"
-          value={repoLink}
-          onChange={handleRepoLinkChange}
-          placeholder="e.g., username/repository"
-          className="implement-input"
-        />
-
-      </label>
-      <button onClick={fetchFilesFromRepo} disabled={loading} className="implement-fetch-btn">
-        {loading ? 'Loading...' : 'Fetch Files'}
-      </button>
-
-      <div className="implement-main-container">
-        <div className="implement-left-column">
-          <div className="implement-files-section">
-            <h3 className="implement-section-title">Select Files from Repo:</h3>
-            <ul className="implement-file-list">
+    return (
+      <div className="implement-page">
+        <label className="implement-label">
+          Link Github Repository:
+          <input
+            type="text"
+            value={repoLink}
+            onChange={handleRepoLinkChange}
+            placeholder="e.g., username/repository"
+            className="implement-input"
+          />
+        </label>
+        <button onClick={fetchFilesFromRepo} disabled={loading} className="implement-fetch-btn">
+          {loading ? 'Loading...' : 'Fetch Files'}
+        </button>
+  
+        <div className="implement-main-container">
+          <div className="implement-left-column">
+            <div className="implement-files-section">
+              <h3 className="implement-section-title">Select Files from Repo:</h3>
               {fileNames.length > 0 ? (
-                fileNames.map((file, index) => (
-                  <li key={index} className="implement-file-item">
-                    <input
-                      type="checkbox"
-                      onChange={() => handleFileSelection(file.path)}
-                      className="implement-checkbox"
-                    />
-                    {file.name}
-                  </li>
-                ))
+                <FileTree files={fileNames} onSelect={handleFileSelection} expandedFolders={expandedFolders} toggleFolder={toggleFolder} />
               ) : (
                 <p className="implement-no-files">No files found</p>
               )}
-            </ul>
+            </div>
+          </div>
+  
+          <div className="implement-right-column">
+            <div className="implement-designs-section">
+              <h3 className="implement-section-title">Selected Designs:</h3>
+              {designs.length > 0 ? (
+                <ul className="implement-design-list">
+                  {designs.map((design, index) => (
+                    <li key={index} className="implement-design-item">
+                      <input
+                        type="checkbox"
+                        onChange={() => {
+                          selectedFiles.forEach(filePath => {
+                            handleDesignSelection(filePath, design.design_id);
+                          });
+                        }}
+                        className="implement-checkbox"
+                      />
+                      {design.diagram_name} - {design.design_type} - {design.design_description}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="implement-no-designs">No designs with status 'BASELINE' found</p>
+              )}
+            </div>
           </div>
         </div>
+  
+        <div className="implement-save-btn-wrapper">
+          <button className="implement-save-btn" onClick={handleSave}>
+            Save
+          </button>
+        </div>
+      </div>
+    );
+  };
+  
+  const FileTree = ({ files, onSelect, expandedFolders, toggleFolder, parentPath = "" }) => {
+    return (
+      <ul className="implement-file-tree">
+        {files.map((item) => {
+          const fullPath = parentPath ? `${parentPath}/${item.name}` : item.name; // สร้าง path เต็ม
+  
+          return (
+            <li key={fullPath} className="implement-file-item">
+              {item.type === "folder" ? (
+                <>
+                  <span 
+  className="implement-folder-label" 
+  onClick={() => toggleFolder(fullPath)} 
+  aria-expanded={expandedFolders.includes(fullPath)}
+>
+  {expandedFolders.includes(fullPath) ? "📂" : "📁"} {item.name}
+</span>
 
-        <div className="implement-right-column">
-          <div className="implement-designs-section">
-            <h3 className="implement-section-title">Selected Designs:</h3>
-            {designs.length > 0 ? (
-              <ul className="implement-design-list">
-                {designs.map((design, index) => (
-                  <li key={index} className="implement-design-item">
+                  {expandedFolders.includes(fullPath) && item.children ? (
+                    <FileTree 
+                      files={item.children} 
+                      onSelect={onSelect} 
+                      expandedFolders={expandedFolders} 
+                      toggleFolder={toggleFolder} 
+                      parentPath={fullPath} // ส่ง path เต็มให้กับ children
+                    />
+                  ) : null}
+                </>
+              ) : (
+                expandedFolders.includes(parentPath) && ( // แสดงไฟล์เฉพาะถ้าโฟลเดอร์แม่ถูกเปิด
+                  <>
                     <input
                       type="checkbox"
-                      onChange={() => {
-                        selectedFiles.forEach(filePath => {
-                          handleDesignSelection(filePath, design.design_id);
-                        });
-                      }}
+                      onChange={() => onSelect(fullPath)}
                       className="implement-checkbox"
                     />
-                    {design.diagram_name} - {design.design_type} - {design.design_description}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="implement-no-designs">No designs with status 'BASELINE' found</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="implement-save-btn-wrapper">
-        <button className="implement-save-btn" onClick={handleSave}>
-          Save
-        </button>
-      </div>
-    </div>
-  );
-
-
-};
-
-export default ImplementPage;
+                    📄 {item.name}
+                  </>
+                )
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
+  
+  
+  export default ImplementPage;
+  

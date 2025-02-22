@@ -123,3 +123,55 @@
 .implement-save-btn:active {
     transform: scale(0.98);
 }
+
+.implement-file-tree {
+    list-style: none;
+    padding-left: 20px;
+  }
+  
+  .implement-file-item {
+    position: relative;
+    padding-left: 20px;
+    margin: 5px 0;
+  }
+  
+  .implement-file-item::before {
+
+    position: absolute;
+    left: 5px;
+    top: 0;
+    bottom: 0;
+    color: #ccc;
+  }
+  
+  .implement-file-item:last-child::before {
+    content: "";
+  }
+  
+  .implement-folder-label {
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .implement-folder-label::before {
+    content: "▶";
+    font-size: 12px;
+    margin-right: 5px;
+    transition: transform 0.2s ease;
+  }
+  
+  .implement-folder-label[aria-expanded="true"]::before {
+    transform: rotate(90deg);
+  }
+  
+  .implement-checkbox {
+    margin-right: 5px;
+  }
+  
+  .implement-file-item input[type="checkbox"] {
+    cursor: pointer;
+  }
+  
