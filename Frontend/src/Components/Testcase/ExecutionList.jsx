@@ -1,87 +1,74 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Eye, Edit, Trash } from "lucide-react";
 import "./testcase_css/ExecutionList.css";
 
 const ExecutionList = () => {
-  const [testCases, setTestCases] = useState([]);
-  const [search, setSearch] = useState("");
+  const [testExecutions, setTestExecutions] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("http://localhost:3001/testexecution")
-      .then(response => {
-        // สร้าง object map เพื่อจัดกลุ่ม test cases ตาม objective
-        const groupedCases = {};
-        response.data.forEach(tc => {
-          if (!groupedCases[tc.objective]) {
-            groupedCases[tc.objective] = {
-              id: `TC-00${tc.id}`,
-              objective: tc.objective,
-              priority: tc.priority,
-              status: tc.status
-            };
-          }
-        });
-  
-        setTestCases(Object.values(groupedCases));
-      })
-      .catch(error => console.error("Error fetching test cases:", error));
+    axios
+      .get("http://localhost:3001/api/testcase_executions")
+      .then((response) => setTestExecutions(response.data))
+      .catch((error) =>
+        console.error("Error fetching test executions:", error)
+      );
   }, []);
-  
 
-  const handleView = (testCase) => {
-    console.log("🔍 Navigating to TestExecution with ID:", testCase.id);
-    navigate(`/TestExecution/${testCase.id}`, { state: { testCase } });
-};
+  const handleRowClick = (execution) => {
+    navigate(`/TestExecution/${execution.testcase_id}`, { state: { testCase: execution } });
+  };
 
-
-  const filteredCases = testCases.filter(tc =>
-    tc.objective.toLowerCase().includes(search.toLowerCase())
+  const filteredExecutions = testExecutions.filter((execution) =>
+    execution.testcase_id.toString().includes(searchTerm)
   );
 
   return (
-    <div className="container">
-      <div className="header">
-        <h1>Test Execution</h1>
-        <button className="execution-button">Execution</button>
+    <div className="test-execution-container">
+      <h2>Test Case Executions</h2>
+      <div className="search-bar">
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Search by Test Case ID"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
-      <input
-        type="text"
-        placeholder="Search"
-        className="search-box"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-      <div className="table-container">
-        <table>
-          <thead>
+      <table className="execution-table">
+        <thead>
+          <tr>
+            <th>Test Case ID</th>
+            <th>Test Name</th>
+            <th>Test Status</th>
+            <th>Completion Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredExecutions.length > 0 ? (
+            filteredExecutions.map((execution) => {
+              const createdAt = execution.testcase_at
+                ? new Date(execution.testcase_at).toLocaleDateString("th-TH")
+                : "-";
+
+              return (
+                <tr key={execution.testcase_id} onClick={() => handleRowClick(execution)} style={{ cursor: "pointer" }}>
+                  <td>TC-{execution.testcase_id.toString().padStart(3, "0")}</td>
+                  <td>{execution.testcase_name || "N/A"}</td>
+                  <td>{execution.test_execution_status || "N/A"}</td>
+                  <td>{createdAt}</td>
+                </tr>
+              );
+            })
+          ) : (
             <tr>
-              <th>Test Case ID</th>
-              <th>Test Objective</th>
-              <th>Priority</th>
-              <th>Test Status</th>
-              <th className="actions-header">Actions</th>
+              <td colSpan="4" className="no-data">❌ No test executions found</td>
             </tr>
-          </thead>
-          <tbody>
-            {filteredCases.map((tc, index) => (
-              <tr key={index}>
-                <td>{tc.id}</td>
-                <td>{tc.objective}</td>
-                <td>{tc.priority}</td>
-                <td className="status">{tc.status}</td>
-                <td className="actions">
-                  <Eye className="icon view" onClick={() => handleView(tc)} />
-                  <Edit className="icon edit" />
-                  <Trash className="icon delete" />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 };

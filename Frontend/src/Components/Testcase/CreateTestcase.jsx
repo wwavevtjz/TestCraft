@@ -50,45 +50,39 @@ const CreateTestcase = () => {
 
   const handleCreateTestCase = async () => {
     if (!title || !description || !testType || !priority || !completionDate) {
-      alert("Please fill in all required fields.");
-      return;
+        alert("Please fill in all required fields.");
+        return;
     }
-  
+
     const testCaseData = {
-      testcase_name: title,
-      testcase_des: description,
-      testcase_type: testType === "Other" ? customTestType : testType,
-      testcase_priority: priority,
-      testcase_by: loggedInUser,
-      testcase_at: completionDate,
-      testcase_attach: attachmentType && attachments.length > 0
-        ? attachments[0].requirement_id || attachments[0].design_id
-        : null,
-      testcase_status: "WORKING"
+        testcase_name: title,
+        testcase_des: description,
+        testcase_type: testType === "Other" ? customTestType : testType,
+        testcase_priority: priority,
+        testcase_by: loggedInUser,
+        testcase_at: completionDate,
+        testcase_attach: attachmentType && attachments.length > 0
+            ? attachments[0].requirement_id || attachments[0].design_id
+            : null,
+        testcase_status: "WORKING"
     };
-  
+
     try {
-      // ส่งข้อมูลไปยัง API testcases และเก็บ response
-      const testcaseResponse = await axios.post("http://localhost:3001/testcases", testCaseData);
-  
-      if (testcaseResponse.status === 201) {
-        const testcase_id = testcaseResponse.data.testcase_id;
-  
-        // ส่ง testcase_id ไปที่ API addHistoryTestcase
-        await axios.post("http://localhost:3001/addHistoryTestcase", {
-          testcase_id: testcase_id,
-          testcase_status: "WORKING",
-        });
-  
-        alert("Test Case created successfully!");
-        navigate(`/Dashboard?project_id=${projectId}`);
-      }
+        const response = await axios.post("http://localhost:3001/testcases", testCaseData);
+
+        if (response.status === 201) {
+            const { testcase_id, test_execution_id } = response.data;
+            console.log(`✅ Testcase ID: ${testcase_id}, Execution ID: ${test_execution_id}`);
+
+            alert("Test Case and Execution created successfully!");
+            navigate(`/Dashboard?project_id=${projectId}`);
+        }
     } catch (error) {
-      console.error("Error creating test case:", error);
-      alert("Failed to create test case. Please try again.");
+        console.error("Error creating test case:", error);
+        alert("Failed to create test case. Please try again.");
     }
-  };
-  
+};
+
   return (
     <div className="create-testcase">
       <h2>Create Test Case</h2>

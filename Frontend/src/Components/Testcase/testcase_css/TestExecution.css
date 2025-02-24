@@ -1,90 +1,136 @@
-/* ตัว container หลัก */
-.test-execution-container {
-    font-family: 'Arial', sans-serif;
+.TestExecution {
+    font-family: Arial, sans-serif;
+    margin: 20px;
     padding: 20px;
-    background-color: #f4f6f9;
-    min-height: 100vh;
-}
-
-/* หัวเรื่อง */
-.test-execution-header {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: #333;
-}
-
-/* Table container */
-.test-execution-table-container {
-    background-color: #ffffff;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* สำหรับ wrapper ของตาราง */
-.test-execution-table-wrapper {
-    max-height: 500px;
-    overflow-y: auto;
-}
-
-/* สไตล์ตาราง */
-.test-execution-table {
+  }
+  
+  h3 {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: left;
+    margin-bottom: 10px;
+  }
+  
+  p {
+    font-size: 14px;
+    margin: 5px 0;
+  }
+  
+  .test-execution-table {
     width: 100%;
     border-collapse: collapse;
+    margin-top: 10px;
+  }
+  
+  .test-execution-table th,
+  .test-execution-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
     text-align: left;
-    border: none;
-}
-
-.test-execution-table-header {
-    background-color: #f8f9fa;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: #555;
-}
-
-.test-execution-table-cell {
-    padding: 12px 16px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.test-execution-table-row:hover {
-    background-color: #f9fafb;
-}
-
-/* สำหรับ input fields และ select dropdown */
-.test-execution-input-field {
+  }
+  
+  .test-execution-table th {
+    background-color: #ddd;
+    font-weight: bold;
+  }
+  
+  .test-execution-table td input {
     width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-    background-color: #fafafa;
-    font-size: 14px;
-    transition: border-color 0.3s ease;
-}
-
-.test-execution-input-field:focus {
-    outline: none;
-    border-color: #3182ce;
-    box-shadow: 0 0 5px rgba(50, 132, 206, 0.3);
-}
-
-/* ปุ่ม Save */
-.test-execution-save-btn {
-    padding: 10px 20px;
-    background-color: #3182ce;
-    color: #fff;
+    border: 1px solid #ccc;
+    padding: 5px;
+  }
+  
+  .test-execution-table td input[type="checkbox"] {
+    width: auto;
+    display: block;
+    margin: auto;
+  }
+  
+  .save-button {
+    background-color: black;
+    color: white;
     border: none;
-    border-radius: 4px;
-    font-size: 16px;
+    padding: 3px 8px; /* Reduced padding to make the button shorter */
+    font-size: 12px; /* Smaller font size */
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    float: right;
+    margin-top: 10px;
+    border-radius: 4px; /* Slightly rounded corners */
+    width: auto; /* Ensure button is not stretched */
+    min-width: 80px; /* Set a minimum width */
+    text-align: center; /* Center the text inside the button */
+  }
+  
+  .save-button:hover {
+    background-color: #333;
+  }
+  
+/* ตั้งค่าพื้นฐานสำหรับ select */
+.test-execution-table select {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
 }
 
-.test-execution-save-btn:hover {
-    background-color: #2b6cb0;
+/* สีพื้นหลังเมื่อเลือกสถานะ */
+.test-execution-table .status-select.passed {
+    background-color: #d4edda; /* เขียว */
+    color: #155724;
 }
 
-.test-execution-save-btn:focus {
-    outline: none;
+.test-execution-table .status-select.failed {
+    background-color: #f8d7da; /* แดง */
+    color: #721c24;
+}
+
+.test-execution-table .status-select.in-progress {
+    background-color: #fff3cd; /* เหลือง */
+    color: #856404;
+}
+
+.test-execution-table .status-select.blocked {
+    background-color: #d1ecf1; /* ฟ้า */
+    color: #0c5460;
+}
+
+/* ตั้งค่าพื้นฐานสำหรับ td ที่เปลี่ยนสี */
+.status-cell {
+    padding: 5px;
+    text-align: center;
+}
+
+/* สีของ Test Status */
+.status-cell.passed {
+    background-color: #d4edda; /* เขียว */
+    color: #155724;
+}
+
+.status-cell.failed {
+    background-color: #f8d7da; /* แดง */
+    color: #721c24;
+}
+
+.status-cell.in-progress {
+    background-color: #fff3cd; /* เหลือง */
+    color: #856404;
+}
+
+.status-cell.blocked {
+    background-color: #d1ecf1; /* ฟ้า */
+    color: #0c5460;
+}
+
+/* ทำให้ select มีความโปร่งใส เพื่อให้เห็นสีพื้นหลัง */
+.status-cell select {
+    background: transparent;
+    border: none;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
 }

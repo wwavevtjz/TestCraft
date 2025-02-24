@@ -1,91 +1,79 @@
-/* TestExecution.css */
-.container {
-    padding: 24px;
-    background-color: #f0f0f0;
-    min-height: 100vh;
-  }
-  
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-  
-  .header h1 {
-    font-size: 1.5rem;
-    font-weight: bold;
-  }
-  
-  .execution-button {
-    padding: 8px 16px;
-    font-size: 14px;
-    background-color: #e0e0e0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .execution-button:hover {
-    background-color: #d6d6d6;
-  }
-  
-  .search-box {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    margin-bottom: 16px;
-  }
-  
-  .table-container {
-    background: white;
-    padding: 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  th, td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  th {
-    background-color: #f9f9f9;
-  }
-  
-  .status {
-    color: green;
-    font-weight: bold;
-  }
-  
-  .actions {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-  }
-  
-  .icon {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-  }
-  
-  .icon.view {
-    color: gray;
-  }
-  
-  .icon.edit {
-    color: blue;
-  }
-  
-  .icon.delete {
-    color: red;
-  }
-  
+.test-execution-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.search-bar {
+  margin-bottom: 20px;
+}
+
+.search-input {
+  width: 80%;
+  padding: 10px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  transition: border 0.3s ease-in-out;
+}
+
+.search-input:focus {
+  border-color: #007bff;
+}
+
+.execution-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.execution-table thead {
+  background: #007bff;
+  color: white;
+}
+
+.execution-table th, 
+.execution-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+.execution-table tbody tr:nth-child(even) {
+  background: #f8f9fa;
+}
+
+.status {
+  font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 6px;
+}
+
+.not-executed {
+  color: red;
+}
+
+.in-progress {
+  color: orange;
+}
+
+.completed {
+  color: green;
+}
+
+.no-data {
+  text-align: center;
+  font-style: italic;
+  color: #888;
+  padding: 20px;
+}

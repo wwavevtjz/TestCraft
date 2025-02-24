@@ -2946,18 +2946,39 @@ app.post("/testcases", (req, res) => {
         testcase_status = "WORKING"; // ✅ กำหนดค่าเริ่มต้นถ้าไม่มีค่า
     }
 
-    const sql = `INSERT INTO testcase (testcase_name, testcase_des, testcase_type, testcase_priority, testcase_by, testcase_at, testcase_attach, testcase_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    const sql = `
+        INSERT INTO testcase (testcase_name, testcase_des, testcase_type, testcase_priority, testcase_by, testcase_at, testcase_attach, testcase_status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
     db.query(sql, [testcase_name, testcase_des, testcase_type, testcase_priority, testcase_by, testcase_at, testcase_attach, testcase_status], (err, result) => {
         if (err) {
             console.error("❌ Error inserting test case:", err);
-            res.status(500).json({ error: "Failed to insert test case" });
-        } else {
-            console.log("✅ Test Case Inserted:", result);
-            res.status(201).json({ message: "Test Case created successfully", testcase_id: result.insertId });
+            return res.status(500).json({ error: "Failed to insert test case" });
         }
+
+        const testcase_id = result.insertId; // ✅ ดึง ID ของ Test Case ที่เพิ่มไป
+
+        // ✅ เพิ่มข้อมูลลง table test_execution
+        const executionSql = `
+            INSERT INTO test_execution (testcase_id, test_execution_status) 
+            VALUES (?, 'IN PROGRESS')`;
+
+        db.query(executionSql, [testcase_id], (execErr, execResult) => {
+            if (execErr) {
+                console.error("❌ Error inserting test execution:", execErr);
+                return res.status(500).json({ error: "Failed to insert test execution" });
+            }
+
+            console.log("✅ Test Execution Inserted:", execResult);
+            res.status(201).json({ 
+                message: "Test Case and Execution created successfully", 
+                testcase_id, 
+                test_execution_id: execResult.insertId 
+            });
+        });
     });
 });
+
 
 app.get("/testcases", (req, res) => {
     const sql = "SELECT * FROM testcase";
@@ -2969,77 +2990,144 @@ app.get("/testcases", (req, res) => {
 
 
 
+//---------------------------- TEST EXECUTION ------------------------------
+// อัปเดต API ให้ดึง testcase_name
+app.get("/api/testcase_executions", (req, res) => {
+    const query = `
+      SELECT 
+        t.testcase_id, 
+        te.test_execution_status, 
+        t.testcase_name, 
+        t.testcase_at
+      FROM testcase t
+      LEFT JOIN test_execution te ON t.testcase_id = te.testcase_id;
+    `;
+  
+    db.query(query, (err, results) => {
+      if (err) {
+        console.error("❌ Database Query Error:", err);
+        return res.status(500).json({ error: "Database query failed" });
+      }
+      res.json(results);
+    });
+  });
 
+  // API สำหรับดึงข้อมูล Test Execution
+  app.get("/api/test_procedures/:testcase_id", (req, res) => {
+    const { testcase_id } = req.params;
+    const query = `
+      SELECT 
+          tp.test_procedures_id,
+          tp.testcase_id,
+          tc.testcase_at,  -- ดึงข้อมูลจากตาราง testcase
+          tp.required_action,
+          tp.expected_result,
+          tp.prerequisite,
+          tp.test_status,
+          tp.actual_result, 
+          te.test_execution_status
+      FROM test_procedures tp
+      INNER JOIN test_execution te ON tp.testcase_id = te.testcase_id
+      INNER JOIN testcase tc ON tp.testcase_id = tc.testcase_id
+      WHERE tp.testcase_id = ?
+      LIMIT 0, 25;
+    `;
+  
+    db.query(query, [testcase_id], (err, results) => {
+      if (err) {
+        console.error("Error fetching test procedures:", err);
+        return res.status(500).json({ error: "Database error" });
+      }
+      res.json(results);
+    });
+  });
+
+  app.post("/api/update_test_execution", (req, res) => {
+    const { testSteps } = req.body;
+  
+    if (!testSteps || testSteps.length === 0) {
+      return res.status(400).json({ error: "No test steps provided" });
+    }
+  
+    const query = `
+      UPDATE test_procedures 
+      SET test_status = ?, actual_result = ? 
+      WHERE test_procedures_id = ?
+    `;
+  
+    testSteps.forEach((step) => {
+      db.query(query, [step.test_status, step.actual_result, step.test_procedures_id], (err) => {
+        if (err) {
+          console.error("Error updating test execution:", err);
+          return res.status(500).json({ error: "Database update error" });
+        }
+      });
+    });
+  
+    res.json({ message: "Test execution updated successfully!" });
+  });
 
 // --------------------------- TestProcedures -------------------------------
 
-// ✅ ดึง test_procedures ตาม testcase_id
+// ✅ ดึง test_procedures ตาม testcase_id 
 app.get("/api/test-procedures", (req, res) => {
     const { testcase_id } = req.query;
+    const sql = `SELECT * FROM test_procedures WHERE testcase_id = ?`;
 
-    const sql = `SELECT * FROM test_procedures WHERE testcase_id = ?`;  // ✅ ต้องแน่ใจว่า SELECT เอา test_procedures_id มาด้วย
     db.query(sql, [testcase_id], (err, result) => {
         if (err) {
             console.error("Error fetching test procedures:", err);
             res.status(500).json({ error: "Failed to fetch test procedures" });
         } else {
-            console.log("Fetched Test Procedures:", result);  // ✅ Debug
+            console.log("Fetched Test Procedures:", result);
             res.status(200).json(result);
         }
     });
 });
 
-
 // ✅ เพิ่ม test_procedure ใหม่
 app.post("/api/test-procedures", (req, res) => {
-    const {
-        testcase_id,
-        test_objective,
-        test_condition,
-        test_step,
-        expected_result,
-        test_data,
-        test_status,
-        tested_by,
-    } = req.body;
+    const { testcase_id, required_action, expected_result, prerequisite } = req.body;
+    
+    // กำหนดค่าเริ่มต้นให้ test_status และ actual_result ถ้ายังไม่มี
+    const test_status = req.body.test_status || ""; 
+    const actual_result = req.body.actual_result || ""; 
 
-    const insertSql = `INSERT INTO test_procedures 
-    (testcase_id, test_objective, test_condition, test_step, expected_result, test_data, test_status, tested_by) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    const insertSql = `
+    INSERT INTO test_procedures (testcase_id, required_action, expected_result, prerequisite, test_status, actual_result) 
+    VALUES (?, ?, ?, ?, ?, ?)`;
 
-    db.query(
-        insertSql,
-        [testcase_id, test_objective, test_condition, test_step, expected_result, test_data, test_status, tested_by],
-        (err, result) => {
-            if (err) {
-                return res.status(500).json({ error: "Insert failed" });
-            }
-
-            const newId = result.insertId; // ดึง ID ของข้อมูลที่เพิ่งถูกเพิ่ม
-            const selectSql = `SELECT * FROM test_procedures WHERE test_procedures_id = ?`;
-
-            db.query(selectSql, [newId], (err, rows) => {
-                if (err) {
-                    return res.status(500).json({ error: "Failed to fetch new test procedure" });
-                }
-                res.status(201).json(rows[0]); // ส่งข้อมูลที่เพิ่มกลับไป
-            });
+    db.query(insertSql, [testcase_id, required_action, expected_result, prerequisite, test_status, actual_result], (err, result) => {
+        if (err) {
+            console.error("Insert Error:", err);
+            return res.status(500).json({ error: "Insert failed" });
         }
-    );
+
+        // ดึงข้อมูลที่เพิ่งเพิ่มมาแสดงกลับไป
+        const newId = result.insertId;
+        const selectSql = "SELECT * FROM test_procedures WHERE test_procedures_id = ?";
+
+        db.query(selectSql, [newId], (err, rows) => {
+            if (err) {
+                return res.status(500).json({ error: "Failed to fetch new data" });
+            }
+            res.status(201).json(rows[0]); // ส่งข้อมูลที่เพิ่มกลับไป
+        });
+    });
 });
 
 
 // ✅ อัปเดต test_procedure
 app.put("/api/test-procedures/:id", (req, res) => {
-    console.log("Request Body:", req.body); // ✅ ตรวจสอบค่าที่ส่งมา
     const { id } = req.params;
-    const { test_objective, test_condition, test_step, expected_result, test_data, test_status, tested_by } = req.body;
+    const { required_action, test_objective, expected_result, prerequisite } = req.body;
 
-    const sql = `UPDATE test_procedures 
-                 SET test_objective = ?, test_condition = ?, test_step = ?, expected_result = ?, test_data = ?, test_status = ?, tested_by = ? 
-                 WHERE test_procedures_id = ?`;
+    const sql = `
+        UPDATE test_procedures 
+        SET required_action = ?, test_objective = ?, expected_result = ?, prerequisite = ? 
+        WHERE test_procedures_id = ?`;
 
-    db.query(sql, [test_objective, test_condition, test_step, expected_result, test_data, test_status, tested_by, id], (err, result) => {
+    db.query(sql, [required_action, test_objective, expected_result, prerequisite, id], (err, result) => {
         if (err) {
             console.error("Error updating test procedure:", err);
             res.status(500).json({ error: "Failed to update test procedure" });
@@ -3049,95 +3137,20 @@ app.put("/api/test-procedures/:id", (req, res) => {
     });
 });
 
-
-
 // ✅ ลบ test_procedure
 app.delete("/api/test-procedures/:id", (req, res) => {
     const { id } = req.params;
-    console.log("Received DELETE request for ID:", id); // ✅ Debug ID
 
     const sql = "DELETE FROM test_procedures WHERE test_procedures_id = ?";
     db.query(sql, [id], (err, result) => {
         if (err) {
             console.error("Delete Error:", err);
-            return res.status(500).json({ error: "Delete failed", details: err });
+            return res.status(500).json({ error: "Delete failed" });
         }
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: "Test procedure not found" });
         }
         res.json({ message: "Test procedure deleted successfully!" });
-    });
-});
-
-// --------------------------- TestExecution -------------------------------
-
-app.get("/testexecution", (req, res) => {
-    const query = `
-      SELECT 
-        t.testcase_id AS id,
-        tp.test_objective AS objective,
-        t.testcase_priority AS priority,
-        tp.test_status AS status
-      FROM testcase t
-      JOIN test_procedures tp ON t.testcase_id = tp.testcase_id;
-    `;
-
-    db.query(query, (err, results) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(results);
-        }
-    });
-});
-
-
-app.get("/testexecution/testcase/:testcaseId", (req, res) => {
-    const { testcaseId } = req.params;
-    console.log(`🔍 Fetching test procedures for testcaseId: ${testcaseId}`);
-
-    const sql = "SELECT * FROM test_procedures WHERE testcase_id = ?";
-
-    db.query(sql, [testcaseId], (err, results) => {
-        if (err) {
-            console.error("❌ Database Error:", err);
-            res.status(500).json({ error: "Database error" });
-        } else {
-            console.log(`✅ SQL Query Executed: SELECT * FROM test_procedures WHERE testcase_id = '${testcaseId}'`);
-            console.log("✅ Data Retrieved:", results);
-            res.json(results);
-        }
-    });
-});
-
-app.get("/testexecution/testcase/:testcaseId/procedures", (req, res) => {
-    const { testcaseId } = req.params;
-    console.log(`🔍 Fetching test procedures for testcaseId: ${testcaseId}`);
-
-    const sql = `
-        SELECT 
-            tp.test_procedures_id, 
-            tp.testcase_id, 
-            tp.test_objective, 
-            tp.test_condition, 
-            tp.test_step, 
-            tp.expected_result, 
-            tp.test_data, 
-            tp.test_status, 
-            tp.tested_by
-        FROM test_procedures tp
-        WHERE tp.testcase_id = ?
-    `;
-
-    db.query(sql, [testcaseId], (err, results) => {
-        if (err) {
-            console.error("❌ Database Error:", err);
-            res.status(500).json({ error: "Database error" });
-        } else {
-            console.log(`✅ SQL Query Executed: SELECT * FROM test_procedures WHERE testcase_id = '${testcaseId}'`);
-            console.log("✅ Data Retrieved:", results);
-            res.json(results);
-        }
     });
 });
 
