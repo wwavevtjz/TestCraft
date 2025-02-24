@@ -233,7 +233,7 @@ const ImplementPage = () => {
   return (
     <div className="implement-page">
       <label className="implement-label">
-        Link Github Repository:หห
+        Link Github Repository:หหฟหกฟ
         <input
           type="text"
           value={repoLink}
