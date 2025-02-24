@@ -261,7 +261,7 @@ const ImplementPage = () => {
       <div className="implement-main-container">
         <div className="implement-left-column">
           <div className="implement-files-section">
-            <h3 className="implement-section-title">Select Files from Repo:</h3>
+            <h3 className="implement-section-title">Select Files from กหฟRepo:</h3>
             {fileNames.length > 0 ? (
               <FileTree files={fileNames} onSelect={handleFileSelection} expandedFolders={expandedFolders} toggleFolder={toggleFolder} />
             ) : (
