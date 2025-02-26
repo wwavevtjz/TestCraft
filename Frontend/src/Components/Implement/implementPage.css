@@ -13,6 +13,7 @@
     font-size: 16px;
     font-weight: bold;
     margin-bottom: 8px;
+    padding: 7px;
 }
 
 .implement-input {
@@ -127,51 +128,65 @@
 .implement-file-tree {
     list-style: none;
     padding-left: 20px;
-  }
-  
-  .implement-file-item {
+}
+
+.implement-file-item {
     position: relative;
     padding-left: 20px;
     margin: 5px 0;
-  }
-  
-  .implement-file-item::before {
+}
+
+.implement-file-item::before {
 
     position: absolute;
     left: 5px;
     top: 0;
     bottom: 0;
     color: #ccc;
-  }
-  
-  .implement-file-item:last-child::before {
+}
+
+.implement-file-item:last-child::before {
     content: "";
-  }
-  
-  .implement-folder-label {
+}
+
+.implement-folder-label {
     cursor: pointer;
     font-weight: bold;
     display: flex;
     align-items: center;
     gap: 5px;
-  }
-  
-  .implement-folder-label::before {
+}
+
+.implement-folder-label::before {
     content: "▶";
     font-size: 12px;
     margin-right: 5px;
     transition: transform 0.2s ease;
-  }
-  
-  .implement-folder-label[aria-expanded="true"]::before {
+}
+
+.implement-folder-label[aria-expanded="true"]::before {
     transform: rotate(90deg);
-  }
-  
-  .implement-checkbox {
+}
+
+.implement-checkbox {
     margin-right: 5px;
-  }
-  
-  .implement-file-item input[type="checkbox"] {
+}
+
+.implement-file-item input[type="checkbox"] {
     cursor: pointer;
-  }
-  
+}
+
+.implement-progress-container {
+    width: 100%;
+    height: 20px;
+    background-color: #f3f3f3;
+    border-radius: 10px;
+    margin: 10px 0;
+}
+
+.implement-progress-bar {
+    height: 100%;
+    background-color: #4caf50;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
