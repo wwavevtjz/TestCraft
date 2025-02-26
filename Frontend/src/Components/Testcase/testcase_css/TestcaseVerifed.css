@@ -1,9 +1,9 @@
 /* Container สำหรับ Checklist และ Comment */
-.designveri-container {
+.testcaseveri-container {
     margin-bottom: 50px;
 }
 
-.design-verified-container {
+.testcase-verified-container {
     display: flex;
     justify-content: space-between;
     gap: 20px;
@@ -12,7 +12,7 @@
 }
 
 /* Checklist Section */
-.checklistveri-design-box {
+.checklistveri-testcase-box {
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
@@ -28,7 +28,7 @@
 }
 
 /* Comment Section */
-.commentveridesign-box {
+.commentveritestcase-box {
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
@@ -44,7 +44,7 @@
 }
 
 /* Styling ของ Checklist */
-.checklistveri-design-title {
+.checklistveri-testcase-title {
     font-size: 24px;
     font-weight: 600;
     color: #2c3e50;
@@ -54,19 +54,19 @@
     text-align: left;
 }
 
-.checklistveri-design-list {
+.checklistveri-testcase-list {
     list-style-type: none;
     padding: 0;
     margin: 0;
 }
 
-.checklistveri-design-item {
+.checklistveri-testcase-item {
     margin-bottom: 15px;
     display: flex;
     align-items: center;
 }
 
-.checklistveri-design-checkbox {
+.checklistveri-testcase-checkbox {
     width: 18px;
     height: 18px;
     margin-right: 10px;
@@ -75,19 +75,19 @@
 }
 
 /* Hover effect for checkbox label */
-.checklistveri-design-label:hover {
+.checklistveri-testcase-label:hover {
     color: #1abc9c;
 }
 
 /* Focus state on checkbox */
 
 /* Checked state for checkbox */
-.checklistveri-design-checkbox:checked {
+.checklistveri-testcase-checkbox:checked {
     background-color: #1abc9c;
     border-color: #1abc9c;
 }
 
-.checklistveri-design-loading {
+.checklistveri-testcase-loading {
     color: #7f8c8d;
     font-style: italic;
     text-align: center;
@@ -95,7 +95,7 @@
     margin-top: 10px;
 }
 
-.checklistveri-design-label {
+.checklistveri-testcase-label {
     font-size: 20px;
     color: #34495e;
     font-weight: 500;
@@ -108,7 +108,7 @@
 }
 
 /* Styling ของ Comment Section */
-.commentveridesign-title {
+.commentveritestcase-title {
     font-size: 24px;
     margin-bottom: 20px;
     font-weight: 600;
@@ -118,13 +118,13 @@
     text-align: left;
 }
 
-.commentveridesign-input-container {
+.commentveritestcase-input-container {
     display: flex;
     flex-direction: column;
     margin-bottom: 15px;
 }
 
-.commentveridesign-textarea {
+.commentveritestcase-textarea {
     padding: 10px;
     font-size: 16px;
     resize: none;
@@ -134,7 +134,7 @@
     margin-bottom: 10px;
 }
 
-.commentveridesign-submit-button {
+.commentveritestcase-submit-button {
     padding: 10px 20px;
     font-size: 16px;
     color: white;
@@ -145,24 +145,24 @@
     align-self: flex-end;
 }
 
-.commentveridesign-submit-button:hover {
+.commentveritestcase-submit-button:hover {
     background-color: #0056b3;
 }
 
 /* Error Message */
-.commentveridesign-error-message {
+.commentveritestcase-error-message {
     color: red;
     font-size: 14px;
 }
 
 /* No Comments */
-.commentveridesign-no-comments {
+.commentveritestcase-no-comments {
     font-size: 16px;
     color: #777;
 }
 
 /* Displaying Comments */
-.commentveridesign-item {
+.commentveritestcase-item {
     background-color: #f9f9f9;
     padding: 15px;
     margin-bottom: 15px;
@@ -170,35 +170,35 @@
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
-.commentveridesign-header {
+.commentveritestcase-header {
     display: flex;
     justify-content: space-between;
     margin-bottom: 10px;
 }
 
-.commentveridesign-name {
+.commentveritestcase-name {
     font-weight: bold;
     color: #333;
 }
 
-.commentveridesign-time {
+.commentveritestcase-time {
     font-size: 14px;
     color: #777;
 }
 
-.commentveridesign-text {
+.commentveritestcase-text {
     font-size: 16px;
     color: #555;
     margin-top: 20px;
 }
 
-.commentveridesign-footer {
+.commentveritestcase-footer {
     display: flex;
     justify-content: flex-end;
 }
 
-.commentveridesign-edit-button,
-.commentveridesign-delete-button {
+.commentveritestcase-edit-button,
+.commentveritestcase-delete-button {
     background: none;
     border: none;
     font-size: 18px;
@@ -206,7 +206,7 @@
     cursor: pointer;
 }
 
-.commentveridesign-delete-button {
+.commentveritestcase-delete-button {
     background: none;
     border: none;
     cursor: pointer;
@@ -214,24 +214,24 @@
     transition: transform 0.2s ease, opacity 0.2s ease;
   }
   
-  .commentveridesign-delete-button:hover {
+  .commentveritestcase-delete-button:hover {
     transform: scale(1.1);
     opacity: 0.8;
   }
   
-  .commentveridesign-trash {
+  .commentveritestcase-trash {
     width: 22px;
     height: 22px;
   }
   
 
-.commentveridesign-edit-button:hover,
-.commentveridesign-delete-button:hover {
+.commentveritestcase-edit-button:hover,
+.commentveritestcase-delete-button:hover {
     color: #0056b3;
 }
 
 /* Container สำหรับ Table */
-.boxrequirement-designveri {
+.boxrequirement-testcaseveri {
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
@@ -240,34 +240,34 @@
 }
 
 /* Styling ของ Table */
-.table-req-designveri {
+.table-req-testcaseveri {
     width: 100%;
     border-collapse: collapse;
     font-size: 16px;
 }
 
-.table-req-designveri th,
-.table-req-designveri td {
+.table-req-testcaseveri th,
+.table-req-testcaseveri td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #ddd;
 }
 
-.table-req-designveri th {
+.table-req-testcaseveri th {
     background-color: #f8f9fa;
     font-weight: bold;
 }
 
-.table-req-designveri tr:nth-child(even) {
+.table-req-testcaseveri tr:nth-child(even) {
     background-color: #f9f9f9;
 }
 
-.table-req-designveri tr:hover {
+.table-req-testcaseveri tr:hover {
     background-color: #f1f1f1;
 }
 
 /* Message when no data is found */
-.table-req-designveri td[colSpan="3"] {
+.table-req-testcaseveri td[colSpan="3"] {
     text-align: center;
     font-size: 16px;
     color: #777;
@@ -282,7 +282,7 @@
 }
 
 /* Save button */
-.savedesignveri-button {
+.savetestcaseveri-button {
     padding: 10px 20px;
     font-size: 16px;
     color: white;
@@ -292,12 +292,12 @@
     cursor: pointer;
 }
 
-.savedesignveri-button:hover {
+.savetestcaseveri-button:hover {
     background-color: #0056b3;
 }
 
 /* Title - Verification Requirement */
-.title-designver {
+.title-testcasever {
     font-size: 28px;
     font-weight: 600;
     color: #333;
@@ -309,8 +309,8 @@
     text-transform: capitalize;
 }
 
-/* Title - Software Design */
-.title-softwaredesign {
+/* Title - Software testcase */
+.title-softwaretestcase {
     font-size: 24px;
     font-weight: 600;
     color: #2c3e50;
@@ -322,7 +322,7 @@
 }
 
 /* Optional: Add a subtle line underneath for emphasis */
-.title-softwaredesign::after {
+.title-softwaretestcase::after {
     content: '';
     display: block;
     width: 80px;

@@ -29,7 +29,6 @@ const TestExecution = () => {
         setTestSteps(updatedTestSteps);
     };
 
-
     const handleActualResultChange = (index, event) => {
         const updatedTestSteps = [...testSteps];
         updatedTestSteps[index].actual_result = event.target.value;
@@ -42,6 +41,33 @@ const TestExecution = () => {
             .then(() => alert("Test Execution saved successfully!"))
             .catch((error) => console.error("Error saving test execution:", error));
     };
+
+    const handleFileChange = (index, event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+    
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("test_procedures_id", testSteps[index].test_procedures_id);
+        formData.append("testcase_id", testCase.testcase_id); // ✅ เพิ่ม testcase_id
+    
+        axios
+            .post("http://localhost:3001/api/upload_test_file", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            })
+            .then((response) => {
+                alert("File uploaded successfully!");
+                const updatedTestSteps = [...testSteps];
+                updatedTestSteps[index].file_testcase_name = response.data.file_testcase_name; // บันทึกชื่อไฟล์
+                setTestSteps(updatedTestSteps);
+            })
+            .catch((error) => {
+                console.error("Error uploading file:", error);
+                alert("File upload failed!");
+            });
+    };
+    
+
 
 
     return (
@@ -73,9 +99,9 @@ const TestExecution = () => {
                                 <td>{step.prerequisite || "-"}</td>
                                 <td
                                     className={`status-cell ${step.test_status === "Passed" ? "passed" :
-                                            step.test_status === "Failed" ? "failed" :
-                                                step.test_status === "In Progress" ? "in-progress" :
-                                                    step.test_status === "Blocked" ? "blocked" : ""
+                                        step.test_status === "Failed" ? "failed" :
+                                            step.test_status === "In Progress" ? "in-progress" :
+                                                step.test_status === "Blocked" ? "blocked" : ""
                                         }`}
                                 >
                                     <select
@@ -99,7 +125,11 @@ const TestExecution = () => {
                                         onChange={(event) => handleActualResultChange(index, event)}
                                     />
                                 </td>
-                                <td><input type="file" /></td>
+                                <td>
+                                    <input type="file" onChange={(event) => handleFileChange(index, event)} />
+                                    {step.file_testcase_name && <p>{step.file_testcase_name}</p>}
+                                </td>
+
                             </tr>
                         ))
                     ) : (

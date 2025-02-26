@@ -150,10 +150,7 @@ const VeriDesign = () => {
       state: { selectedDesign: designIds }
     });
   };
-
-
-
-
+  
   return (
     <div className="design-list-container">
       <h1 className="design-list">Design List</h1>

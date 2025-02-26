@@ -55,13 +55,12 @@ const TestcaseVerifed = () => {
     }
   };
 
-
   const fetchCriteria = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:3001/designcriteria");
+      const response = await axios.get("http://localhost:3001/testcasecriteria");
       const initialCheckboxState = response.data.reduce((acc, criteria) => {
-        acc[criteria.design_cri_id] = false;
+        acc[criteria.testcasecri_id] = false;
         return acc;
       }, {});
       setTestcasecriList(response.data);
@@ -94,8 +93,8 @@ const TestcaseVerifed = () => {
 
   const fetchComments = async () => {
     try {
-      const response = await axios.get("http://localhost:3001/get-commentveridesign", {
-        params: { veridesign_id: veriTestcaseId },
+      const response = await axios.get("http://localhost:3001/get-commentveritestcase", {
+        params: { veritestcase_id: veriTestcaseId },
       });
       setComments(response.data);
     } catch (error) {
@@ -115,84 +114,99 @@ const TestcaseVerifed = () => {
       return updatedState;
     });
   };
-
-  const handleSave = async () => {
-
-    console.log("testcase_id", testcaseId);
-
-    if (!storedUsername) {
-      toast.warning("ข้อมูล reviewer ขาดหาย กรุณารีเฟรชหน้า");
-      return;
-    }
-
-    // เช็คว่า checkbox ทั้งหมดถูกเลือกหรือไม่
-    const allChecked = testcasecriList.every((criteria) => checkboxState[criteria.design_cri_id]);
-
-    if (!allChecked) {
-      toast.warning("กรุณาเลือกทุกข้อก่อนกด Save");
-      return;
-    }
-
-    // อัปเดต veridesign_by โดยไม่ลบผู้ใช้คนอื่น
-    const updatedVeridesignBy = { ...veritestcaseBy, [storedUsername]: true };
-
-    try {
-      const response = await axios.put("http://localhost:3001/update-veridesign-by", {
-        veridesign_id: veriTestcaseId,
-        veridesign_by: updatedVeridesignBy, // ส่งข้อมูลที่อัปเดต
-      });
-
-      if (response.data.message === "ไม่พบข้อมูล veridesign นี้ในฐานข้อมูล") {
-        toast.error("ไม่พบข้อมูล veridesign ID กรุณาตรวจสอบใหม่");
-        return;
-      }
-
-      // ดึงข้อมูล veridesign_by ใหม่หลังจากอัปเดต
-      const updatedResponse = await axios.get("http://localhost:3001/designveri", {
-        params: { project_id: projectId, veridesign_id: veriTestcaseId },
-      });
-
-      console.log("API Response Data:", updatedResponse.data);
-      const data = updatedResponse.data[0];
-
-      const allReviewed = data.veridesign_by &&
-        Object.values(data.veridesign_by).every((status) => status === true);
-      console.log("DATA", data);
-      console.log("ALLREEVIEWED", allReviewed);
-
-
-      if (allReviewed) {
-        const designIdsArray = testcaseId.split(",").map((id) => id.trim());
-        console.log("designIdsArray", designIdsArray);
-
-        if (designIdsArray.length === 0) {
-          toast.error("ไม่พบข้อมูล design ID กรุณาตรวจสอบใหม่");
-          return;
-        }
-
-        // ส่ง testcase_id ไปเพื่ออัปเดตสถานะ
-        const updateStatusResponse = await axios.put(
-          `http://localhost:3001/update-design-status-verified`,
-          { design_ids: designIdsArray, design_status: "VERIFIED" }
-        );
-
-
-        if (updateStatusResponse.data.message === "Design status updated to VERIFIED successfully.") {
-          toast.success("อัปเดตสถานะเป็น VERIFIED สำเร็จ", {
-            autoClose: 1500,
-            onClose: () => navigate(`/Dashboard?project_id=${projectId}`),
-          });
-        } else {
-          toast.error("ไม่สามารถอัปเดตสถานะ design ได้");
-        }
-      } else {
-        toast.warning("ยังมี reviewer ที่ยังไม่ได้ทำการตรวจสอบ");
-      }
-    } catch (error) {
-      console.error("Error updating verification status:", error);
-      toast.error("ไม่สามารถอัปเดตสถานะได้ กรุณาลองใหม่");
-    }
-  };
+  
+      const handleSave = async () => {
+          console.log("testcase_id:", testcaseId);
+  
+          if (!storedUsername) {
+              toast.warning("ข้อมูล reviewer ขาดหาย กรุณารีเฟรชหน้า");
+              return;
+          }
+  
+          // ✅ ตรวจสอบว่า checklist ทั้งหมดถูกเลือก
+          const allChecked = testcasecriList.every(criteria => checkboxState[criteria.testcasecri_id]);
+          if (!allChecked) {
+              toast.warning("กรุณาเลือกทุกข้อก่อนกด Save");
+              return;
+          }
+  
+          try {
+              // 1️⃣ ดึงข้อมูลปัจจุบันของ veritestcase
+              const { data } = await axios.get("http://localhost:3001/testcaseveri", {
+                  params: { project_id: projectId, veritestcase_id: veriTestcaseId },
+              });
+  
+              console.log("API Response Data:", data);
+              if (!data.length) {
+                  toast.error("ไม่พบข้อมูล veritestcase กรุณาตรวจสอบใหม่");
+                  return;
+              }
+  
+              const veritestcaseData = data[0];
+  
+              // 2️⃣ ตรวจสอบว่าข้อมูล reviewer มีอยู่แล้วหรือไม่
+              let currentVeritestcaseBy = veritestcaseData.veritestcase_by || {};
+  
+              // 3️⃣ อัปเดต reviewer โดยไม่ลบคนอื่น
+              const updatedVeritestcaseBy = { ...currentVeritestcaseBy, [storedUsername]: true };
+  
+              console.log("Updated veritestcase_by:", updatedVeritestcaseBy);
+  
+              // 4️⃣ ส่งข้อมูลอัปเดตไปยังเซิร์ฟเวอร์
+              const response = await axios.put("http://localhost:3001/update-veritestcase-by", {
+                  veritestcaseid: veriTestcaseId, // ✅ ต้องตรงกับ API
+                  veritestcaseby: updatedVeritestcaseBy, // ✅ ส่งเป็น Object ตรง ๆ
+              });
+  
+              console.log("📤 ส่งข้อมูลไปยัง API:", response.data);
+  
+              if (response.data.message.includes("ไม่พบข้อมูล")) {
+                  toast.error("ไม่พบข้อมูล veritestcase ID กรุณาตรวจสอบใหม่");
+                  return;
+              }
+  
+              // 5️⃣ ตรวจสอบว่า reviewer ทุกคนตรวจสอบครบหรือยัง
+              const { data: newData } = await axios.get("http://localhost:3001/testcaseveri", {
+                  params: { project_id: projectId, veritestcase_id: veriTestcaseId },
+              });
+  
+              console.log("Updated API Response Data:", newData);
+  
+              const allReviewed = newData[0].veritestcase_by &&
+                  Object.values(newData[0].veritestcase_by).every(status => status === true);
+  
+              console.log("All Reviewed:", allReviewed);
+  
+              if (!allReviewed) {
+                  toast.warning("ยังมี reviewer ที่ยังไม่ได้ทำการตรวจสอบ");
+                  return;
+              }
+  
+              const testcaseIdsArray = testcaseId.split(",").map(id => id.trim());
+              if (testcaseIdsArray.length === 0) {
+                  toast.error("ไม่พบข้อมูล testcase ID กรุณาตรวจสอบใหม่");
+                  return;
+              }
+  
+              // 6️⃣ ถ้า reviewer ทุกคนตรวจสอบแล้ว อัปเดตสถานะเป็น VERIFIED
+              const updateStatusResponse = await axios.put("http://localhost:3001/update-testcase-status-verified", {
+                  testcase_ids: testcaseIdsArray,
+                  testcase_status: "VERIFIED",
+              });
+  
+              if (updateStatusResponse.data.message.includes("VERIFIED successfully")) {
+                  toast.success("อัปเดตสถานะเป็น VERIFIED สำเร็จ", {
+                      autoClose: 1500,
+                      onClose: () => navigate(`/Dashboard?project_id=${projectId}`),
+                  });
+              } else {
+                  toast.error("ไม่สามารถอัปเดตสถานะ testcase ได้");
+              }
+          } catch (error) {
+              console.error("Error updating verification status:", error);
+              toast.error("ไม่สามารถอัปเดตสถานะได้ กรุณาลองใหม่");
+          }
+      };
 
   const handleSubmit = async () => {
     if (!newComment.trim()) {
@@ -201,10 +215,10 @@ const TestcaseVerifed = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:3001/commentveridesign", {
+      const response = await axios.post("http://localhost:3001/commentveritestcase", {
         member_name: storedUsername,
-        comverdesign_text: newComment,
-        veridesign_id: veriTestcaseId
+        comvertestcase_text: newComment,
+        veritestcase_id: veriTestcaseId
       });
 
       if (response.status === 201) {
@@ -220,13 +234,13 @@ const TestcaseVerifed = () => {
     }
   };
 
-  const handleDelete = async (comverdesign_id) => {
+  const handleDelete = async (comvertestcase_id) => {
     if (!window.confirm("Are you sure you want to delete this comment?")) {
       return;
     }
 
     try {
-      const response = await axios.delete(`http://localhost:3001/delete-commentveridesign/${comverdesign_id}`);
+      const response = await axios.delete(`http://localhost:3001/delete-commentveritestcase/${comvertestcase_id}`);
 
       if (response.status !== 200) {
         throw new Error(response.data.error || "Failed to delete comment");
@@ -238,7 +252,7 @@ const TestcaseVerifed = () => {
 
       // อัปเดตรายการคอมเมนต์หลังจากลบ
       setComments((prevComments) =>
-        prevComments.filter((comment) => comment.comverdesign_id !== comverdesign_id)
+        prevComments.filter((comment) => comment.comvertestcase_id !== comvertestcase_id)
       );
     } catch (error) {
       console.error("Error deleting comment:", error);
@@ -247,26 +261,26 @@ const TestcaseVerifed = () => {
   };
 
   return (
-    <div className="designveri-container">
-      <h1 className="title-designver">Verification Requirement</h1>
-      <div className="design-verified-container">
+    <div className="testcaseveri-container">
+      <h1 className="title-testcasever">Verification Requirement</h1>
+      <div className="testcase-verified-container">
         {/* Checklist Section */}
-        <div className="checklistveri-design-box">
-          <h2 className="checklistveri-design-title">Testcase Verification Checklist</h2>
+        <div className="checklistveri-testcase-box">
+          <h2 className="checklistveri-testcase-title">Testcase Verification Checklist</h2>
           {loading ? (
-            <p className="checklistveri-design-loading">Loading...</p>
+            <p className="checklistveri-testcase-loading">Loading...</p>
           ) : (
-            <ul className="checklistveri-design-list">
+            <ul className="checklistveri-testcase-list">
               {testcasecriList.map((criteria) => (
-                <li key={criteria.design_cri_id} className="checklistveri-design-item">
-                  <label className="checklistveri-design-label">
+                <li key={criteria.testcasecri_id} className="checklistveri-testcase-item">
+                  <label className="checklistveri-testcase-label">
                     <input
                       type="checkbox"
-                      className="checklistveri-design-checkbox"
-                      checked={checkboxState[criteria.design_cri_id] || false}
-                      onChange={() => handleCheckboxChange(criteria.design_cri_id)}
+                      className="checklistveri-testcase-checkbox"
+                      checked={checkboxState[criteria.testcasecri_id] || false}
+                      onChange={() => handleCheckboxChange(criteria.testcasecri_id)}
                     />
-                    {criteria.design_cri_name}
+                    {criteria.testcasecri_name}
                   </label>
                 </li>
               ))}
@@ -275,43 +289,43 @@ const TestcaseVerifed = () => {
         </div>
 
         {/* Comment Section */}
-        <div className="commentveridesign-box">
-          <div className="commentveridesign-section">
-            <h2 className="commentveridesign-title">Comments ({comments.length})</h2>
+        <div className="commentveritestcase-box">
+          <div className="commentveritestcase-section">
+            <h2 className="commentveritestcase-title">Comments ({comments.length})</h2>
 
             {/* Post a new comment */}
-            <div className="commentveridesign-input-container">
+            <div className="commentveritestcase-input-container">
               <textarea
                 placeholder={`Add comment as ${storedUsername}...`}
-                className="commentveridesign-textarea"
+                className="commentveritestcase-textarea"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
               />
-              <button className="commentveridesign-submit-button" onClick={handleSubmit}>
+              <button className="commentveritestcase-submit-button" onClick={handleSubmit}>
                 Submit
               </button>
             </div>
 
             {/* Error Message */}
-            {error && <p className="commentveridesign-error-message">{error}</p>}
+            {error && <p className="commentveritestcase-error-message">{error}</p>}
 
             {/* Display comments */}
             {comments.length === 0 ? (
-              <p className="commentveridesign-no-comments">No comments available at the moment.</p>
+              <p className="commentveritestcase-no-comments">No comments available at the moment.</p>
             ) : (
               comments.map((comment) => (
-                <div key={comment.comverdesign_id} className="commentveridesign-item">
-                  <div className="commentveridesign-header">
-                    <span className="commentveridesign-name">{comment.member_name}</span>
-                    <span className="commentveridesign-time">{new Date(comment.comverdesign_at).toLocaleString()}</span>
+                <div key={comment.comvertestcase_id} className="commentveritestcase-item">
+                  <div className="commentveritestcase-header">
+                    <span className="commentveritestcase-name">{comment.member_name}</span>
+                    <span className="commentveritestcase-time">{new Date(comment.comvertestcase_at).toLocaleString()}</span>
                   </div>
-                  <p className="commentveridesign-text">{comment.comverdesign_text}</p>
-                  <div className="commentveridesign-footer">
+                  <p className="commentveritestcase-text">{comment.comvertestcase_text}</p>
+                  <div className="commentveritestcase-footer">
                     <button
-                      className="commentveridesign-delete-button"
-                      onClick={() => handleDelete(comment.comverdesign_id)}
+                      className="commentveritestcase-delete-button"
+                      onClick={() => handleDelete(comment.comvertestcase_id)}
                     >
-                      <img src={trash_comment} alt="Delete" className="commentveridesign-trash" />
+                      <img src={trash_comment} alt="Delete" className="commentveritestcase-trash" />
                     </button>
                   </div>
                 </div>
@@ -322,9 +336,9 @@ const TestcaseVerifed = () => {
       </div>
 
 
-      <div className="boxrequirement-designveri">
-        <h1 className="title-softwaredesign">Testcase</h1>
-        <table className="table-req-designveri">
+      <div className="boxrequirement-testcaseveri">
+        <h1 className="title-softwaretestcase">Testcase</h1>
+        <table className="table-req-testcaseveri">
           <thead>
             <tr><th>ID</th><th>Testcase Name</th><th>Type</th></tr>
           </thead>
@@ -347,7 +361,7 @@ const TestcaseVerifed = () => {
       </div>
 
       <div className="button-container">
-        <button onClick={handleSave} className="savedesignveri-button">Save</button>
+        <button onClick={handleSave} className="savetestcaseveri-button">Save</button>
       </div>
     </div>
   );

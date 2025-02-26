@@ -55,17 +55,19 @@ const CreateTestcase = () => {
     }
 
     const testCaseData = {
-        testcase_name: title,
-        testcase_des: description,
-        testcase_type: testType === "Other" ? customTestType : testType,
-        testcase_priority: priority,
-        testcase_by: loggedInUser,
-        testcase_at: completionDate,
-        testcase_attach: attachmentType && attachments.length > 0
-            ? attachments[0].requirement_id || attachments[0].design_id
-            : null,
-        testcase_status: "WORKING"
-    };
+      testcase_name: title,
+      testcase_des: description,
+      testcase_type: testType === "Other" ? customTestType : testType,
+      testcase_priority: priority,
+      testcase_by: loggedInUser,
+      testcase_at: completionDate,
+      testcase_attach: attachmentType && attachments.length > 0
+          ? attachments[0].requirement_id || attachments[0].design_id
+          : null,
+      testcase_status: "WORKING",
+      project_id: projectId
+  };
+  
 
     try {
         const response = await axios.post("http://localhost:3001/testcases", testCaseData);

@@ -11,30 +11,31 @@ import "../CSS/buttons/buttons.css";
 const Modal = ({ show, onClose, details = {}, veritestcaseBy = [] }) => {
   if (!show) return null;
 
-  // Ensure that testcaseId is always an array
-  const testcaseId = Array.isArray(details.testcase_id) ? details.testcase_id : [details.testcase_id];
+  // ตรวจสอบว่ามี testcase_id หรือไม่
+  const testcaseId = details.testcase_id 
+    ? (Array.isArray(details.testcase_id) ? details.testcase_id : [details.testcase_id]) 
+    : [];
 
   return (
     <div className="modal-overlay-review">
       <div className="modal-content-review">
         <h3>Testcase Details</h3>
         <div>
-        <p>
-  <strong>Testcase ID:</strong> 
-  {testcaseId && testcaseId.length > 0 ? testcaseId.join(", ") : "N/A"}
-</p>
-
-          <p><strong>Created By:</strong> {details.created_by}</p>
+          <p>
+            <strong>Testcase ID:</strong> 
+            {testcaseId.length > 0 ? testcaseId.join(", ") : "N/A"}
+          </p>
+          <p><strong>Created By:</strong> {details.created_by || "Unknown"}</p>
         </div>
 
         <h3>Verification Status</h3>
-        {veritestcaseBy.length > 0 ? (
+        {Array.isArray(veritestcaseBy) && veritestcaseBy.length > 0 ? (
           veritestcaseBy.map((reviewer, index) => (
             <div className="list-reviewer" key={index}>
-              <span>{reviewer.name}</span>
+              <span>{reviewer.name || "Unknown"}</span>
               <img
-                src={reviewer.value ? verifydone : notverify}
-                alt={reviewer.value ? "Verified" : "Not Verified"}
+                src={reviewer.value === true ? verifydone : notverify}
+                alt={reviewer.value === true ? "Verified" : "Not Verified"}
                 className="verification-status-icon"
               />
             </div>
@@ -48,6 +49,7 @@ const Modal = ({ show, onClose, details = {}, veritestcaseBy = [] }) => {
     </div>
   );
 };
+
 
 const VeriTestcase = () => {
   const [testcase, setTestcase] = useState([]);
