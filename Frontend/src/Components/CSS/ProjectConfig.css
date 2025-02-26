@@ -26,13 +26,20 @@
 }
 
 .project-config-checklist-section {
-    margin-bottom: 30px;
+    max-width: 100%;
+    margin: 40px auto;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    font-family: 'Arial', sans-serif;
 }
 
 .project-config-checklist-section h2 {
-    font-size: 1.4rem;
-    margin-bottom: 10px;
+    font-size: 20px;
     color: #333;
+    text-align: center;
+    margin-bottom: 15px;
 }
 
 .project-config-input-container {
@@ -103,4 +110,119 @@
 
 .project-config-delete-button:active {
     transform: scale(0.97);
+}
+
+.implement-configpage {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.implementconfig-label {
+    font-size: 14px;
+    color: #555;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.implementconfig-input,
+.implementconfig-label select,
+.implementconfig-label input[type="text"] {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: border 0.3s ease;
+}
+
+.implement-configinput:focus,
+.implement-configlabel select:focus,
+.implement-configlabel input[type="text"]:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+}
+
+.implementconfig-fetch-btn {
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s;
+}
+
+.save-implement,
+.update-implement {
+    width: 20%;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s;
+}
+
+.implementconfig-fetch-btn {
+    background: #007bff;
+    color: white;
+}
+
+.implementconfig-fetch-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.save-implement {
+    background: #28a745;
+    color: white;
+}
+
+.update-implement {
+    background: #ffc107;
+    color: black;
+}
+
+.implementconfig-fetch-btn:hover:not(:disabled),
+.save-implement:hover,
+.update-implement:hover {
+    filter: brightness(0.9);
+    transform: translateY(-2px);
+}
+
+.implement-main-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.implement-files-section {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+}
+
+.implement-section-title {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.implement-no-files {
+    text-align: center;
+    font-size: 14px;
+    color: #999;
+}
+
+.save-update-imple {
+    display: flex;
+    justify-content: end;
+    gap: 10px;
+    padding-bottom: 10px;
+    box-shadow: 0 3px 2px -2px rgb(0, 0, 0);
 }
