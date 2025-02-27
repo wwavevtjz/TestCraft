@@ -44,6 +44,7 @@
 
 .implement-files-section,
 .implement-designs-section {
+    height: 100%;
     background-color: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
@@ -87,7 +88,7 @@
 
 .implement-save-btn-wrapper {
     margin-top: 20px;
-    text-align: center;
+    text-align: end;
 }
 
 .implement-fetch-btn {
@@ -189,4 +190,40 @@
     background-color: #4caf50;
     border-radius: 10px;
     transition: width 0.5s ease;
+}
+
+.filter-design {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Arial', sans-serif;
+    font-size: 14px;
+    color: #333;
+    padding: 10px 15px;
+    background-color: #f7f7f7;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin-bottom: 14px;
+}
+
+.filter-design input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.filter-design input:focus {
+    border-color: #4e9cfa;
+    box-shadow: 0 0 5px rgba(78, 156, 250, 0.3);
+}
+
+.filter-design::before {
+    content: '🔍';
+    font-size: 16px;
+    color: #777;
 }

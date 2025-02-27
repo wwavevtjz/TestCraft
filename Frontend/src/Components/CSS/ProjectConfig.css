@@ -193,13 +193,13 @@
     transform: translateY(-2px);
 }
 
-.implement-main-container {
+.implementconfig-main-container {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.implement-files-section {
+.implementconfig-files-section {
     margin-top: 10px;
     padding: 10px;
     border-radius: 5px;
@@ -207,7 +207,7 @@
     border: 1px solid #ddd;
 }
 
-.implement-section-title {
+.implementconfig-section-title {
     font-size: 16px;
     color: #333;
     margin-bottom: 8px;
