@@ -2919,25 +2919,50 @@ app.put('/implementConfig/:id', (req, res) => {
 
 //--------------------------IMPLEMENT----------------------------------
 app.get('/implementrelation', (req, res) => {
-    const query = 'SELECT implement_id, implement_filename, design_id, relation_at FROM implementation';
+    const { implementFilename } = req.query;
+    let query = 'SELECT implement_id, implement_filename, design_id, relation_at FROM implementation WHERE implement_filename IS NOT NULL AND design_id IS NOT NULL';
 
-    db.query(query, (err, results) => {
+    if (implementFilename) {
+        query += ' AND implement_filename LIKE ?';
+    }
+
+    db.query(query, implementFilename ? [`%${implementFilename}%`] : [], (err, results) => {
         if (err) {
             console.error('Error fetching data:', err);
             return res.status(500).json({ error: 'Database error' });
         }
 
-        // กรองข้อมูลถ้าจำเป็น
+        // Filter out only the files with design_id
         const filteredResults = results.filter(item => item.implement_filename && item.design_id);
 
-        // ส่งข้อมูลกลับเป็น JSON
+        // Return only files with design_id in the format requested
+        const formattedResults = filteredResults.map(item => {
+            return {
+                implement_filename: `📄 ${item.implement_filename} (DesignID: ${item.design_id})`,
+                implement_id: item.implement_id,
+                design_id: item.design_id,
+                relation_at: item.relation_at
+            };
+        });
+
         res.status(200).json({
             message: 'Data fetched successfully',
-            data: filteredResults
+            data: formattedResults
         });
     });
 });
 
+app.get("/implementmapdesign", (req, res) => {
+    const sql = "SELECT implement_filename, design_id FROM implementation";
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error("Error fetching data:", err);
+            return res.status(500).json({ error: "Database query failed" });
+        }
+        console.log("Fetched data:", results); // ตรวจสอบข้อมูลที่ได้จากฐานข้อมูล
+        res.json({ data: results }); // ส่งข้อมูลเป็น JSON
+    });
+});
 
 
 app.post('/implementrelation', (req, res) => {
@@ -3027,9 +3052,9 @@ app.get("/project/:projectId/attachments", (req, res) => {
 });
 
 app.post("/testcases", (req, res) => {
-    const { testcase_name, testcase_des, testcase_type, testcase_priority, 
-            testcase_by, testcase_at, testcase_attach, project_id } = req.body;
-    
+    const { testcase_name, testcase_des, testcase_type, testcase_priority,
+        testcase_by, testcase_at, testcase_attach, project_id } = req.body;
+
     if (!project_id) {
         return res.status(400).json({ error: "Project ID is required" });
     }
@@ -3038,31 +3063,31 @@ app.post("/testcases", (req, res) => {
                                                testcase_by, testcase_at, testcase_attach, testcase_status, project_id) 
                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    db.query(sqlTestCase, [testcase_name, testcase_des, testcase_type, testcase_priority, 
-                           testcase_by, testcase_at, testcase_attach, "WORKING", project_id], 
-    (err, result) => {
-        if (err) {
-            console.error("❌ Error inserting test case:", err);
-            return res.status(500).json({ error: "Failed to insert test case" });
-        }
-
-        const testcase_id = result.insertId;
-
-        // ✅ เปลี่ยน status เป็น "IN PROGRESS"
-        const sqlExecution = `INSERT INTO test_execution (testcase_id, test_execution_status) VALUES (?, ?)`;
-        db.query(sqlExecution, [testcase_id, "IN PROGRESS"], (err, execResult) => {
+    db.query(sqlTestCase, [testcase_name, testcase_des, testcase_type, testcase_priority,
+        testcase_by, testcase_at, testcase_attach, "WORKING", project_id],
+        (err, result) => {
             if (err) {
-                console.error("❌ Error inserting test execution:", err);
-                return res.status(500).json({ error: "Failed to insert test execution" });
+                console.error("❌ Error inserting test case:", err);
+                return res.status(500).json({ error: "Failed to insert test case" });
             }
 
-            res.status(201).json({ 
-                message: "Test Case and Execution created successfully", 
-                testcase_id: testcase_id,
-                test_execution_id: execResult.insertId
+            const testcase_id = result.insertId;
+
+            // ✅ เปลี่ยน status เป็น "IN PROGRESS"
+            const sqlExecution = `INSERT INTO test_execution (testcase_id, test_execution_status) VALUES (?, ?)`;
+            db.query(sqlExecution, [testcase_id, "IN PROGRESS"], (err, execResult) => {
+                if (err) {
+                    console.error("❌ Error inserting test execution:", err);
+                    return res.status(500).json({ error: "Failed to insert test execution" });
+                }
+
+                res.status(201).json({
+                    message: "Test Case and Execution created successfully",
+                    testcase_id: testcase_id,
+                    test_execution_id: execResult.insertId
+                });
             });
         });
-    });
 });
 
 
@@ -3100,18 +3125,18 @@ app.get("/api/testcase_executions", (req, res) => {
       FROM testcase t
       LEFT JOIN test_execution te ON t.testcase_id = te.testcase_id;
     `;
-  
-    db.query(query, (err, results) => {
-      if (err) {
-        console.error("❌ Database Query Error:", err);
-        return res.status(500).json({ error: "Database query failed" });
-      }
-      res.json(results);
-    });
-  });
 
-  // API สำหรับดึงข้อมูล Test Execution
-  app.get("/api/test_procedures/:testcase_id", (req, res) => {
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("❌ Database Query Error:", err);
+            return res.status(500).json({ error: "Database query failed" });
+        }
+        res.json(results);
+    });
+});
+
+// API สำหรับดึงข้อมูล Test Execution
+app.get("/api/test_procedures/:testcase_id", (req, res) => {
     const { testcase_id } = req.params;
     const query = `
       SELECT 
@@ -3130,40 +3155,40 @@ app.get("/api/testcase_executions", (req, res) => {
       WHERE tp.testcase_id = ?
       LIMIT 0, 25;
     `;
-  
-    db.query(query, [testcase_id], (err, results) => {
-      if (err) {
-        console.error("Error fetching test procedures:", err);
-        return res.status(500).json({ error: "Database error" });
-      }
-      res.json(results);
-    });
-  });
 
-  app.post("/api/update_test_execution", (req, res) => {
+    db.query(query, [testcase_id], (err, results) => {
+        if (err) {
+            console.error("Error fetching test procedures:", err);
+            return res.status(500).json({ error: "Database error" });
+        }
+        res.json(results);
+    });
+});
+
+app.post("/api/update_test_execution", (req, res) => {
     const { testSteps } = req.body;
-  
+
     if (!testSteps || testSteps.length === 0) {
-      return res.status(400).json({ error: "No test steps provided" });
+        return res.status(400).json({ error: "No test steps provided" });
     }
-  
+
     const query = `
       UPDATE test_procedures 
       SET test_status = ?, actual_result = ? 
       WHERE test_procedures_id = ?
     `;
-  
+
     testSteps.forEach((step) => {
-      db.query(query, [step.test_status, step.actual_result, step.test_procedures_id], (err) => {
-        if (err) {
-          console.error("Error updating test execution:", err);
-          return res.status(500).json({ error: "Database update error" });
-        }
-      });
+        db.query(query, [step.test_status, step.actual_result, step.test_procedures_id], (err) => {
+            if (err) {
+                console.error("Error updating test execution:", err);
+                return res.status(500).json({ error: "Database update error" });
+            }
+        });
     });
-  
+
     res.json({ message: "Test execution updated successfully!" });
-  });
+});
 
 // --------------------------- TestProcedures -------------------------------
 
@@ -3186,10 +3211,10 @@ app.get("/api/test-procedures", (req, res) => {
 // ✅ เพิ่ม test_procedure ใหม่
 app.post("/api/test-procedures", (req, res) => {
     const { testcase_id, required_action, expected_result, prerequisite } = req.body;
-    
+
     // กำหนดค่าเริ่มต้นให้ test_status และ actual_result ถ้ายังไม่มี
-    const test_status = req.body.test_status || ""; 
-    const actual_result = req.body.actual_result || ""; 
+    const test_status = req.body.test_status || "";
+    const actual_result = req.body.actual_result || "";
 
     const insertSql = `
     INSERT INTO test_procedures (testcase_id, required_action, expected_result, prerequisite, test_status, actual_result) 
@@ -3613,7 +3638,7 @@ app.put('/update-testcase-status-waitingfor-ver/:id', (req, res) => {
     });
 });
 
-app.put('/update-testcase-status-verified', (req, res) => { 
+app.put('/update-testcase-status-verified', (req, res) => {
     const { testcase_ids, testcase_status } = req.body; // รับ testcase_ids แทน
     if (!Array.isArray(testcase_ids) || testcase_ids.length === 0) {
         return res.status(400).json({ message: "testcase_ids is required and should be a non-empty array." });
@@ -3837,7 +3862,7 @@ app.post('/createtestcasebaseline', (req, res) => {
         return res.status(400).json({ message: "Testcase ID is required and should be a non-empty array" });
     }
 
-    const findLatestBaselineRoundQuery = 
+    const findLatestBaselineRoundQuery =
         `SELECT COALESCE(MAX(baselinetestcase_round), 0) AS latest_baselinetestcase_round FROM baselinetestcase`;
 
     db.query(findLatestBaselineRoundQuery, (err, results) => {
@@ -3851,7 +3876,7 @@ app.post('/createtestcasebaseline', (req, res) => {
 
         const baselineValues = testcase_id.map(id => [id, nextRound, formattedDate]);
 
-        const insertBaselineQuery = 
+        const insertBaselineQuery =
             `INSERT INTO baselinetestcase (testcase_id, baselinetestcase_round, baselinetestcase_at) VALUES ?`;
 
         db.query(insertBaselineQuery, [baselineValues], (insertErr, insertResult) => {
@@ -3971,6 +3996,115 @@ app.get("/overviewcount", (req, res) => {
             total_baseline_design: result[0]?.total_baseline_design || 0,
         });
     });
+});
+
+//------------------------------ TRACEABILITY RECORD------------------------
+app.get('/traceability', (req, res) => {
+    // รับข้อมูลจาก query params (หรืออาจจะใช้ path params)
+    const { requirement_id, design_id, implement_id, testcase_id, project_id } = req.query;
+
+    // สร้างเงื่อนไขสำหรับกรองข้อมูล
+    let query = 'SELECT * FROM traceability WHERE 1=1';
+    let queryParams = [];
+
+    if (requirement_id) {
+        query += ' AND requirement_id = ?';
+        queryParams.push(requirement_id);
+    }
+    if (design_id) {
+        query += ' AND design_id = ?';
+        queryParams.push(design_id);
+    }
+    if (implement_id) {
+        query += ' AND implement_id = ?';
+        queryParams.push(implement_id);
+    }
+    if (testcase_id) {
+        query += ' AND testcase_id = ?';
+        queryParams.push(testcase_id);
+    }
+    if (project_id) {
+        query += ' AND project_id = ?';
+        queryParams.push(project_id);
+    }
+
+    // ดึงข้อมูลจากฐานข้อมูล
+    db.query(query, queryParams, (err, result) => {
+        if (err) {
+            console.error('Error fetching data from traceability table:', err);
+            return res.status(500).json({ error: 'Failed to fetch data' });
+        }
+        // ส่งข้อมูลที่ได้กลับไป
+        res.status(200).json(result);
+    });
+});
+
+app.post('/traceability', (req, res) => {
+    const traceabilityData = req.body; // ได้ข้อมูลจาก request body
+
+    if (!Array.isArray(traceabilityData)) {
+        return res.status(400).json({ error: "Invalid data format. Expected an array." });
+    }
+
+    // ตรวจสอบแต่ละรายการใน traceabilityData
+    for (const data of traceabilityData) {
+        const { requirement_id, design_id, project_id } = data;
+
+        if (!requirement_id || !design_id || !project_id) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
+
+        // สร้าง query สำหรับแทรกข้อมูล
+        const query = `INSERT INTO traceability (requirement_id, design_id, project_id) 
+                        VALUES (?, ?, ?)`;
+
+        // แทรกข้อมูลลงในฐานข้อมูล
+        db.query(query, [requirement_id, design_id, project_id], (err, result) => {
+            if (err) {
+                console.error('Error inserting data into traceability table:', err);
+                return res.status(500).json({ error: 'Failed to insert data' });
+            }
+        });
+    }
+
+    res.status(201).json({ message: 'Data inserted successfully' });
+});
+
+app.put('/traceability', (req, res) => {
+    const traceabilityData = req.body; // ได้ข้อมูลจาก request body
+
+    if (!Array.isArray(traceabilityData)) {
+        return res.status(400).json({ error: "Invalid data format. Expected an array." });
+    }
+
+    // ตรวจสอบแต่ละรายการใน traceabilityData
+    for (const data of traceabilityData) {
+        const { tr_id, requirement_id, design_id, project_id } = data;
+
+        if (!tr_id || !requirement_id || !design_id || !project_id) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
+
+        // สร้าง query สำหรับอัปเดตข้อมูล
+        const query = `UPDATE traceability 
+                       SET requirement_id = ?, design_id = ?, project_id = ? 
+                       WHERE tr_id = ?`;
+
+        // อัปเดตข้อมูลในฐานข้อมูล
+        db.query(query, [requirement_id, design_id, project_id, tr_id], (err, result) => {
+            if (err) {
+                console.error('Error updating data in traceability table:', err);
+                return res.status(500).json({ error: 'Failed to update data' });
+            }
+
+            // ตรวจสอบว่ามีแถวที่อัปเดตหรือไม่
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: "Traceability record not found" });
+            }
+        });
+    }
+
+    res.status(200).json({ message: 'Data updated successfully' });
 });
 
 

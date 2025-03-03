@@ -69,6 +69,9 @@ import TestcaseVerifed from './Components/Testcase/TestcaseVerifed';
 import TestcaseBaseline from './Components/Testcase/TestcaseBaseline';
 import CreateTestcasebaseline from './Components/Testcase/CreateTestcasebaseline';
 
+//Traceability
+import TraceabilityPage from './Components/Traceability/traceabilityPage';
+
 // Notify
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -161,10 +164,13 @@ const App = () => {
         <Route path="/TestcaseVerifed" element={<TestcaseVerifed />} />
         <Route path="/TestcaseBaseline" element={<TestcaseBaseline />} />
         <Route path="/CreateTestcasebaseline" element={<CreateTestcasebaseline />} />
-        
 
-        {/* ทำ Testcase */}
+
+        {/* ทำ Implement */}
         <Route path="/implementPage" element={<ImplementPage />} />
+
+        {/* ทำ Trace */}
+        <Route path="/traceabilityPage" element={<TraceabilityPage />} />
       </Routes>
     </>
   );

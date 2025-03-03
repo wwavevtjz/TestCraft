@@ -9,6 +9,7 @@ import DesignPage from './DesignPage';
 import TestcasePage from './Testcase/TestcasePage';
 import OverviewProject from './Project/OverviewProject';
 import ImplementPage from './Implement/implementPage';
+import TraceabilityPage from './Traceability/traceabilityPage';
 
 
 const Dashboard = () => {
@@ -185,7 +186,7 @@ const Dashboard = () => {
             {selectedSection === 'Testcase' && <TestcasePage />}
             {selectedSection === 'Review' && <h2>Review Content</h2>}
             {selectedSection === 'Baseline' && <h2>Baseline Content</h2>}
-            {selectedSection === 'Traceability' && <h2>Traceability Content</h2>}
+            {selectedSection === 'Traceability' && <TraceabilityPage />}
             {selectedSection === 'Guide Tutorial' && <h2>Guide Tutorial Content</h2>}
           </>
         )}
