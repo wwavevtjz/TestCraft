@@ -131,29 +131,8 @@
   font-weight: bold;
 }
 
-/* Responsive Fixes */
-@media (max-width: 768px) {
-  .dashboard-sidebar {
-    width: 100%;
-    height: auto;
-    flex-direction: row;
-    justify-content: space-between;
-    padding: 10px;
-  }
-
-  .dashboard-dropdown-menu {
-    width: 100%;
-  }
-
-  .dashboard-nav-link {
-    margin: 0 5px;
-    font-size: 16px;
-  }
-}
-
 .dashboard-container {
   display: flex;
-  height: auto;
   color: #fff;
 }
 
