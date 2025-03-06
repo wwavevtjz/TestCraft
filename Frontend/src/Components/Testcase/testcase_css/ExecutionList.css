@@ -1,79 +1,61 @@
 .test-execution-container {
   max-width: 900px;
-  margin: 40px auto;
+  margin: 20px auto;
   padding: 20px;
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  text-align: center;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 h2 {
+  text-align: center;
   color: #333;
-  margin-bottom: 20px;
 }
 
 .search-bar {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  text-align: center;
 }
 
-.search-input {
+.search-bar input {
   width: 80%;
-  padding: 10px;
-  font-size: 16px;
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  outline: none;
-  transition: border 0.3s ease-in-out;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
-.search-input:focus {
-  border-color: #007bff;
-}
-
-.execution-table {
+table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
 }
 
-.execution-table thead {
+th, td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
   background: #007bff;
-  color: white;
 }
 
-.execution-table th, 
-.execution-table td {
-  padding: 12px;
-  border: 1px solid #ddd;
-  text-align: center;
-}
-
-.execution-table tbody tr:nth-child(even) {
-  background: #f8f9fa;
-}
-
-.status {
-  font-weight: bold;
-  padding: 5px 10px;
-  border-radius: 6px;
-}
-
-.not-executed {
-  color: red;
-}
-
-.in-progress {
-  color: orange;
-}
-
-.completed {
-  color: green;
+tr:hover {
+  background: #f5f5f5;
 }
 
 .no-data {
   text-align: center;
   font-style: italic;
   color: #888;
-  padding: 20px;
 }
+
+a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
