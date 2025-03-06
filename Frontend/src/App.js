@@ -56,7 +56,6 @@ import UpdateDesign from './Components/UpdateDesign';
 
 //Implement
 import ImplementPage from './Components/Implement/implementPage';
-import VerifyImplement from './Components/Implement/verifyImplement';
 
 // Testcase
 import CreateTestcase from './Components/Testcase/CreateTestcase';
@@ -173,7 +172,6 @@ const App = () => {
 
         {/* ทำ Implement */}
         <Route path="/implementPage" element={<ImplementPage />} />
-        <Route path="/verifyImplement" element={<VerifyImplement />} />
 
         {/* ทำ Trace */}
         <Route path="/traceabilityPage" element={<TraceabilityPage />} />
