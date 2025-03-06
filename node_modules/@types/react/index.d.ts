@@ -132,7 +132,7 @@ declare namespace React {
     type JSXElementConstructor<P> =
         | ((
             props: P,
-        ) => ReactNode)
+        ) => ReactNode | Promise<ReactNode>)
         // constructor signature must match React.Component
         | (new(props: P) => Component<any, any>);
 
@@ -1036,7 +1036,7 @@ declare namespace React {
      * ```
      */
     interface FunctionComponent<P = {}> {
-        (props: P): ReactNode;
+        (props: P): ReactNode | Promise<ReactNode>;
         /**
          * Ignored by React.
          * @deprecated Only kept in types for backwards compatibility. Will be removed in a future major release.
@@ -1508,13 +1508,13 @@ declare namespace React {
      * @example
      *
      * ```tsx
-     * type MyComponentRef = React.ElementRef<typeof MyComponent>;
+     * type MyComponentRef = React.ComponentRef<typeof MyComponent>;
      * ```
      *
      * @example
      *
      * ```tsx
-     * type DivRef = React.ElementRef<'div'>;
+     * type DivRef = React.ComponentRef<'div'>;
      * ```
      */
     type ComponentRef<T extends ElementType> = ComponentPropsWithRef<T> extends RefAttributes<infer Method> ? Method
@@ -1863,7 +1863,6 @@ declare namespace React {
      *
      * @param callback A function which causes state updates that can be deferred.
      */
-    export function startTransition(scope: TransitionFunction): void;
     export function startTransition(scope: TransitionFunction): void;
 
     /**
