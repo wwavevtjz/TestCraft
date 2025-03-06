@@ -46,14 +46,17 @@ import Comment from './Components/Comment';
 // Design
 import DesignPage from './Components/DesignPage';
 import CreateDesign from './Components/CreateDesign';
+import ViewDesign from './Components/ViewDesign';
 import CreateVeriDesign from './Components/CreateVeriDesign';
 import VeriDesign from './Components/VeriDesign';
 import DesignVerifed from './Components/DesignVerifed';
 import DesignBaseline from './Components/DesignBaseline';
 import CreateDesignbaseline from './Components/CreateDesignbaseline';
+import UpdateDesign from './Components/UpdateDesign';
 
 //Implement
 import ImplementPage from './Components/Implement/implementPage';
+import VerifyImplement from './Components/Implement/verifyImplement';
 
 // Testcase
 import CreateTestcase from './Components/Testcase/CreateTestcase';
@@ -145,6 +148,8 @@ const App = () => {
         {/* ทำ Design */}
         <Route path="/DesignPage" element={<DesignPage />} />
         <Route path="/CreateDesign" element={<CreateDesign />} />
+        <Route path="/ViewDesign" element={<ViewDesign />} />
+        <Route path="/UpdateDesign" element={<UpdateDesign />} />
         <Route path="/CreateVeriDesign" element={<CreateVeriDesign />} />
         <Route path="/VeriDesign" element={<VeriDesign />} />
         <Route path="/DesignVerifed" element={<DesignVerifed />} />
@@ -168,6 +173,7 @@ const App = () => {
 
         {/* ทำ Implement */}
         <Route path="/implementPage" element={<ImplementPage />} />
+        <Route path="/verifyImplement" element={<VerifyImplement />} />
 
         {/* ทำ Trace */}
         <Route path="/traceabilityPage" element={<TraceabilityPage />} />

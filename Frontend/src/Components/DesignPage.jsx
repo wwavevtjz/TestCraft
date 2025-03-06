@@ -43,33 +43,6 @@ const DesignPage = () => {
         </div>
       </header>
 
-      <section className="design-summary">
-        <h2>Overview Summary</h2>
-        <table className="design-summary-table">
-          <thead>
-            <tr>
-              <th>Design Type</th>
-              <th>Total Diagram</th>
-              <th>In Progress</th>
-              <th>Verified</th>
-            </tr>
-          </thead>
-          <tbody>
-            {["High-Level Design", "Low-Level Design"].map((type) => {
-              const filteredDesigns = designs.filter(design => design.design_type === type);
-              return (
-                <tr key={type}>
-                  <td>{type}</td>
-                  <td>{filteredDesigns.length}</td>
-                  <td>{filteredDesigns.length}</td>
-                  <td>{filteredDesigns.length}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </section>
-
       <section className="design-diagrams">
         <h2>Diagrams</h2>
         {loading ? (
@@ -95,10 +68,10 @@ const DesignPage = () => {
                   <td>{design.design_type}</td>
                   <td>
                     <button className="design-action-btn view">
-                      <FontAwesomeIcon icon={faEye} />
+                      <FontAwesomeIcon icon={faEye} onClick={() => navigate(`/ViewDesign?project_id=${projectId}&design_id=${design.design_id}`)} />
                     </button>
                     <button className="design-action-btn edit">
-                      <FontAwesomeIcon icon={faPen} />
+                      <FontAwesomeIcon icon={faPen} onClick={() => navigate(`/UpdateDesign?project_id=${projectId}&design_id=${design.design_id}`)} />
                     </button>
                     <button className="design-action-btn delete">
                       <FontAwesomeIcon icon={faTrash} />
