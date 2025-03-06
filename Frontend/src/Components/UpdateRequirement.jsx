@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Select from "react-select"; // ✅ เพิ่มการ import
 import "./CSS/CreateRequirement.css";
 import { toast } from 'react-toastify';
+import Swal from "sweetalert2";
 import 'react-toastify/dist/ReactToastify.css';
 
 const UpdateRequirement = () => {
@@ -18,6 +19,12 @@ const UpdateRequirement = () => {
   const queryParams = new URLSearchParams(window.location.search);
   const projectId = queryParams.get("project_id");
   const requirementId = queryParams.get("requirement_id");
+  const [requirementStatus, setRequirementStatus] = useState("");
+  const [initialRequirementStatement, setInitialRequirementStatement] = useState("");
+  const [initialRequirementType, setInitialRequirementType] = useState("");
+  const [initialDescription, setInitialDescription] = useState("");
+  const [initialSelectedFileIds, setInitialSelectedFileIds] = useState([]);
+
 
   useEffect(() => {
     if (projectId) {
@@ -54,62 +61,117 @@ const UpdateRequirement = () => {
 
   const fetchRequirementData = async () => {
     try {
-      const res = await axios.get(`http://localhost:3001/requirement/${requirementId}`);
-      const { requirement_name, requirement_type, requirement_description, filereq_ids } = res.data;
+        const res = await axios.get(`http://localhost:3001/requirement/${requirementId}`);
+        const { requirement_name, requirement_type, requirement_description, filereq_ids, requirement_status } = res.data;
 
-      setRequirementStatement(requirement_name);
-      setRequirementType(requirement_type);
-      setDescription(requirement_description);
+        setRequirementStatement(requirement_name);
+        setRequirementType(requirement_type);
+        setDescription(requirement_description);
+        setSelectedFileIds(filereq_ids || []);
+        setRequirementStatus(requirement_status);
 
-      // เปลี่ยนค่า selectedFileIds ให้เป็นอาเรย์จาก filereq_id ถ้ามี
-      // ตรวจสอบว่า filereq_id เป็นหลายไฟล์หรือไฟล์เดียว
-      setSelectedFileIds(filereq_ids ? filereq_ids : []);
+        // กำหนดค่าเริ่มต้น
+        setInitialRequirementStatement(requirement_name);
+        setInitialRequirementType(requirement_type);
+        setInitialDescription(requirement_description);
+        setInitialSelectedFileIds(filereq_ids || []);
     } catch (error) {
-      console.error("Error fetching requirement data:", error);
+        console.error("Error fetching requirement data:", error);
     }
-  };
+};
 
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!requirementStatement || !requirementType || !description || selectedFileIds.length === 0) {
-      setError("Please fill in all fields.");
+  
+    // ตรวจสอบว่ามีการกรอกข้อมูลครบถ้วนหรือไม่
+    const isDataFilled = requirementStatement && requirementType && description && selectedFileIds.length > 0;
+    const isDataUnchanged = 
+      requirementStatement === initialRequirementStatement &&
+      requirementType === initialRequirementType &&
+      description === initialDescription &&
+      JSON.stringify(selectedFileIds) === JSON.stringify(initialSelectedFileIds);
+  
+    if (!isDataFilled) {
+      Swal.fire({
+        title: "กรุณากรอกข้อมูลเพื่อทำการยืนยัน",
+        text: "ทุกช่องต้องถูกกรอกก่อนดำเนินการ",
+        icon: "error",
+        confirmButtonText: "ตกลง",
+      });
       return;
     }
+  
+    if (isDataUnchanged) {
+      Swal.fire({
+        text: "ไม่มีการแก้ไขข้อมูล",
+        icon: "info",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      return;
+    }
+  
+    let confirmText = "ยืนยันการเปลี่ยนแปลง";
+  
+    if (requirementStatus === "BASELINE") {
+      confirmText = "หากยืนยันแล้ว Requirement Status จะเปลี่ยนเป็น WORKING และความสัมพันธ์ทั้งหมดจะหายไป กรุณาตรวจสอบก่อนดำเนินการ";
+      
+    } else if (requirementStatus === "WORKING") {
+      confirmText = "ยืนยันการเปลี่ยนแปลง";
+    } else {
+      confirmText = "ยืนยันการเปลี่ยนแปลง สถานะจะเปลี่ยนเป็น WORKING";
+    }
+  
+// แสดง Popup ยืนยัน
+const result = await Swal.fire({
+  title: requirementStatus === "BASELINE" ? "คำเตือน!" : "",
+  text: confirmText,
+  icon: "warning",
+  showCancelButton: true,
+  confirmButtonText: "ตกลง",
+  cancelButtonText: "ยกเลิก",
+});
 
+  
+    if (!result.isConfirmed) return;
+  
     const updatedRequirement = {
       requirement_name: requirementStatement,
       requirement_type: requirementType,
       requirement_description: description,
       project_id: projectId,
-      filereq_ids: selectedFileIds, // Send array of file IDs to the backend
+      filereq_ids: selectedFileIds,
     };
-
+  
     try {
       const response = await axios.put(
         `http://localhost:3001/requirement/${requirementId}`,
         updatedRequirement
       );
-    
+  
       if (response.status === 200) {
-        toast.success("Requirement updated successfully", {
-          autoClose: 1300, // ปิด toast หลังจาก 1 วินาที
+        await Swal.fire({
+          title: "อัปเดตสำเร็จ!",
+          text: "Requirement ถูกอัปเดตเรียบร้อยแล้ว",
+          icon: "success",
+          confirmButtonText: "ตกลง",
+          timer: 1500,
+          showConfirmButton: false,
         });
-    
-        // รอให้ Toast แสดงก่อนเปลี่ยนหน้า
-        setTimeout(() => {
-          toast.dismiss(); // ปิด toast ก่อนที่จะทำการเปลี่ยนหน้า
-          navigate(`/Dashboard?project_id=${projectId}`, {
-            state: { selectedSection: "Requirement" },
-          });
-        }, 1300); 
-      } else {
-        toast.error("Failed to update requirement");
+  
+        navigate(`/Dashboard?project_id=${projectId}`, {
+          state: { selectedSection: "Requirement" },
+        });
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Network error. Please try again.";
-      toast.error(`Error updating requirement: ${errorMessage}`);
-      setError(errorMessage);
+      const errorMessage = error.response?.data?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย กรุณาลองใหม่อีกครั้ง";
+      Swal.fire({
+        title: "❌ Error!",
+        text: `Error updating requirement: ${errorMessage}`,
+        icon: "error",
+        confirmButtonText: "ตกลง",
+      });
     }
   };
 
