@@ -58,13 +58,14 @@ const TestcaseVerifed = () => {
   const fetchCriteria = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:3001/testcasecriteria");
+      const response = await axios.get(`http://localhost:3001/testcasecriteria/${projectId}`);
       const initialCheckboxState = response.data.reduce((acc, criteria) => {
         acc[criteria.testcasecri_id] = false;
         return acc;
       }, {});
       setTestcasecriList(response.data);
-
+  
+      const storedUsername = localStorage.getItem("username");
       if (storedUsername) {
         const storedCheckboxState = localStorage.getItem(
           `checkboxState_${storedUsername}_${projectId}_${veriTestcaseId}`
@@ -74,11 +75,11 @@ const TestcaseVerifed = () => {
         );
       }
     } catch (error) {
-      console.error("Error fetching criteria:", error);
+      console.error("Error fetching testcase criteria:", error);
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   const fetchTestcaseDetails = async () => {
     try {

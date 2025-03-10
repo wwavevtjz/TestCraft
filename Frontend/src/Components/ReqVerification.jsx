@@ -45,13 +45,13 @@ const ReqVerification = () => {
   const fetchCriteria = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:3001/reqcriteria");
+      const response = await axios.get(`http://localhost:3001/reqcriteria/${projectId}`);
       const initialCheckboxState = response.data.reduce((acc, criteria) => {
         acc[criteria.reqcri_id] = false;
         return acc;
       }, {});
       setReqcriList(response.data);
-
+  
       const storedUsername = localStorage.getItem("username");
       if (storedUsername) {
         const storedCheckboxState = localStorage.getItem(
@@ -69,6 +69,7 @@ const ReqVerification = () => {
       setLoading(false);
     }
   };
+  
 
   const fetchRequirementsDetails = async (requirements) => {
     try {

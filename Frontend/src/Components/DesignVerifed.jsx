@@ -61,13 +61,14 @@ const DesignVerifed = () => {
   const fetchCriteria = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:3001/designcriteria");
+      const response = await axios.get(`http://localhost:3001/designcriteria/${projectId}`);
       const initialCheckboxState = response.data.reduce((acc, criteria) => {
         acc[criteria.design_cri_id] = false;
         return acc;
       }, {});
       setDesigncriList(response.data);
-
+  
+      const storedUsername = localStorage.getItem("username");
       if (storedUsername) {
         const storedCheckboxState = localStorage.getItem(
           `checkboxState_${storedUsername}_${projectId}_${veridesignId}`
@@ -77,11 +78,12 @@ const DesignVerifed = () => {
         );
       }
     } catch (error) {
-      console.error("Error fetching criteria:", error);
+      console.error("Error fetching design criteria:", error);
     } finally {
       setLoading(false);
     }
   };
+  
 
   const fetchDesignDetails = async () => {
     try {
