@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom"; // ใช้ useNavigate แทน Link
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./testcase_css/ExecutionList.css";
 
 const ExecutionList = () => {
   const location = useLocation();
-  const navigate = useNavigate(); // ใช้ navigate สำหรับเปลี่ยนหน้า
+  const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const project_id = queryParams.get("project_id");
 
@@ -20,22 +20,27 @@ const ExecutionList = () => {
     }
   }, [project_id]);
 
+  // แปลงวันที่ให้เป็นรูปแบบ วัน เดือน ปี (DD MM YYYY)
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    const options = { day: "2-digit", month: "long", year: "numeric" };
+    return new Date(dateString).toLocaleDateString("th-TH", options);
+  };
+
   const filteredExecutions = testExecutions.filter((execution) =>
     execution.testcase_id.toString().includes(searchTerm)
   );
 
   const handleNavigate = (testcase_id) => {
-    console.log("Navigating to:", testcase_id);
     if (testcase_id) {
-        navigate(`/TestExecution/${testcase_id}`);
+      navigate(`/TestExecution/${testcase_id}`);
     } else {
-        console.error("testcase_id is undefined or null");
+      console.error("testcase_id is undefined or null");
     }
-};
-
+  };
 
   return (
-    <div className="test-execution-container">
+    <div className="execution-list">
       <h2>Test Execution for Project {project_id}</h2>
       <div className="search-bar">
         <input
@@ -52,7 +57,7 @@ const ExecutionList = () => {
             <th>Test Title</th>
             <th>Test Status</th>
             <th>Completion Date</th>
-            <th>Actions</th> {/* เพิ่มคอลัมน์สำหรับปุ่ม */}
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -62,10 +67,9 @@ const ExecutionList = () => {
                 <td>TC-{execution.testcase_id.toString().padStart(3, "0")}</td>
                 <td>{execution.testcase_name || "N/A"}</td>
                 <td>{execution.test_execution_status}</td>
-                <td>{execution.testcase_at || "-"}</td>
+                <td>{formatDate(execution.testcase_at)}</td>
                 <td>
-                  {/* ปุ่มเลือก Execution */}
-                  <button onClick={() => handleNavigate(execution.testcase_id)}>
+                  <button className="execute-btn" onClick={() => handleNavigate(execution.testcase_id)}>
                     Execute
                   </button>
                 </td>

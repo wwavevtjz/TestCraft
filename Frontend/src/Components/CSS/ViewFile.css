@@ -1,48 +1,178 @@
-/* ViewFile.css */
+/* General Container */
 .view-file-container-custom {
-    max-width: 800px;
-    margin: 20px auto;
+    max-width: 1200px;
+    margin: 40px auto;
     padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     font-family: 'Arial', sans-serif;
 }
 
+/* Title Styling */
 .view-file-title-custom {
-    font-size: 2rem;
+    font-size: 36px;
     color: #333;
     text-align: center;
     margin-bottom: 20px;
 }
 
-.view-file-id-custom, 
-.view-file-name-custom, 
-.view-file-requirement-custom {
-    font-size: 1rem;
+/* Metadata Section */
+.view-file-metadata {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.view-file-metadata p {
+    font-size: 18px;
     color: #555;
-    line-height: 1.6;
-    margin: 10px 0;
+    margin: 8px 0;
 }
 
-strong {
-    font-weight: bold;
+/* Requirement Container */
+.requirement-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Eye Button */
+.eye-button {
+    background-color: #007bff;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+}
+
+.eye-button:hover {
+    background-color: #0056b3;
+}
+
+.eye-button svg {
+    color: white;
+}
+
+/* Modal Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-title {
+    font-size: 24px;
     color: #333;
+    margin-bottom: 10px;
 }
 
-@media (max-width: 600px) {
+.requirement-list {
+    list-style: none;
+    padding: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.requirement-item {
+    font-size: 18px;
+    color: #007bff;
+    margin: 5px 0;
+}
+
+/* Close Button */
+.close-button {
+    margin-top: 15px;
+    padding: 10px 15px;
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.close-button:hover {
+    background-color: #cc0000;
+}
+
+/* Box around File Preview */
+.view-file-box-custom {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.view-file-box-title-custom {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #f1f1f1;
+    padding-bottom: 10px;
+}
+
+/* Iframe for File Preview */
+.view-file-pdf-custom {
+    width: 100%;
+    height: 600px;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Fallback Message */
+.view-file-box-content-custom {
+    text-align: center;
+    font-size: 18px;
+    color: #888;
+}
+
+/* Responsive Design for Small Screens */
+@media (max-width: 768px) {
     .view-file-container-custom {
         padding: 15px;
-        margin: 10px;
     }
 
     .view-file-title-custom {
-        font-size: 1.5rem;
+        font-size: 28px;
     }
 
-    .view-file-id-custom,
-    .view-file-name-custom,
-    .view-file-requirement-custom {
-        font-size: 0.9rem;
+    .view-file-box-title-custom {
+        font-size: 20px;
+    }
+
+    .view-file-metadata p,
+    .requirement-item {
+        font-size: 16px;
+    }
+
+    .view-file-pdf-custom {
+        height: 400px;
+    }
+
+    .modal-content {
+        width: 90%;
     }
 }

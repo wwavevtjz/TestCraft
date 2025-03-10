@@ -10,36 +10,60 @@ const TestExecution = () => {
   const [error, setError] = useState(null);
   const [testSteps, setTestSteps] = useState([]);
   const [testCase, setTestCase] = useState({});
+  const [testFiles, setTestFiles] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStep, setSelectedStep] = useState(null);
 
   const statusOptions = ["Passed", "Failed", "In Progress"];
 
   useEffect(() => {
-    if (testcaseId) {
-      axios.get(`http://localhost:3001/api/test_procedures/${testcaseId}`)
-        .then((response) => {
-          if (response.data.length > 0) {
-            setTestProcedures(response.data);
-            setTestSteps(response.data);
-            setTestCase({
-              testcase_id: response.data[0].testcase_id,
-              testcase_at: response.data[0].testcase_at,
-              tested_by: response.data[0].tested_by,
-              testcase_name: response.data[0].testcase_name, // ตรวจสอบว่า API คืนค่านี้มาหรือไม่
-            });
-          }
-          setLoading(false);
-        })
-        .catch((error) => {
-          console.error("Error fetching test procedures:", error);
-          setError("Failed to load test procedures");
-          setLoading(false);
-        });
-    }
-  }, [testcaseId]);
-  
-  
+    const fetchTestProceduresAndFiles = async () => {
+        if (!testcaseId) return;
+
+        setLoading(true);
+        try {
+            // ดึงข้อมูล Test Procedures
+            const response = await axios.get(`http://localhost:3001/api/test_procedures/${testcaseId}`);
+            console.log("Fetched data:", response.data); // Debugging
+
+            if (response.data.length > 0) {
+                setTestProcedures(response.data);
+                setTestSteps(response.data);
+                setTestCase({
+                    testcase_id: response.data[0].testcase_id,
+                    testcase_at: response.data[0].testcase_at,
+                    tested_by: response.data[0].tested_by || "Unknown",
+                    testcase_name: response.data[0].testcase_name || "No Name",
+                });
+
+                // ดึงข้อมูลไฟล์ของแต่ละ Test Step
+                const filesMap = {};
+                await Promise.all(
+                    response.data.map(async (step) => {
+                        try {
+                            const fileResponse = await axios.get(
+                                `http://localhost:3001/api/get_test_files/${step.test_procedures_id}`
+                            );
+                            filesMap[step.test_procedures_id] = fileResponse.data;
+                        } catch (error) {
+                            console.warn(`No files found for step ${step.test_procedures_id}, setting empty array.`);
+                            filesMap[step.test_procedures_id] = []; // ✅ แก้ให้เซ็ตเป็น array ว่าง
+                        }
+                    })
+                );
+
+                setTestFiles(filesMap);
+            }
+        } catch (error) {
+            console.error("Error fetching test procedures:", error);
+            setError("Failed to load test procedures");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchTestProceduresAndFiles();
+}, [testcaseId]);
 
   if (loading) return <p>Loading test procedures...</p>;
   if (error) return <p>{error}</p>;
@@ -102,6 +126,36 @@ const TestExecution = () => {
       alert("File upload failed!");
     }
   };
+
+  const handleDeleteFile = async (test_procedures_id, fileIndex) => {
+    const fileName = testFiles[test_procedures_id][fileIndex].file_testcase_name;
+    const encodedFileName = encodeURIComponent(fileName); // 🔹 แก้ปัญหาชื่อไฟล์ผิดพลาด
+
+    if (!window.confirm(`Are you sure you want to delete ${fileName}?`)) return;
+
+    try {
+        const response = await fetch(`/api/delete_test_file/${test_procedures_id}/${encodedFileName}`, {
+            method: "DELETE",
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            console.error("Server response:", text);
+            throw new Error(`Failed to delete file: ${text}`);
+        }
+
+        setTestFiles((prevFiles) => {
+            const updatedFiles = { ...prevFiles };
+            updatedFiles[test_procedures_id] = updatedFiles[test_procedures_id].filter((_, i) => i !== fileIndex);
+            return updatedFiles;
+        });
+
+        alert("File deleted successfully");
+    } catch (error) {
+        console.error("Error deleting file:", error);
+        alert("An error occurred while deleting the file.");
+    }
+};
 
   const openModal = (step) => {
     setSelectedStep(step);
@@ -173,27 +227,56 @@ const TestExecution = () => {
       </table>
 
       {modalOpen && selectedStep && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>File Details</h3>
-            <p><strong>Test Step:</strong> {selectedStep.required_action}</p>
-            <input type="file" onChange={(event) => handleFileChange(testSteps.indexOf(selectedStep), event)} />
-            {selectedStep.files?.length > 0 ? (
-              selectedStep.files.map((file, fileIndex) => (
-                <div key={fileIndex}>
-                  <p><strong>File:</strong> {file.file_testcase_name}</p>
-                  <a href={file.file_url} target="_blank" rel="noopener noreferrer">
-                    <button className="download-btn">Download</button>
-                  </a>
+  <div className="modal-overlay">
+    <div className="modal-content">
+      <h3>File Details</h3>
+      <p><strong>Test Step:</strong> {selectedStep.required_action}</p>
+      <input 
+        type="file" 
+        onChange={(event) => handleFileChange(testSteps.indexOf(selectedStep), event)} 
+      />
+
+      {testFiles[selectedStep.test_procedures_id]?.length > 0 ? (
+        <div className="file-list">
+          {testFiles[selectedStep.test_procedures_id].map((file, fileIndex) => (
+            <div key={fileIndex} className="file-item">
+              <p><strong>File:</strong> {file.file_testcase_name}</p>
+
+              {/* แสดงรูปภาพ */}
+              {file.file_url && /\.(jpg|jpeg|png)$/i.test(file.file_testcase_name) ? (
+                <div className="image-container">
+                  <img 
+                    src={file.file_url} 
+                    alt={file.file_testcase_name} 
+                    className="preview-image"
+                  />
                 </div>
-              ))
-            ) : (
-              <p>No file uploaded.</p>
-            )}
-            <button className="close-btn" onClick={closeModal}>Close</button>
-          </div>
+              ) : (
+                <p>📄 {file.file_testcase_name}</p>
+              )}
+
+              {/* ปุ่มดาวน์โหลดและลบ */}
+              <div className="file-actions">
+                <a href={file.file_url} download={file.file_testcase_name}>
+                  <button className="download-btn">⬇ Download</button>
+                </a>
+                <button className="delete-btn" onClick={() => handleDeleteFile(selectedStep.test_procedures_id, fileIndex)}>
+                  ❌ Delete
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
+      ) : (
+        <p>No file uploaded.</p>
       )}
+
+      <button className="close-btn" onClick={closeModal}>Close</button>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 };

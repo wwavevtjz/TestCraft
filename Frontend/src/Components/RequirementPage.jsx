@@ -445,24 +445,57 @@ const RequirementPage = () => {
                     <td className="file-actions">
                       <button
                         className="view-requirement-button"
-                        onClick={() => navigate(`/ViewFile?filereq_id=${file.filereq_id}`, { state: { file } })}
+                        onClick={() => {
+                          if (file?.filereq_id) {
+                            navigate(`/ViewFile?filereq_id=${file.filereq_id}`, { state: { file } });
+                          } else {
+                            console.error("Invalid filereq_id:", file);
+                          }
+                        }}
                       >
                         <FontAwesomeIcon icon={faEye} />
                       </button>
 
+
+
                       <button
                         className="download-file-button"
-                        onClick={() => {
-                          const link = document.createElement("a");
-                          link.href = `http://localhost:3001/files/${file.filereq_id}`;
-                          link.download = file.filereq_name.endsWith(".pdf") ? file.filereq_name : `${file.filereq_name}.pdf`;
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
+                        onClick={async () => {
+                          try {
+                            const fileId = file?.filereq_id;
+                            if (!fileId) {
+                              alert("Invalid file ID");
+                              return;
+                            }
+
+                            const response = await fetch(`http://localhost:3001/files/${fileId}`);
+
+                            if (!response.ok) {
+                              throw new Error(`Failed to fetch file: ${response.statusText}`);
+                            }
+
+                            const blob = await response.blob();
+                            const fileURL = window.URL.createObjectURL(blob);
+                            const link = document.createElement("a");
+
+                            link.href = fileURL;
+                            link.download = file.filereq_name.endsWith(".pdf") ? file.filereq_name : `${file.filereq_name}.pdf`;
+
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+
+                            window.URL.revokeObjectURL(fileURL);
+                          } catch (error) {
+                            console.error("Download error:", error);
+                            alert("Failed to download file. Please try again.");
+                          }
                         }}
                       >
                         <FontAwesomeIcon icon={faDownload} />
                       </button>
+
+
 
                       <button className="delete-file-button" onClick={() => handleDeleteFile(file.filereq_id)}>
                         <FontAwesomeIcon icon={faTrash} className="delete-file" />
