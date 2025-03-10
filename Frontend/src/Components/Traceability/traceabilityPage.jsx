@@ -101,11 +101,15 @@ const TraceabilityPage = () => {
                 </thead>
                 <tbody>
                     {traceabilityData.map((item, index) => (
-                        <tr key={index}>
-                            <td>{`REQ${item.RequirementID}`}
-                                <button className="view-req-trace" onClick={() => navigate(`/ViewEditReq?requirement_id=${item.RequirementID}`)}>VIEW </button>
-                                <button className="edit-req-trace" onClick={() => navigate(`/UpdateRequirement?requirement_id=${item.RequirementID}&project_id=${projectId}`)}>EDIT </button>
+                        <tr key={index} >
+                            <td>
+                                <span onClick={() => navigate(`/ViewEditReq?requirement_id=${item.RequirementID}`)} style={{ cursor: 'pointer'}}>
+                                    {`REQ${item.RequirementID}`}
+                                </span>
+                                {/* <button className="view-req-trace" onClick={() => navigate(`/ViewEditReq?requirement_id=${item.RequirementID}`)}>VIEW</button>
+                                <button className="edit-req-trace" onClick={() => navigate(`/UpdateRequirement?requirement_id=${item.RequirementID}&project_id=${projectId}`)}>EDIT</button> */}
                             </td>
+
                             <td>
                                 {`DE${item.DesignID}`}
                                 <button
